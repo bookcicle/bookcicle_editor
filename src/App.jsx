@@ -6,7 +6,6 @@ import Quill from 'quill';
 import './App.css';
 import {Container, CssBaseline} from "@mui/material";
 import BookcicleThemeProvider from "../BookcicleThemeProvider.jsx";
-
 const Delta = Quill.import('delta');
 
 const App = () => {
