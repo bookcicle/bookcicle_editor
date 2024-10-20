@@ -72,3 +72,8 @@ html, body, #root {
 .ql-toolbar.ql-snow {
   border: none
 }
+
+.ql-editor {
+  counter-reset: line;
+  padding-left: 0;
+}
