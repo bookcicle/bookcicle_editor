@@ -12,7 +12,7 @@ import Save from "@mui/icons-material/Save";
 import React, {useCallback, useEffect} from "react";
 import t from "prop-types";
 import {styled} from "@mui/material/styles";
-import {FormControl, MenuItem, Select} from "@mui/material";
+import {FormControl, MenuItem, Select, useTheme} from "@mui/material";
 
 const DividerSpan = styled("span")(() => ({
     margin: "0 4px", color: "lightgrey",
@@ -36,6 +36,7 @@ export const DesktopToolbarActions = (props) => {
     } = props;
 
     const [currentHeader, setCurrentHeader] = React.useState("0");
+    const theme = useTheme()
 
     const renderIconButton = (title, IconComponent, className, onClick) => (
         <Tooltip disableTouchListener leaveDelay={0} leaveTouchDelay={0} title={title}>
@@ -111,7 +112,7 @@ export const DesktopToolbarActions = (props) => {
             <IconButton
                 value={"customControl"}
                 onClick={() => handleSave(false)}
-                style={{color: "#2196f3"}}
+                style={{color: theme.palette.text.primary}}
                 disabled={savingBookContent}
             >
                 <Save/>
