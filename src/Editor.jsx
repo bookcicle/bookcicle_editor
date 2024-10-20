@@ -1,63 +1,64 @@
 /** @jsxImportSource @emotion/react */
-import {forwardRef, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState} from 'react';
+import { Global, css } from '@emotion/react';
+import {
+    forwardRef,
+    useCallback,
+    useContext,
+    useEffect,
+    useLayoutEffect,
+    useRef,
+    useState
+} from 'react';
 import Quill from 'quill';
+import 'quill/dist/quill.snow.css'; // Ensure Quill CSS is imported for proper styling
 import styled from '@emotion/styled';
-import './assets/css/bubble.css';
-import {AppContext} from './AppContext.jsx';
+import { AppContext } from './AppContext.jsx';
 import DesktopToolbarActions from './toolbar/DesktopToolbarActions';
-import {useTheme} from "@mui/material";
+import { useTheme } from '@mui/material';
+import PropTypes from 'prop-types';
 
-// Styled components for the line number gutter and editor container
+// Styled components for the editor container and wrapper
 const EditorContainer = styled.div`
-    display: flex;
     position: relative;
     height: 100%;
     width: 100%;
 `;
 
-const LineNumberGutter = styled.div`
-    width: 40px;
-    background-color: ${({theme}) => theme.palette.background || '#f0f0f0'};
-    text-align: right;
-    padding-right: 10px;
-    color: ${({theme}) => theme.palette.text.secondary || '#888'};
-    font-size: 14px;
-    border-right: 1px solid ${({theme}) => theme.palette.divider || '#ddd'};
-    user-select: none;
-    overflow: hidden;
-    padding-top: 10px; /* Adjust based on Quill's padding */
-`;
-
 const QuillEditorWrapper = styled.div`
-    flex-grow: 1;
-    overflow: auto;
-    position: relative;
+    height: 100%;
+    width: 100%;
+    position: relative; /* Ensure that the pseudo-element is positioned correctly */
+    .ql-editor {
+        min-height: 100%;
+        padding-left: 2.5em;
+    }
 `;
 
-// Define a consistent line height
-const LINE_HEIGHT = 20; // in pixels
-
-const Editor = forwardRef((// eslint-disable-next-line react/prop-types
-    {readOnly, defaultValue, onTextChange, onSelectionChange}, ref) => {
+const Editor = forwardRef(({
+                               readOnly,
+                               defaultValue,
+                               onTextChange,
+                               onSelectionChange
+                           }, ref) => {
     const containerRef = useRef(null);
     const defaultValueRef = useRef(defaultValue);
     const onTextChangeRef = useRef(onTextChange);
     const onSelectionChangeRef = useRef(onSelectionChange);
-    const {state} = useContext(AppContext);
+    const { state } = useContext(AppContext);
     const theme = useTheme();
 
     const [editorReady, setEditorReady] = useState(false);
-    const [lineNumbers, setLineNumbers] = useState([]); // Track line numbers
 
     const handleTextChange = useCallback(() => {
-        calculateLineNumbers(ref.current);
-        onTextChangeRef.current?.(ref.current.getText());
+        if (ref.current) {
+            onTextChangeRef.current?.(ref.current.getText());
+        }
     }, [ref]);
 
     useLayoutEffect(() => {
         onTextChangeRef.current = onTextChange;
         onSelectionChangeRef.current = onSelectionChange;
-    });
+    }, [onTextChange, onSelectionChange]);
 
     useEffect(() => {
         if (ref.current) {
@@ -66,15 +67,25 @@ const Editor = forwardRef((// eslint-disable-next-line react/prop-types
     }, [ref, readOnly]);
 
     useEffect(() => {
+        if (!containerRef.current) {
+            console.error('Container ref is not defined');
+            return;
+        }
+
         const container = containerRef.current;
         const editorContainer = container.appendChild(container.ownerDocument.createElement('div'));
 
         const quill = new Quill(editorContainer, {
-            theme: state.appSettings.quillTheme, modules: {
-                toolbar: false, history: {
-                    delay: 1000, maxStack: 100, userOnly: false,
+            theme: state.appSettings.quillTheme || 'snow', // Ensure a valid theme is applied
+            modules: {
+                toolbar: false,
+                history: {
+                    delay: 1000,
+                    maxStack: 100,
+                    userOnly: false,
                 },
-            }, formats: ['header', 'bold', 'italic', 'underline', 'background', 'blockquote',],
+            },
+            formats: ['header', 'bold', 'italic', 'underline', 'background', 'blockquote'],
         });
 
         ref.current = quill;
@@ -87,36 +98,106 @@ const Editor = forwardRef((// eslint-disable-next-line react/prop-types
         // Listen for text changes and update line numbers
         quill.on('text-change', handleTextChange);
 
-        quill.on('selection-change', (...args) => {
-            onSelectionChangeRef.current?.(...args);
+        quill.on('selection-change', (range, oldRange, source) => {
+            onSelectionChangeRef.current?.(range, oldRange, source);
+            highlightActiveLine(quill, range);
         });
 
         setEditorReady(true);
 
-        calculateLineNumbers(quill);
-
-        // Recalculate line numbers on window resize
-        const handleResize = () => {
-            calculateLineNumbers(quill);
-        };
-        window.addEventListener('resize', handleResize);
-
         return () => {
             ref.current = null;
-            container.innerHTML = '';
-            window.removeEventListener('resize', handleResize);
+            container.innerHTML = ''; // Clean up the container content on unmount
         };
-    }, [handleTextChange, ref, state.appSettings.quillTheme, state.appSettings.theme]);
+    }, [handleTextChange, ref, state.appSettings.quillTheme]);
 
+    // Function to highlight the active line
+    const highlightActiveLine = (quillInstance, range) => {
+        const editor = quillInstance.root;
 
-    const calculateLineNumbers = (quillInstance) => {
-        if (!quillInstance) return;
+        // Remove 'active-line' class from all block-level elements
+        editor.querySelectorAll('.active-line').forEach(elem => {
+            elem.classList.remove('active-line');
+        });
 
-        const editorElement = quillInstance.container.firstChild;
-        const editorHeight = editorElement.clientHeight;
-        const lines = Math.ceil(editorHeight / LINE_HEIGHT);
-        setLineNumbers(Array.from({length: lines}, (_, i) => i + 1));
+        if (range && range.length === 0) { // Only when cursor is active (no text selected)
+            const [line] = quillInstance.getLine(range.index);
+            if (line && line.domNode) {
+                line.domNode.classList.add('active-line');
+            }
+        }
     };
+
+    // Dynamically generate CSS for line numbers and active line highlighting
+    const dynamicStyles = css`
+        /* Line Numbers */
+        .ql-editor {
+            counter-reset: line;
+            position: initial;
+        }
+        .ql-editor p::before,
+        .ql-editor h1::before,
+        .ql-editor h2::before,
+        .ql-editor h3::before,
+        .ql-editor h4::before,
+        .ql-editor h5::before,
+        .ql-editor h6::before,
+        .ql-editor blockquote::before {
+            counter-increment: line;
+            content: counter(line);
+            position: absolute;
+            left: 0;
+            width: 2em;
+            text-align: right;
+            padding-right: 0.5em;
+            color: ${theme.palette.text.secondary || '#888'};
+            user-select: none;
+            font-size: 14px; /* Fixed font size for line numbers */
+            line-height: 1.2; /* Adjust for better vertical alignment */
+            border-right: none; /* Remove border-right to avoid overlapping with vertical border */
+            z-index: 2; /* Ensure line numbers appear above the gutter border */
+        }
+        /* Adjust paragraph and heading position to make space for line numbers */
+        .ql-editor p,
+        .ql-editor h1,
+        .ql-editor h2,
+        .ql-editor h3,
+        .ql-editor h4,
+        .ql-editor h5,
+        .ql-editor h6,
+        .ql-editor blockquote {
+            position: initial;
+            margin-left: 0;
+        }
+        /* Handle empty paragraphs and headings */
+        .ql-editor p:empty::before,
+        .ql-editor h1:empty::before,
+        .ql-editor h2:empty::before,
+        .ql-editor h3:empty::before,
+        .ql-editor h4:empty::before,
+        .ql-editor h5:empty::before,
+        .ql-editor h6:empty::before,
+        .ql-editor blockquote:empty::before {
+            content: counter(line);
+        }
+
+        /* Active Line Highlighting */
+        .active-line {
+            background-color: ${theme.palette.action.hover || 'rgba(0, 0, 0, 0.04)'};
+        }
+
+        /* Continuous Vertical Border for Gutter */
+        .quill-editor-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 1.7em;
+            width: 1px;
+            height: 100%;
+            background-color: ${theme.palette.divider || '#ddd'};
+            z-index: 1;
+        }
+    `;
 
     // Custom toolbar functions
     const handleHeadingChange = (event) => {
@@ -127,78 +208,60 @@ const Editor = forwardRef((// eslint-disable-next-line react/prop-types
         }
     };
 
-    const handleUndo = () => ref.current.history.undo();
-    const handleRedo = () => ref.current.history.redo();
-    const handleBold = () => ref.current.format('bold', true);
-    const handleItalic = () => ref.current.format('italic', true);
-    const handleUnderline = () => ref.current.format('underline', true);
-    const handleHighlight = () => ref.current.format('background', 'yellow');
-    const handleQuote = () => ref.current.format('blockquote', true);
+    const handleUndo = () => ref.current?.history.undo();
+    const handleRedo = () => ref.current?.history.redo();
+    const handleBold = () => ref.current?.format('bold', true);
+    const handleItalic = () => ref.current?.format('italic', true);
+    const handleUnderline = () => ref.current?.format('underline', true);
+    const handleHighlight = () => ref.current?.format('background', 'yellow');
+    const handleQuote = () => ref.current?.format('blockquote', true);
     const handleClearFormatting = () => {
-        const selection = ref.current.getSelection();
+        const selection = ref.current?.getSelection();
         if (selection) {
-            ref.current.removeFormat(selection.index, selection.length);
+            ref.current?.removeFormat(selection.index, selection.length);
         }
     };
 
-    // Synchronize scrolling between gutter and editor
-    const editorScrollRef = useRef(null);
+    return (
+        <div>
+            {/* Inject dynamic CSS for line numbers and active line highlighting */}
+            <Global styles={dynamicStyles} />
 
-    useEffect(() => {
-        if (!editorScrollRef.current && ref.current) {
-            editorScrollRef.current = ref.current.container.firstChild;
-            const gutterElement = containerRef.current.previousSibling;
+            {editorReady && (
+                <DesktopToolbarActions
+                    quillRef={ref}
+                    handleUndo={handleUndo}
+                    handleRedo={handleRedo}
+                    handleBold={handleBold}
+                    handleItalic={handleItalic}
+                    handleHeader={handleHeadingChange}
+                    handleUnderline={handleUnderline}
+                    handleHighlight={handleHighlight}
+                    handleQuote={handleQuote}
+                    handleClearFormatting={handleClearFormatting}
+                    isAdvanced={true}
+                    isReadOnly={readOnly}
+                    handleSave={() => { }}
+                    savingBookContent={false}
+                />
+            )}
 
-            const handleEditorScroll = () => {
-                if (gutterElement) {
-                    gutterElement.scrollTop = editorScrollRef.current.scrollTop;
-                }
-            };
-
-            editorScrollRef.current.addEventListener('scroll', handleEditorScroll);
-
-            return () => {
-                if (editorScrollRef.current) {
-                    editorScrollRef.current.removeEventListener('scroll', handleEditorScroll);
-                }
-            };
-        }
-    }, [editorReady, ref]);
-
-    return (<div>
-        {editorReady && (<DesktopToolbarActions
-            quillRef={ref}
-            handleUndo={handleUndo}
-            handleRedo={handleRedo}
-            handleBold={handleBold}
-            handleItalic={handleItalic}
-            handleHeader={handleHeadingChange}
-            handleUnderline={handleUnderline}
-            handleHighlight={handleHighlight}
-            handleQuote={handleQuote}
-            handleClearFormatting={handleClearFormatting}
-            isAdvanced={true}
-            isReadOnly={readOnly}
-            handleSave={() => {
-            }}
-            savingBookContent={false}
-        />)}
-
-        {/* Line numbers and editor container with dynamic theming */}
-        <EditorContainer>
-            {/* Line number gutter */}
-            <LineNumberGutter theme={theme}>
-                {lineNumbers.map((lineNumber) => (<div key={lineNumber}>{lineNumber}</div>))}
-            </LineNumberGutter>
-
-            {/* Quill editor */}
-            <QuillEditorWrapper>
-                <div ref={containerRef}></div>
-            </QuillEditorWrapper>
-        </EditorContainer>
-    </div>);
+            <EditorContainer>
+                <QuillEditorWrapper className="quill-editor-wrapper">
+                    <div ref={containerRef}></div>
+                </QuillEditorWrapper>
+            </EditorContainer>
+        </div>
+    );
 });
 
 Editor.displayName = 'Editor';
+
+Editor.propTypes = {
+    readOnly: PropTypes.bool.isRequired,
+    defaultValue: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    onTextChange: PropTypes.func.isRequired,
+    onSelectionChange: PropTypes.func.isRequired,
+};
 
 export default Editor;
