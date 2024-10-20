@@ -259,7 +259,7 @@ Editor.displayName = 'Editor';
 
 Editor.propTypes = {
     readOnly: PropTypes.bool.isRequired,
-    defaultValue: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    defaultValue: PropTypes.oneOfType([PropTypes.string, PropTypes.number, PropTypes.object]),
     onTextChange: PropTypes.func.isRequired,
     onSelectionChange: PropTypes.func.isRequired,
 };

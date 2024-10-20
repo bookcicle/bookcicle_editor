@@ -35,7 +35,7 @@ export const DesktopToolbarActions = (props) => {
         quillRef
     } = props;
 
-    const [currentHeader, setCurrentHeader] = React.useState(null);
+    const [currentHeader, setCurrentHeader] = React.useState("0");
 
     const renderIconButton = (title, IconComponent, className, onClick) => (
         <Tooltip disableTouchListener leaveDelay={0} leaveTouchDelay={0} title={title}>
