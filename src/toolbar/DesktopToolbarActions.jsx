@@ -9,7 +9,7 @@ import FormatBold from "@mui/icons-material/FormatBold";
 import FormatUnderline from "@mui/icons-material/FormatUnderlined";
 import FormatQuote from "@mui/icons-material/FormatQuote";
 import Save from "@mui/icons-material/Save";
-import React, {useCallback, useEffect} from "react";
+import React from "react";
 import t from "prop-types";
 import {styled} from "@mui/material/styles";
 import {FormControl, MenuItem, Select, useTheme} from "@mui/material";
@@ -20,53 +20,17 @@ const DividerSpan = styled("span")(() => ({
 
 export const DesktopToolbarActions = (props) => {
     const {
-        savingBookContent,
-        handleSave,
-        handleUndo,
-        handleRedo,
-        handleBold,
-        handleHeader,
-        handleItalic,
-        handleUnderline,
-        handleHighlight,
-        handleQuote,
-        handleClearFormatting,
-        isAdvanced,
-        quillRef
+        savingBookContent, handleSave, handleHeader, isAdvanced, currentHeader
     } = props;
 
-    const [currentHeader, setCurrentHeader] = React.useState("0");
     const theme = useTheme()
 
-    const renderIconButton = (title, IconComponent, className, onClick) => (
+    const renderIconButton = (title, IconComponent, className) => (
         <Tooltip disableTouchListener leaveDelay={0} leaveTouchDelay={0} title={title}>
-            <IconButton className={className} value={"customControl"} onClick={onClick}>
+            <IconButton className={className} value={"customControl"}>
                 <IconComponent fontSize={"small"}/>
             </IconButton>
         </Tooltip>);
-
-    const getCurrentHeader = useCallback(() => {
-        const quill = quillRef.current;
-        if (quill) {
-            const range = quill.getSelection();
-            if (range) {
-                const format = quill.getFormat(range);
-                return format.header || 0; // 0 for normal text
-            }
-        }
-        return 0;
-    }, [quillRef]);
-
-    useEffect(() => {
-        setCurrentHeader(getCurrentHeader())
-    }, [getCurrentHeader])
-
-    useEffect(() => {
-        quillRef.current.on('editor-change', () => {
-            setCurrentHeader(getCurrentHeader())
-        });
-    }, [getCurrentHeader, quillRef]);
-
 
     return (<React.Fragment>
         {isAdvanced && (<>
@@ -93,20 +57,23 @@ export const DesktopToolbarActions = (props) => {
                 <MenuItem value={2}>Heading 2</MenuItem>
                 <MenuItem value={3}>Heading 3</MenuItem>
                 {/* Add more headings if needed */}
-            </Select></FormControl>}
+            </Select>
+            </FormControl>}
             <DividerSpan/>
-            {renderIconButton("Remove Formatting", FormatClearIcon, "ql-clean", handleClearFormatting)}
-            {renderIconButton("Undo", UndoIcon, "ql-bc-undo", handleUndo)}
-            {renderIconButton("Redo", RedoIcon, "ql-bc-redo", handleRedo)}
+            <span className={"ql-formats"}>
+            {renderIconButton("Remove Formatting", FormatClearIcon, "ql-clean")}
+                {renderIconButton("Undo", UndoIcon, "ql-undo")}
+                {renderIconButton("Redo", RedoIcon, "ql-redo")}
+                </span>
         </>)}
 
-        <>
-            {renderIconButton("Italics", FormatItalic, "ql-italic", handleItalic)}
-            {renderIconButton("Highlight Text", HighlightIcon, "ql-bc-highlighter", handleHighlight)}
-            {renderIconButton("Bold", FormatBold, "ql-bold", handleBold)}
-            {renderIconButton("Underline", FormatUnderline, "ql-underline", handleUnderline)}
-            {renderIconButton("Block Quote", FormatQuote, "ql-blockquote", handleQuote)}
-        </>
+        <span className={"ql-formats"}>
+            {renderIconButton("Italics", FormatItalic, "ql-italic")}
+            {renderIconButton("Highlight Text", HighlightIcon, "ql-background")}
+            {renderIconButton("Bold", FormatBold, "ql-bold")}
+            {renderIconButton("Underline", FormatUnderline, "ql-underline")}
+            {renderIconButton("Block Quote", FormatQuote, "ql-blockquote")}
+        </span>
         <>
             <DividerSpan/>
             <IconButton
@@ -125,16 +92,9 @@ DesktopToolbarActions.propTypes = {
     isAdvanced: t.bool.isRequired,
     savingBookContent: t.bool.isRequired,
     handleSave: t.func.isRequired,
-    handleUndo: t.func.isRequired,
-    handleRedo: t.func.isRequired,
-    handleBold: t.func.isRequired,
     handleHeader: t.func.isRequired,
-    handleItalic: t.func.isRequired,
-    handleUnderline: t.func.isRequired,
-    handleHighlight: t.func.isRequired,
-    handleQuote: t.func.isRequired,
-    handleClearFormatting: t.func.isRequired,
-    quillRef: t.any.isRequired
+    quillRef: t.any.isRequired,
+    currentHeader: t.any.isRequired,
 };
 
 export default DesktopToolbarActions;
