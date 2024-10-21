@@ -24,19 +24,19 @@ jobs:
     steps:
       # Step 1: Checkout Repository
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0  # Fetch all history for accurate tag retrieval
 
       # Step 2: Setup Node.js
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v3
         with:
           node-version: '18'  # Specify your Node.js version
 
       # Step 3: Cache Node.js modules
       - name: Cache Node.js modules
-        uses: actions/cache@v4
+        uses: actions/cache@v3
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -47,9 +47,10 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-#      # Step 5: Run Tests
-#      - name: Run Tests
-#        run: npm test
+      # Step 5: Run Tests (Optional)
+      # Uncomment the following block if you want to run tests
+      # - name: Run Tests
+      #   run: npm test
 
       # Step 6: Build the Application
       - name: Build
@@ -85,7 +86,7 @@ jobs:
           fi
           
           echo "Next version: $next_version"
-          echo "::set-output name=next_version::$next_version"
+          echo "next_version=$next_version" >> $GITHUB_OUTPUT
 
       # Step 9: Configure Git User
       - name: Configure Git
