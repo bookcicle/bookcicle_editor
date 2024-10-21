@@ -4,7 +4,7 @@ export const INITIAL_STATE = {
     appSettings: localStorage.getItem('appSettingsStorage')
         ? JSON.parse(localStorage.getItem('appSettingsStorage'))
         : {
-            theme: "abyss",
+            theme: "system",
             quillTheme: "snow"
         },
 

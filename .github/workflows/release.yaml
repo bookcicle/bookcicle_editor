@@ -1,0 +1,117 @@
+
+name: Test, Build, and Create Release
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'  # Optional: Trigger on tag pushes
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag (e.g., v1.0.0)'
+        required: false
+      release_name:
+        description: 'Release name'
+        required: false
+      release_body:
+        description: 'Release description'
+        required: false
+
+env:
+  JAVA_HOME: "/home/github-runner/java-21"
+  PATH: "/home/github-runner/node/bin:/home/github-runner/java-21/bin:/usr/bin:/usr/local/bin:/usr/bin:/bin"
+
+permissions:
+  contents: write
+  checks: write
+  actions: write
+
+jobs:
+  build-and-release:
+    runs-on: self-hosted
+
+    steps:
+      # Step 1: Checkout Repository
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'  # Specify your Node.js version
+
+      # Step 3: Cache Node.js modules
+      - name: Cache Node.js modules
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Step 4: Install Dependencies
+      - name: Install Dependencies
+        run: npm install
+
+#      # Step 5: Run Tests
+#      - name: Run Tests
+#        run: npm test
+
+      # Step 6: Build the Application
+      - name: Build
+        run: npm run build
+
+      # Step 7: Bundle the `dist` folder
+      - name: Bundle dist folder
+        run: zip -r dist.zip dist
+
+      # Step 8: Determine Tag for Release
+      - name: Determine Tag
+        id: get_tag
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+          elif [ -n "${{ github.event.inputs.tag }}" ]; then
+            echo "TAG_NAME=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+          else
+            echo "No tag found. Skipping release creation."
+            exit 0
+          fi
+
+      # Step 9: Create GitHub Release
+      - name: Create GitHub Release
+        if: env.TAG_NAME != ''
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          release_name: Release ${{ env.TAG_NAME }}
+          body: |
+            Automated release of version ${{ env.TAG_NAME }}.
+            - Built by GitHub Actions.
+          draft: false
+          prerelease: false
+
+      # Step 10: Upload Release Asset
+      - name: Upload Release Asset
+        if: env.TAG_NAME != ''
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./dist.zip
+          asset_name: dist.zip
+          asset_content_type: application/zip
+
+      # Optional Step 11: Clean Up Artifacts
+      - name: Clean Up
+        run: rm dist.zip
