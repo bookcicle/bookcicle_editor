@@ -20,7 +20,7 @@ const DividerSpan = styled("span")(() => ({
 
 export const DesktopToolbarActions = (props) => {
     const {
-        savingBookContent, handleSave, handleHeader, isAdvanced, currentHeader, currentBold
+        savingBookContent, handleSave, handleHeader, isAdvanced, currentHeader
     } = props;
 
     const theme = useTheme()
@@ -57,20 +57,23 @@ export const DesktopToolbarActions = (props) => {
                 <MenuItem value={2}>Heading 2</MenuItem>
                 <MenuItem value={3}>Heading 3</MenuItem>
                 {/* Add more headings if needed */}
-            </Select></FormControl>}
+            </Select>
+            </FormControl>}
             <DividerSpan/>
+            <span className={"ql-formats"}>
             {renderIconButton("Remove Formatting", FormatClearIcon, "ql-clean")}
-            {renderIconButton("Undo", UndoIcon, "ql-undo")}
-            {renderIconButton("Redo", RedoIcon, "ql-redo")}
+                {renderIconButton("Undo", UndoIcon, "ql-undo")}
+                {renderIconButton("Redo", RedoIcon, "ql-redo")}
+                </span>
         </>)}
 
-        <>
+        <span className={"ql-formats"}>
             {renderIconButton("Italics", FormatItalic, "ql-italic")}
             {renderIconButton("Highlight Text", HighlightIcon, "ql-background")}
-            {renderIconButton("Bold", FormatBold, currentBold ? "ql-active ql-bold" : "ql-bold")}
+            {renderIconButton("Bold", FormatBold, "ql-bold")}
             {renderIconButton("Underline", FormatUnderline, "ql-underline")}
             {renderIconButton("Block Quote", FormatQuote, "ql-blockquote")}
-        </>
+        </span>
         <>
             <DividerSpan/>
             <IconButton
@@ -92,7 +95,6 @@ DesktopToolbarActions.propTypes = {
     handleHeader: t.func.isRequired,
     quillRef: t.any.isRequired,
     currentHeader: t.any.isRequired,
-    currentBold: t.any.isRequired,
 };
 
 export default DesktopToolbarActions;
