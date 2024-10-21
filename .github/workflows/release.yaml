@@ -47,9 +47,10 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-#      # Step 5: Run Tests
-#      - name: Run Tests
-#        run: npm test
+      # Step 5: Run Tests (Optional)
+      # Uncomment the following block if you want to run tests
+      # - name: Run Tests
+      #   run: npm test
 
       # Step 6: Build the Application
       - name: Build
@@ -85,7 +86,7 @@ jobs:
           fi
           
           echo "Next version: $next_version"
-          echo "::set-output name=next_version::$next_version"
+          echo "next_version=$next_version" >> $GITHUB_OUTPUT
 
       # Step 9: Configure Git User
       - name: Configure Git
