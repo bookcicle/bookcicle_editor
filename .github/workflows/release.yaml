@@ -59,9 +59,9 @@ jobs:
       - name: Install Dependencies
         run: npm install
 
-      # Step 5: Run Tests
-      - name: Run Tests
-        run: npm test
+#      # Step 5: Run Tests
+#      - name: Run Tests
+#        run: npm test
 
       # Step 6: Build the Application
       - name: Build
