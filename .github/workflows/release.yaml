@@ -1,33 +1,19 @@
-
-name: Test, Build, and Create Release
+name: Test, Build, Tag, and Release
 
 on:
   push:
     branches:
       - main
-    tags:
-      - 'v*.*.*'  # Optional: Trigger on tag pushes
   pull_request:
     branches:
       - main
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: 'Release tag (e.g., v1.0.0)'
-        required: false
-      release_name:
-        description: 'Release name'
-        required: false
-      release_body:
-        description: 'Release description'
-        required: false
 
 env:
   JAVA_HOME: "/home/github-runner/java-21"
   PATH: "/home/github-runner/node/bin:/home/github-runner/java-21/bin:/usr/bin:/usr/local/bin:/usr/bin:/bin"
 
 permissions:
-  contents: write
+  contents: write  # Required for creating releases and uploading assets
   checks: write
   actions: write
 
@@ -39,6 +25,8 @@ jobs:
       # Step 1: Checkout Repository
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history for accurate tag retrieval
 
       # Step 2: Setup Node.js
       - name: Setup Node.js
@@ -71,38 +59,66 @@ jobs:
       - name: Bundle dist folder
         run: zip -r dist.zip dist
 
-      # Step 8: Determine Tag for Release
-      - name: Determine Tag
-        id: get_tag
+      # Step 8: Determine Next Version
+      - name: Determine Next Version
+        id: get_version
         run: |
-          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
-            echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
-          elif [ -n "${{ github.event.inputs.tag }}" ]; then
-            echo "TAG_NAME=${{ github.event.inputs.tag }}" >> $GITHUB_ENV
+          # Get the latest tag matching the pattern vX.Y.Z
+          latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+          echo "Latest tag: $latest_tag"
+          
+          # Extract the version numbers
+          if [ -z "$latest_tag" ]; then
+            next_version="v1.0.0"
           else
-            echo "No tag found. Skipping release creation."
-            exit 0
+            # Remove the 'v' prefix
+            version=${latest_tag#v}
+            IFS='.' read -r -a version_parts <<< "$version"
+          
+            major=${version_parts[0]}
+            minor=${version_parts[1]}
+            patch=${version_parts[2]}
+          
+            # Increment the patch version
+            patch=$((patch + 1))
+            next_version="v$major.$minor.$patch"
           fi
+          
+          echo "Next version: $next_version"
+          echo "::set-output name=next_version::$next_version"
 
-      # Step 9: Create GitHub Release
+      # Step 9: Configure Git User
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      # Step 10: Create and Push Tag
+      - name: Create and Push Tag
+        if: success() && steps.get_version.outputs.next_version
+        run: |
+          git tag ${{ steps.get_version.outputs.next_version }}
+          git push origin ${{ steps.get_version.outputs.next_version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Step 11: Create GitHub Release
       - name: Create GitHub Release
-        if: env.TAG_NAME != ''
+        if: success() && steps.get_version.outputs.next_version
         id: create_release
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ env.TAG_NAME }}
-          release_name: Release ${{ env.TAG_NAME }}
-          body: |
-            Automated release of version ${{ env.TAG_NAME }}.
-            - Built by GitHub Actions.
+          tag_name: ${{ steps.get_version.outputs.next_version }}
+          release_name: Release ${{ steps.get_version.outputs.next_version }}
+          body: "Automated release of version ${{ steps.get_version.outputs.next_version }}."
           draft: false
           prerelease: false
 
-      # Step 10: Upload Release Asset
+      # Step 12: Upload Release Asset
       - name: Upload Release Asset
-        if: env.TAG_NAME != ''
+        if: success() && steps.create_release.outputs.upload_url
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -112,6 +128,6 @@ jobs:
           asset_name: dist.zip
           asset_content_type: application/zip
 
-      # Optional Step 11: Clean Up Artifacts
+      # Step 13: Clean Up
       - name: Clean Up
         run: rm dist.zip
