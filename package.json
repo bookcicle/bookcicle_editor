@@ -1,6 +1,5 @@
 {
   "name": "@bookcicle/bookcicle_editor",
-  "private": true,
   "version": "0.0.1",
   "type": "module",
   "scripts": {
