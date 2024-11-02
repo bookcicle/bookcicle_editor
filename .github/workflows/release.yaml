@@ -97,10 +97,15 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
+      # Step 10: Create and Push Tag with Stash, Pull, and Reapply Changes
       - name: Create and Push Tag
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          git pull --rebase origin main  # Pull latest changes to avoid conflicts
+          git stash  # Stash uncommitted changes
+          git pull --rebase origin main  # Pull latest changes
+          git stash pop  # Reapply stashed changes
+          
+          # Create and push the new tag
           git tag ${{ steps.get_version.outputs.next_version }}
           git push origin main
           git push origin ${{ steps.get_version.outputs.next_version }}
