@@ -16,6 +16,7 @@ permissions:
   contents: write  # Required for creating releases and uploading assets
   checks: write
   actions: write
+  id-token: write
 
 jobs:
   build-and-release:
