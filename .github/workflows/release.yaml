@@ -97,11 +97,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # Step 10: Create and Push Tag
       - name: Create and Push Tag
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
+          git pull --rebase origin main  # Pull latest changes to avoid conflicts
           git tag ${{ steps.get_version.outputs.next_version }}
+          git push origin main
           git push origin ${{ steps.get_version.outputs.next_version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
