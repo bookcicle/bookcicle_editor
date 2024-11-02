@@ -56,6 +56,8 @@ jobs:
       - name: Determine Next Version and Update package.json
         id: get_version
         run: |
+          git config --global user.email "andy.barraford@gmail.com"
+          git config --global user.name "Andrew Barraford"
           latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
           echo "Latest tag: $latest_tag"
           
