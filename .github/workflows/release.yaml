@@ -8,10 +8,6 @@ on:
     branches:
       - main
 
-env:
-  JAVA_HOME: "/home/github-runner/java-21"
-  PATH: "/home/github-runner/node/bin:/home/github-runner/java-21/bin:/usr/bin:/usr/local/bin:/usr/bin:/bin"
-
 permissions:
   contents: write  # Required for creating releases and uploading assets
   checks: write
@@ -20,7 +16,7 @@ permissions:
 
 jobs:
   build-and-release:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
 
     steps:
       # Step 1: Checkout Repository
