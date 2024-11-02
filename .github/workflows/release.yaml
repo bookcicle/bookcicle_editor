@@ -40,7 +40,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      # Step 4: Install Dependencies
+      # Step 4: Install Dependencie
       - name: Install Dependencies
         run: npm install
 
