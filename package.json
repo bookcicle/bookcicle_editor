@@ -1,5 +1,10 @@
 {
   "name": "@bookcicle/bookcicle_editor",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bookcicle/bookcicle_editor.git"
+  },
   "version": "0.0.10",
   "type": "module",
   "scripts": {
