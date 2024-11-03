@@ -5,14 +5,17 @@ export default defineConfig({
   plugins: [react()],
   build: {
     lib: {
-      entry: './src/index.js',  // Point to the file where all components are exported
-      name: 'BookcicleEditor',
+      entry: './src/index.js',
+      name: 'bookcicle_editor',
       fileName: (format) => `bookcicle-editor.${format}.js`,
-      formats: ['es', 'cjs'], // Export as ES module and CommonJS
+      formats: ['es'], // Only ES module format
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'quill'],
+      external: ['react', 'react-dom', 'quill'], // External dependencies
       output: {
+        entryFileNames: 'index.js',
+        format: 'es',
+        exports: 'named',
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
