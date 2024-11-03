@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'  # Specify your Node.js version
+          node-version: '22'
 
       # Step 3: Cache Node.js modules
       - name: Cache Node.js modules
