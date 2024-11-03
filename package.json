@@ -9,7 +9,7 @@
     "node": "^22",
     "npm": "^10"
   },
-  "version": "0.0.16",
+  "version": "0.0.17",
   "main": "dist/bookcicle-editor.cjs.js",
   "module": "dist/bookcicle-editor.es.js",
   "exports": {
