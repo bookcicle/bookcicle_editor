@@ -13,7 +13,7 @@
     "node": "^22",
     "npm": "^10"
   },
-  "version": "0.0.16",
+  "version": "0.0.18",
   "peerDependencies": {
     "quill": "^2.0.0",
     "react": "^18.0.0"
