@@ -5,6 +5,10 @@
     "type": "git",
     "url": "https://github.com/bookcicle/bookcicle_editor.git"
   },
+  "engines": {
+    "node": "^22",
+    "npm": "^10"
+  },
   "version": "0.0.16",
   "type": "module",
   "scripts": {

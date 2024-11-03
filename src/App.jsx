@@ -5,14 +5,13 @@ import Editor from './Editor';
 import Quill from 'quill';
 import './App.css';
 import {Container, CssBaseline} from "@mui/material";
-import BookcicleThemeProvider from "../BookcicleThemeProvider.jsx";
 const Delta = Quill.import('delta');
 
 const App = () => {
 
     const quillRef = useRef(null);
 
-    return (<BookcicleThemeProvider>
+    return (<main>
         <CssBaseline/>
         <Container maxWidth={false} style={{padding: 0}}>
             <Editor
@@ -32,7 +31,7 @@ const App = () => {
                 }}
             />
         </Container>
-    </BookcicleThemeProvider>);
+    </main>);
 };
 
 export default App;
