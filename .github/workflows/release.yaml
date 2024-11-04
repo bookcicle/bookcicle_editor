@@ -63,7 +63,10 @@ jobs:
         run: |
           git config --global user.email "andy.barraford@gmail.com"
           git config --global user.name "Andrew Barraford"
-          git remote -v
+          
+          git remote remove origin
+          git remote add origin git@github.com:bookcicle/bookcicle_editor.git
+          
           latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
           echo "Latest tag: $latest_tag"
           
