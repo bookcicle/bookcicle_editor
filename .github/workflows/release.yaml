@@ -63,6 +63,7 @@ jobs:
         run: |
           git config --global user.email "andy.barraford@gmail.com"
           git config --global user.name "Andrew Barraford"
+          git remote -v
           latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
           echo "Latest tag: $latest_tag"
           
@@ -90,7 +91,7 @@ jobs:
 
       - name: Push changes to main
         run: |
-          git push origin main
+          git push origin main --force
 
       # Step 9: Configure Git User
       - name: Configure Git
