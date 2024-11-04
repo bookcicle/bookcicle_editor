@@ -65,18 +65,19 @@ jobs:
         with:
           ssh-private-key: ${{ secrets.DEPLOY_KEY }}
 
-      # Step 7: Commit version bump (if applicable) and push
+      - name: Configure Git
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote remove origin
+          git remote add origin git@github.com:bookcicle/bookcicle_editor.git
+
       - name: Determine Next Version and Update package.json
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
         id: get_version
         run: |
-          git config --global user.email "andy.barraford@gmail.com"
-          git config --global user.name "Andrew Barraford"
-          
-          git remote remove origin
-          git remote add origin git@github.com:bookcicle/bookcicle_editor.git
-          
           latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
           echo "Latest tag: $latest_tag"
           
@@ -102,14 +103,7 @@ jobs:
           git add package.json
           git commit -m "Bump version to $next_version"
 
-      # Step 8: Configure Git User
-      - name: Configure Git
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      # Step 9: Create and Push Tag with Stash, Pull, and Reapply Changes
       - name: Create and Push Tag
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
@@ -119,7 +113,6 @@ jobs:
           
           # Create and push the new tag
           git tag ${{ steps.get_version.outputs.next_version }}
-          git push origin main
           git push origin ${{ steps.get_version.outputs.next_version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
