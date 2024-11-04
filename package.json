@@ -17,7 +17,7 @@
     "node": "^22",
     "npm": "^10"
   },
-  "version": "0.0.18",
+  "version": "0.0.38",
   "license": "MIT",
   "peerDependencies": {
     "@emotion/react": "^11.13.3",
