@@ -66,11 +66,11 @@ html, body, #root {
 }
 
 .ql-container.ql-snow {
-  border: none
+  border: hidden
 }
 
 .ql-toolbar.ql-snow {
-  border: none
+  border: hidden
 }
 
 .ql-editor {
