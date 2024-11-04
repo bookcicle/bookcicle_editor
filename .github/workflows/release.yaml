@@ -52,7 +52,11 @@ jobs:
       - name: Bundle dist folder
         run: zip -r dist.zip dist
 
-      # Step 8: Determine Next Version and Update package.json
+      - name: Set up SSH deploy key
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+
       - name: Determine Next Version and Update package.json
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         id: get_version
@@ -83,8 +87,10 @@ jobs:
           # Commit the version bump
           git add package.json
           git commit -m "Bump version to $next_version"
-          git push origin main
 
+      - name: Push changes to main
+        run: |
+          git push origin main
 
       # Step 9: Configure Git User
       - name: Configure Git
