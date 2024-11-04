@@ -56,6 +56,12 @@ jobs:
             exit 1
           fi
 
+      - name: Set up SSH deploy key
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: webfactory/ssh-agent@v0.5.4
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+
       # Step 7: Commit version bump (if applicable) and push
       - name: Determine Next Version and Update package.json
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
