@@ -2,8 +2,8 @@ name: Test, Build, Tag, and Release
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*'
   pull_request:
     branches:
       - main
