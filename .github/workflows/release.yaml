@@ -2,8 +2,8 @@ name: Test, Build, Tag, and Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches:
+      - main
   pull_request:
     branches:
       - main
@@ -92,11 +92,6 @@ jobs:
           # Commit the version bump
           git add package.json
           git commit -m "Bump version to $next_version"
-
-      - name: Push changes to main
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        run: |
-          git push origin main --force
 
       # Step 8: Configure Git User
       - name: Configure Git
