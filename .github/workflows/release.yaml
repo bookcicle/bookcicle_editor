@@ -48,6 +48,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Bundle dist folder
+        run: zip -r dist.zip dist
+
       # Step 6: Verify dist folder
       - name: Verify dist folder exists
         run: |
