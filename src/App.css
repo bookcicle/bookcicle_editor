@@ -69,6 +69,10 @@ html, body, #root {
   border: hidden
 }
 
+.ql-toolbar {
+  text-align: center;
+}
+
 .ql-toolbar.ql-snow {
   border: hidden
 }
