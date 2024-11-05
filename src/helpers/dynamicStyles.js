@@ -108,7 +108,7 @@ const dynamicStyles = (theme, showLineNumbers, showDivider, linePadding, buttonS
             color: ${showLineNumbers ? (theme.palette.text.secondary || '#888') : theme.palette.background.default};
             user-select: none;
             font-size: 14px; /* Fixed font size for line numbers */
-            line-height: 1.2; /* Adjust for better vertical alignment */
+            line-height: 1.6; /* Adjust for better vertical alignment */
             border-right: none; /* Remove border-right to avoid overlapping with vertical border */
             z-index: 2; /* Ensure line numbers appear above the gutter border */
         }
