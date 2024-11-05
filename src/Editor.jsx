@@ -167,7 +167,13 @@ const Editor = forwardRef(({
             quill.history.clear();
         }
 
-        quill.on('text-change', handleTextChange);
+        quill.on('text-change', () => {
+            handleTextChange();
+            setTimeout(() => {
+                const range = quill.getSelection();
+                highlightActiveLine(quill, range);
+            }, 0);
+        });
 
         quill.on('selection-change', (range, oldRange, source) => {
             onSelectionChangeRef.current?.(range, oldRange, source);
