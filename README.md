@@ -156,6 +156,30 @@ We welcome contributions to the **Bookcicle Editor**! To contribute:
 4. Push to the branch (`git push origin feature/your-feature`).
 5. Create a pull request.
 
+## Testing In Upstream
+
+Since we do not build a cjs entry, make sure you add a `transformIgnorePattern`
+
+```json
+{ 
+  "jest": {
+    "transformIgnorePatterns": [
+      "<rootDir>/node_modules/(?!@bookcicle/bookcicle_editor.*\\.js$)"
+    ]
+  }
+}
+```
+
+You may also need to handle quill inside jest config. 
+
+```json
+{
+  "moduleNameMapper": {
+    "^quill$": "<rootDir>/node_modules/quill/dist/quill.js"
+  }
+}
+```
+
 ## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
