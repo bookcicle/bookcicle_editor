@@ -170,6 +170,15 @@ Since we do not build a cjs entry, make sure you add a `transformIgnorePattern`
 }
 ```
 
+You may also need to handle quill inside jest config. 
+
+```json
+{
+  "moduleNameMapper": {
+    "^quill$": "<rootDir>/node_modules/quill/dist/quill.js"
+  }
+}
+```
 
 ## License
 
