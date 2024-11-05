@@ -30,6 +30,10 @@ const App = () => {
                     }}
                     onTextChange={() => {
                     }}
+                    onDeltaChange={() => {
+                    }}
+                    onDeltaChangeIteration={() => {
+                    }}
                 />
             </Container>
         </ThemeProvider>
