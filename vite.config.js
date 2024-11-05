@@ -9,7 +9,7 @@ export default defineConfig({
         lib: {
             entry: './src/index.js',
             name: 'bookcicle_editor',
-            fileName: (format) => `bookcicle-editor.${format}.js`,
+            fileName: () => `index.js`,
             formats: ['es'], // Add 'umd' if you need UMD format
         },
         rollupOptions: {
