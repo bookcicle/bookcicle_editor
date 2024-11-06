@@ -1,48 +1,57 @@
 // dynamicStyles.js
-import {css} from "@emotion/react";
-import {alpha} from "@mui/material";
+import { css } from '@emotion/react';
+import { alpha } from '@mui/material';
 
-const dynamicStyles = (theme, showLineNumbers, showDivider, linePadding, buttonSize = "xs", enableDragHandle) => {
+const dynamicStyles = (
+    theme,
+    showLineNumbers,
+    showDivider,
+    linePadding,
+    buttonSize = 'xs',
+    enableDragHandle
+) => {
+    let tipTapPadding = '1em';
+    let dragDisplay = 'none';
 
-    let tipTapPadding = 0
     if (enableDragHandle) {
-        tipTapPadding = "3em"
+        tipTapPadding = '3em';
+        dragDisplay = 'flex';
     }
 
-    let padding = "0";
+    let padding = '0';
     switch (linePadding) {
-        case "xs":
-            padding = "8px !important";
+        case 'xs':
+            padding = '8px !important';
             break;
-        case "small":
-            padding = "12px !important";
+        case 'small':
+            padding = '12px !important';
             break;
-        case "medium":
-            padding = "16px !important";
+        case 'medium':
+            padding = '16px !important';
             break;
-        case "large":
-            padding = "24px !important";
+        case 'large':
+            padding = '24px !important';
             break;
         default:
-            padding = "12px !important";
+            padding = '12px !important';
     }
 
     let buttonSizeStyle;
     switch (buttonSize) {
-        case "xs":
-            buttonSizeStyle = "18px !important";
+        case 'xs':
+            buttonSizeStyle = '18px !important';
             break;
-        case "small":
-            buttonSizeStyle = "22px !important";
+        case 'small':
+            buttonSizeStyle = '22px !important';
             break;
-        case "medium":
-            buttonSizeStyle = "26px !important";
+        case 'medium':
+            buttonSizeStyle = '26px !important';
             break;
-        case "large":
-            buttonSizeStyle = "30px !important";
+        case 'large':
+            buttonSizeStyle = '30px !important';
             break;
         default:
-            buttonSizeStyle = "18px !important";
+            buttonSizeStyle = '18px !important';
     }
 
     return css`
@@ -50,8 +59,7 @@ const dynamicStyles = (theme, showLineNumbers, showDivider, linePadding, buttonS
 
         .tiptap-editor-wrapper {
             display: flex;
-            position: relative;
-            border-right: 1px solid ${showDivider ? theme.palette.divider : "transparent"};
+            position: relative; /* Ensure relative positioning */
             height: 100%;
             width: 100%;
         }
@@ -61,7 +69,7 @@ const dynamicStyles = (theme, showLineNumbers, showDivider, linePadding, buttonS
         .tiptap-editor {
             counter-reset: line; /* Reset the line counter */
             padding-left: ${tipTapPadding}; /* Space for line numbers */
-            position: relative;
+            position: relative; /* Ensure relative positioning */
             flex-grow: 1;
             overflow-y: auto;
         }
@@ -91,11 +99,11 @@ const dynamicStyles = (theme, showLineNumbers, showDivider, linePadding, buttonS
         .tiptap-editor .ProseMirror > ul > li::before,
         .tiptap-editor .ProseMirror > ol > li::before {
             content: counter(line);
-            position: fixed;
-            left: -0.7em; /* Align with gutter padding */
+            position: absolute; /* Changed from 'fixed' to 'absolute' */
+            left: -2em; /* Adjusted to align with the gutter */
             width: 2em;
-            text-align: right;
-            color: ${showLineNumbers ? theme.palette.text.secondary : "transparent"};
+            text-align: left;
+            color: ${showLineNumbers ? theme.palette.text.secondary : 'transparent'};
             user-select: none;
             font-size: 14px;
             line-height: 1.68em;
@@ -146,14 +154,13 @@ const dynamicStyles = (theme, showLineNumbers, showDivider, linePadding, buttonS
 
         .tiptap-editor-wrapper::before {
             content: '';
-            position: fixed;
-            top: 2.5em; /* Adjust this value to start where your editor's content begins */
-            left: 2em;
+            position: absolute;
+            top: 0;
+            left: 1.2em; /* Adjust this value to align with line numbers */
             width: 1px;
-            height: calc(100% - 2em); /* Adjust this value to stop where the editor ends */
-            background-color: ${showDivider ? (theme.palette.text.primary || '#ddd') : theme.palette.background.default};
-            transform: scaleX(0.1);
-            transform-origin: left;
+            height: 100%;
+            background-color: ${showDivider ? theme.palette.divider : 'transparent'};
+            /* Removed transform */
             z-index: 1;
         }
 
@@ -210,7 +217,7 @@ const dynamicStyles = (theme, showLineNumbers, showDivider, linePadding, buttonS
             border-radius: 0.25rem;
             border: 1px solid ${theme.palette.text.primary};
             cursor: grab;
-            display: flex;
+            display: ${dragDisplay};
             height: 1.5rem;
             justify-content: center;
             width: 1.5rem;
@@ -222,7 +229,6 @@ const dynamicStyles = (theme, showLineNumbers, showDivider, linePadding, buttonS
             }
         }
     `;
-
 };
 
 export default dynamicStyles;
