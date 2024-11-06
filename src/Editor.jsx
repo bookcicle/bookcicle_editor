@@ -1,9 +1,9 @@
-import { Global } from '@emotion/react';
-import { EditorContent, useEditor } from '@tiptap/react';
+import {Global} from '@emotion/react';
+import {EditorContent, useEditor} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import DragHandle from '@tiptap-pro/extension-drag-handle-react';
-import { Box, useTheme } from '@mui/material';
+import {Box, useTheme} from '@mui/material';
 import PropTypes from 'prop-types';
 import dynamicStyles from './helpers/dynamicStyles.js';
 import styled from '@emotion/styled';
@@ -16,11 +16,11 @@ import Highlight from '@tiptap/extension-highlight';
 import DragHandleIcon from '@mui/icons-material/DragHandleOutlined';
 import FontFamily from '@tiptap/extension-font-family';
 import 'katex/dist/katex.min.css'; // Import KaTeX CSS
-import { Mathematics } from '@tiptap-pro/extension-mathematics'; // Import the Mathematics extension
+import {Mathematics} from '@tiptap-pro/extension-mathematics'; // Import the Mathematics extension
 import TextStyle from '@tiptap/extension-text-style';
-import { Link } from "@tiptap/extension-link";
-import { Color } from "@tiptap/extension-color";
-import { Decoration, DecorationSet } from "prosemirror-view";
+import {Link} from "@tiptap/extension-link";
+import {Color} from "@tiptap/extension-color";
+import {Decoration, DecorationSet} from "prosemirror-view";
 
 /**
  * @typedef {Object} EditorSettings
@@ -37,15 +37,15 @@ import { Decoration, DecorationSet } from "prosemirror-view";
  */
 
 const EditorContainer = styled.div`
-  position: relative;
-  height: 100%;
-  width: 100%;
+    position: relative;
+    height: 100%;
+    width: 100%;
 `;
 
 const TiptapEditorWrapper = styled.div`
-  height: 100%;
-  width: 100%;
-  position: relative;
+    height: 100%;
+    width: 100%;
+    position: relative;
 `;
 
 /**
@@ -61,131 +61,133 @@ const TiptapEditorWrapper = styled.div`
  * @param {Object} [props.tipTapSettings] - Configuration object for TipTap's useEditor settings.
  */
 const Editor = ({
-  readOnly,
-  defaultValue,
-  onTextChange,
-  onSelectionChange,
-  onDeltaChange,
-  editorSettings = {
-    openLinks: true,
-    enableDragHandle: true,
-    showLineNumbers: true,
-    showLineHighlight: true,
-    buttonSize: "small",
-    linePadding: "small",
-    showVerticalDivider: true,
-    doubleNewlineOnEnter: false,
-  },
-  tipTapSettings = {},
-}) => {
+                    readOnly,
+                    defaultValue,
+                    onTextChange,
+                    onSelectionChange,
+                    onDeltaChange,
+                    editorSettings = {
+                        openLinks: true,
+                        enableDragHandle: true,
+                        showLineNumbers: true,
+                        showLineHighlight: true,
+                        buttonSize: "small",
+                        linePadding: "small",
+                        showVerticalDivider: true,
+                    },
+                    tipTapSettings = {},
+                }) => {
 
-  const theme = useTheme();
-  let activeLineDecoration = DecorationSet.empty;
+    const theme = useTheme();
+    let activeLineDecoration = DecorationSet.empty;
 
-  const editor = useEditor({
-    // Default configurations
-    extensions: [
-      StarterKit,
-      FontFamily,
-      TextStyle,
-      Color,
-      Underline,
-      Image,
-      TextAlign.configure({
-        types: ['heading', 'paragraph'],
-        alignments: ['left', 'center', 'right'],
-      }),
-      Subscript,
-      Superscript,
-      Mathematics,
-      Highlight.configure({ multicolor: true }),
-      Link.configure({
-        openOnClick: editorSettings.openLinks,
-      }),
-    ],
-    content: defaultValue || `<p>Start editing...</p>`,
-    editable: !readOnly,
-    onUpdate: ({ editor }) => {
-      const jsonContent = editor.getJSON();
-      onTextChange?.(editor.getText());
-      onDeltaChange?.(jsonContent);
-    },
-    onSelectionUpdate: ({ editor }) => {
-      const selection = editor.state.selection;
-      onSelectionChange?.(selection);
+    const editor = useEditor({
+        // Default configurations
+        extensions: [
+            StarterKit,
+            FontFamily,
+            TextStyle,
+            Color,
+            Underline,
+            Image,
+            TextAlign.configure({
+                types: ['heading', 'paragraph'],
+                alignments: ['left', 'center', 'right'],
+            }),
+            Subscript,
+            Superscript,
+            Mathematics,
+            Highlight.configure({multicolor: true}),
+            Link.configure({
+                openOnClick: editorSettings.openLinks,
+            }),
+        ],
+        content: defaultValue || `<p>Start editing...</p>`,
+        editable: !readOnly,
+        onUpdate: ({editor}) => {
+            const jsonContent = editor.getJSON();
+            onTextChange?.(editor.getText());
+            onDeltaChange?.(jsonContent);
+        },
+        onSelectionUpdate: ({editor}) => {
+            const selection = editor.state.selection;
+            onSelectionChange?.(selection);
 
-      const { state } = editor;
-      const { $from } = state.selection;
+            if (editorSettings.showLineHighlight) {
+                const {state} = editor;
+                const {$from} = state.selection;
 
-      const start = $from.start($from.depth);
-      const end = $from.end($from.depth);
+                const start = $from.start($from.depth);
+                const end = $from.end($from.depth);
 
-      const deco = Decoration.node(start - 1, end + 1, { class: 'active-line' });
+                const deco = Decoration.node(start - 1, end + 1, {class: 'active-line'});
 
-      activeLineDecoration = DecorationSet.create(state.doc, [deco]);
+                activeLineDecoration = DecorationSet.create(state.doc, [deco]);
 
-      editor.view.setProps({
-        decorations: () => activeLineDecoration,
-      });
-    },
-    onBlur: ({ editor }) => {
-      editor.view.setProps({
-        decorations: () => DecorationSet.empty,
-      });
-    },
-    ...tipTapSettings,
-  });
+                editor.view.setProps({
+                    decorations: () => activeLineDecoration,
+                });
+            }
 
-  return (
-    <Box>
-      <Global
-        styles={dynamicStyles(
-          theme,
-          editorSettings.showLineNumbers,
-          editorSettings.showVerticalDivider,
-          editorSettings.linePadding,
-          editorSettings.buttonSize
-        )}
-      />
-      <Box sx={{ flexGrow: 1, padding: '10px', overflowY: 'hidden', height: '100%', boxSizing: 'border-box' }}>
-        <EditorToolbar editor={editor} />
-        <EditorContainer>
-          <TiptapEditorWrapper className="tiptap-editor-wrapper">
-            <div className="tiptap-editor" style={{ paddingLeft: '3em' }}>
-              {editorSettings.enableDragHandle && (
-                <DragHandle editor={editor}>
-                  <DragHandleIcon />
-                </DragHandle>
-              )}
-              <EditorContent editor={editor} />
-            </div>
-          </TiptapEditorWrapper>
-        </EditorContainer>
-      </Box>
-    </Box>
-  );
+        },
+        onBlur: ({editor}) => {
+            if (editorSettings.showLineHighlight) {
+                editor.view.setProps({
+                    decorations: () => DecorationSet.empty,
+                });
+            }
+        },
+        ...tipTapSettings,
+    });
+
+    return (
+        <Box>
+            <Global
+                styles={dynamicStyles(
+                    theme,
+                    editorSettings.showLineNumbers,
+                    editorSettings.showVerticalDivider,
+                    editorSettings.linePadding,
+                    editorSettings.buttonSize
+                )}
+            />
+            <Box sx={{flexGrow: 1, padding: '10px', overflowY: 'hidden', height: '100%', boxSizing: 'border-box'}}>
+                <EditorToolbar editor={editor}/>
+                <EditorContainer>
+                    <TiptapEditorWrapper className="tiptap-editor-wrapper">
+                        <div className="tiptap-editor" style={{paddingLeft: '3em'}}>
+                            {editorSettings.enableDragHandle && (
+                                <DragHandle editor={editor}>
+                                    <DragHandleIcon/>
+                                </DragHandle>
+                            )}
+                            <EditorContent editor={editor}/>
+                        </div>
+                    </TiptapEditorWrapper>
+                </EditorContainer>
+            </Box>
+        </Box>
+    );
 };
 
 Editor.propTypes = {
-  readOnly: PropTypes.bool.isRequired,
-  defaultValue: PropTypes.string,
-  onTextChange: PropTypes.func.isRequired,
-  onSelectionChange: PropTypes.func.isRequired,
-  onDeltaChange: PropTypes.func.isRequired,
-  editorSettings: PropTypes.shape({
-    openLinks: PropTypes.bool,
-    languageCode: PropTypes.string,
-    showGrammarSuggestions: PropTypes.bool,
-    showLineHighlight: PropTypes.bool,
-    showLineNumbers: PropTypes.bool,
-    showVerticalDivider: PropTypes.bool,
-    showSpellingSuggestions: PropTypes.bool,
-    buttonSize: PropTypes.oneOf(['small', 'medium', 'large']),
-    linePadding: PropTypes.oneOf(['small', 'medium', 'large']),
-    doubleNewlineOnEnter: PropTypes.bool,
-    enableDragHandle: PropTypes.bool,
-  }),
-  tipTapSettings: PropTypes.object,
+    readOnly: PropTypes.bool.isRequired,
+    defaultValue: PropTypes.string,
+    onTextChange: PropTypes.func.isRequired,
+    onSelectionChange: PropTypes.func.isRequired,
+    onDeltaChange: PropTypes.func.isRequired,
+    editorSettings: PropTypes.shape({
+        openLinks: PropTypes.bool,
+        showGrammarSuggestions: PropTypes.bool,
+        showLineHighlight: PropTypes.bool,
+        showLineNumbers: PropTypes.bool,
+        showVerticalDivider: PropTypes.bool,
+        showSpellingSuggestions: PropTypes.bool,
+        buttonSize: PropTypes.oneOf(['small', 'medium', 'large']),
+        linePadding: PropTypes.oneOf(['small', 'medium', 'large']),
+        enableDragHandle: PropTypes.bool,
+    }),
+    tipTapSettings: PropTypes.object,
 };
 
 export default Editor;
