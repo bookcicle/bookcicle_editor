@@ -1,32 +1,33 @@
-import {IconButton, Menu, MenuItem, Tooltip} from '@mui/material';
+import {Button, Menu, MenuItem, Tooltip, useTheme} from '@mui/material';
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
 import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
 import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
 import {useState} from "react";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 
-const AlignmentTools = ({ handleAlignmentChange, selectedAlignment }) => {
+const AlignmentTools = ({handleAlignmentChange, selectedAlignment}) => {
     const [alignmentMenuAnchorEl, setAlignmentMenuAnchorEl] = useState(null);
-
+    const theme = useTheme();
     const handleAlignmentMenuClick = (event) => setAlignmentMenuAnchorEl(event.currentTarget);
     const handleAlignmentMenuClose = () => setAlignmentMenuAnchorEl(null);
 
     const getAlignmentIcon = () => {
         switch (selectedAlignment) {
             case 'center':
-                return <FormatAlignCenterIcon />;
+                return <FormatAlignCenterIcon/>;
             case 'right':
-                return <FormatAlignRightIcon />;
+                return <FormatAlignRightIcon/>;
             default:
-                return <FormatAlignLeftIcon />;
+                return <FormatAlignLeftIcon/>;
         }
     };
 
-    return (
-        <>
+    return (<>
             <Tooltip title="Alignment">
-                <IconButton onClick={handleAlignmentMenuClick}>
+                <Button onClick={handleAlignmentMenuClick} sx={{color: theme.palette.text.primary}}>
                     {getAlignmentIcon()}
-                </IconButton>
+                    <ArrowDropDownIcon/>
+                </Button>
             </Tooltip>
             <Menu
                 anchorEl={alignmentMenuAnchorEl}
@@ -35,22 +36,21 @@ const AlignmentTools = ({ handleAlignmentChange, selectedAlignment }) => {
                 sx={{
                     '& .MuiPaper-root': {
                         textAlign: "center",
-                        width: 33
+                        width: 40
                     },
                 }}
             >
-                <MenuItem onClick={() => handleAlignmentChange('left')} sx={{padding: "2px 1px 2px 4px"}}>
-                    <FormatAlignLeftIcon />
+                <MenuItem onClick={() => handleAlignmentChange('left')} sx={{padding: "2px 1px 2px 6px"}}>
+                    <FormatAlignLeftIcon/>
                 </MenuItem>
-                <MenuItem onClick={() => handleAlignmentChange('center')} sx={{padding: "2px 1px 2px 4px"}}>
-                    <FormatAlignCenterIcon />
+                <MenuItem onClick={() => handleAlignmentChange('center')} sx={{padding: "2px 1px 2px 6px"}}>
+                    <FormatAlignCenterIcon/>
                 </MenuItem>
-                <MenuItem onClick={() => handleAlignmentChange('right')} sx={{padding: "2px 1px 2px 4px"}}>
-                    <FormatAlignRightIcon />
+                <MenuItem onClick={() => handleAlignmentChange('right')} sx={{padding: "2px 1px 2px 6px"}}>
+                    <FormatAlignRightIcon/>
                 </MenuItem>
             </Menu>
-        </>
-    );
+        </>);
 };
 
 export default AlignmentTools;

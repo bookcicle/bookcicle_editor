@@ -84,7 +84,7 @@ const Editor = ({
     const editor = useEditor({
         // Default configurations
         extensions: [
-            StarterKit,
+            StarterKit.configure({heading: {levels: [1, 2, 3]}}),
             FontFamily,
             TextStyle,
             Color,

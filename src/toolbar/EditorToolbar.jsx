@@ -8,22 +8,29 @@ import UndoRedoTools from './UndoRedoTools';
 import TextClearTools from './TextClearTools';
 import PropTypes from 'prop-types';
 import TextFormattingTools from "./TextFormattingTools.jsx";
+import HeadingTools from "./HeadingTool.jsx";
 
 const EditorToolbar = ({editor}) => {
     const [fontMenuAnchorEl, setFontMenuAnchorEl] = useState(null);
     const [selectedAlignment, setSelectedAlignment] = useState('left');
+    const [selectedHeading, setSelectedHeading] = useState(1); // State for selected heading
 
     const handleFontMenuClick = (event) => setFontMenuAnchorEl(event.currentTarget);
     const handleFontMenuClose = () => setFontMenuAnchorEl(null);
 
     const handleFontStyleChange = (style) => {
-        editor.chain().focus().setMark('textStyle', {fontFamily: style}).run();
+        editor.chain().focus().setMark('textStyle', { fontFamily: style }).run();
         handleFontMenuClose();
     };
 
     const handleAlignmentChange = (alignment) => {
         editor.chain().focus().setTextAlign(alignment).run();
-        setSelectedAlignment(alignment); // Update the selected alignment
+        setSelectedAlignment(alignment);
+    };
+
+    const handleHeadingChange = (level) => {
+        editor.chain().focus().toggleHeading({ level }).run();
+        setSelectedHeading(level); // Update the selected heading level
     };
 
     const handleAction = (action, color = null) => {
@@ -121,9 +128,13 @@ const EditorToolbar = ({editor}) => {
                         selectedAlignment={selectedAlignment}
                         handleAlignmentChange={handleAlignmentChange}
                     />
-                    <InsertTools handleAction={handleAction}/>
-                    <TextClearTools handleAction={handleAction}/>
-                    <UndoRedoTools handleAction={handleAction}/>
+                    <HeadingTools
+                        selectedHeading={selectedHeading}
+                        handleHeadingChange={handleHeadingChange}
+                    />
+                    <InsertTools handleAction={handleAction} />
+                    <TextClearTools handleAction={handleAction} />
+                    <UndoRedoTools handleAction={handleAction} />
                 </Box>
             </Toolbar>
         </AppBar>);

@@ -1,8 +1,9 @@
-import {IconButton, Menu, MenuItem, Tooltip} from '@mui/material';
+import {Button, Menu, MenuItem, Tooltip, useTheme} from '@mui/material';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
 import HighlightIcon from '@mui/icons-material/Highlight';
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
 import ColorDropdown from "./ColorDropdown.jsx";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 
 const FontAndColorTools = ({
                                fontMenuAnchorEl,
@@ -10,12 +11,14 @@ const FontAndColorTools = ({
                                handleFontMenuClose,
                                handleFontStyleChange,
                                handleAction,
-                           }) => (
-    <>
+                           }) => {
+    const theme = useTheme();
+    return <>
         <Tooltip title="Font Style">
-            <IconButton onClick={handleFontMenuClick}>
-                <TextFieldsIcon />
-            </IconButton>
+            <Button onClick={handleFontMenuClick} sx={{color: theme.palette.text.primary}}>
+                <TextFieldsIcon/>
+                <ArrowDropDownIcon/>
+            </Button>
         </Tooltip>
         <Menu
             anchorEl={fontMenuAnchorEl}
@@ -28,16 +31,16 @@ const FontAndColorTools = ({
         </Menu>
 
         <ColorDropdown
-            icon={<HighlightIcon />}
+            icon={<HighlightIcon/>}
             title="Highlight Color"
             onSelectColor={(color) => handleAction('highlight', color)}
         />
         <ColorDropdown
-            icon={<FormatColorTextIcon />}
+            icon={<FormatColorTextIcon/>}
             title="Text Color"
             onSelectColor={(color) => handleAction('color', color)}
         />
     </>
-);
+};
 
 export default FontAndColorTools;
