@@ -77,11 +77,12 @@ const Editor = ({
                         enableDragHandle: false,
                         showLineNumbers: true,
                         showLineHighlight: true,
-                        buttonSize: "small",
+                        buttonSize: "xl",
                         linePadding: "small",
                         showVerticalDivider: true,
                         enablePageEditor: false,
                         pageEditorWidth: '800px',
+                        toolbarStyle: "general"
                     },
                     tipTapSettings = {},
                 }) => {
@@ -172,7 +173,7 @@ const Editor = ({
                 )}
             />
             <Box sx={{ flexGrow: 1, padding: '10px', overflowY: 'hidden', height: '100%', boxSizing: 'border-box' }}>
-                <EditorToolbar editor={editor} />
+                <EditorToolbar editor={editor} toolbarStyle={editorSettings.toolbarStyle}/>
                 <EditorContainer>
                     {editorSettings.enablePageEditor ? (
                         <PageEditorWrapper width={editorSettings.pageEditorWidth}>
@@ -205,6 +206,7 @@ Editor.propTypes = {
         enableDragHandle: PropTypes.bool,
         enablePageEditor: PropTypes.bool,
         pageEditorWidth: PropTypes.string,
+        toolbarStyle: PropTypes.oneOf(['science', 'general', 'fiction', 'non-fiction', 'all']),
     }),
     tipTapSettings: PropTypes.object,
 };
