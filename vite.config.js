@@ -1,7 +1,7 @@
-import {defineConfig} from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
-import {visualizer} from 'rollup-plugin-visualizer';
+import { visualizer } from 'rollup-plugin-visualizer';
 
 export default defineConfig({
     plugins: [react(), cssInjectedByJsPlugin()],
@@ -10,39 +10,76 @@ export default defineConfig({
             entry: './src/index.js',
             name: 'bookcicle_editor',
             fileName: () => `index.js`,
-            formats: ['es'], // Add 'umd' if you need UMD format
+            formats: ['es'], // Use 'umd' if you need UMD format
         },
         rollupOptions: {
             plugins: [visualizer()],
             external: [
                 'react',
                 'react-dom',
-                'quill',
                 '@emotion/react',
                 '@emotion/styled',
                 '@mui/material',
                 '@mui/icons-material',
                 '@mui/material-pigment-css',
                 'styled-components',
-                "katex"
+                'katex',
+                // TipTap packages
+                '@tiptap/core',
+                '@tiptap/react',
+                '@tiptap/starter-kit',
+                '@tiptap/extension-bullet-list',
+                '@tiptap/extension-character-count',
+                '@tiptap/extension-code-block',
+                '@tiptap/extension-code-block-lowlight',
+                '@tiptap/extension-collaboration',
+                '@tiptap/extension-collaboration-cursor',
+                '@tiptap/extension-color',
+                '@tiptap/extension-document',
+                '@tiptap/extension-dropcursor',
+                '@tiptap/extension-focus',
+                '@tiptap/extension-font-family',
+                '@tiptap/extension-heading',
+                '@tiptap/extension-highlight',
+                '@tiptap/extension-horizontal-rule',
+                '@tiptap/extension-image',
+                '@tiptap/extension-link',
+                '@tiptap/extension-ordered-list',
+                '@tiptap/extension-paragraph',
+                '@tiptap/extension-placeholder',
+                '@tiptap/extension-subscript',
+                '@tiptap/extension-superscript',
+                '@tiptap/extension-table',
+                '@tiptap/extension-table-header',
+                '@tiptap/extension-table-row',
+                '@tiptap/extension-task-item',
+                '@tiptap/extension-task-list',
+                '@tiptap/extension-text-align',
+                '@tiptap/extension-text-style',
+                '@tiptap/extension-typography',
+                '@tiptap/extension-underline',
+                '@tiptap/pm',
+                '@tiptap-pro/extension-details',
+                '@tiptap-pro/extension-details-content',
+                '@tiptap-pro/extension-details-summary',
+                '@tiptap-pro/extension-drag-handle',
+                '@tiptap-pro/extension-drag-handle-react',
+                '@tiptap-pro/extension-emoji',
+                '@tiptap-pro/extension-file-handler',
+                '@tiptap-pro/extension-mathematics',
+                '@tiptap-pro/extension-node-range',
+                '@tiptap-pro/extension-table-of-contents',
+                '@tiptap-pro/extension-unique-id',
+                'prosemirror-state',
+                'prosemirror-view',
+                'tiptap-extension-resize-image'
             ],
             output: {
                 entryFileNames: 'index.js',
                 assetFileNames: 'index.[ext]',
                 format: 'es',
                 exports: 'named',
-                globals: {
-                    react: 'React',
-                    'react-dom': 'ReactDOM',
-                    quill: 'Quill',
-                    '@emotion/react': 'emotionReact',
-                    '@emotion/styled': 'emotionStyled',
-                    '@mui/material': 'MaterialUI',
-                    '@mui/icons-material': 'MaterialUIIcons',
-                    '@mui/material-pigment-css': 'MaterialUIPigmentCSS',
-                    'styled-components': 'styled',
-                    'katex': 'katex'
-                },
+                // 'globals' are not necessary for 'es' format
             },
         },
     },
