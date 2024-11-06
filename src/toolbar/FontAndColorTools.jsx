@@ -1,9 +1,8 @@
-import {Button, Menu, MenuItem, Tooltip, useTheme} from '@mui/material';
+import {Menu, MenuItem, Tooltip, useTheme} from '@mui/material';
 import TextFieldsIcon from '@mui/icons-material/TextFields';
 import HighlightIcon from '@mui/icons-material/Highlight';
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
 import ColorDropdown from "./ColorDropdown.jsx";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import CustomIconButton from "./ToolbarIconButton.jsx";
 
 const FontAndColorTools = ({
@@ -12,6 +11,7 @@ const FontAndColorTools = ({
                                handleFontMenuClose,
                                handleFontStyleChange,
                                handleAction,
+                               toolbarStyle
                            }) => {
     const theme = useTheme();
     return <>
@@ -35,11 +35,12 @@ const FontAndColorTools = ({
             title="Highlight Color"
             onSelectColor={(color) => handleAction('highlight', color)}
         />
-        <ColorDropdown
+
+        {toolbarStyle === "all" && <ColorDropdown
             icon={<FormatColorTextIcon/>}
             title="Text Color"
             onSelectColor={(color) => handleAction('color', color)}
-        />
+        />}
     </>
 };
 

@@ -1,6 +1,6 @@
 // dynamicStyles.js
-import { css } from '@emotion/react';
-import { alpha } from '@mui/material';
+import {css} from '@emotion/react';
+import {alpha} from '@mui/material';
 
 const dynamicStyles = (
     theme,
@@ -36,22 +36,25 @@ const dynamicStyles = (
             padding = '12px !important';
     }
 
-    let buttonSizeStyle;
+    let buttonScale;
     switch (buttonSize) {
         case 'xs':
-            buttonSizeStyle = '18px !important';
+            buttonScale = 0.7;
             break;
         case 'small':
-            buttonSizeStyle = '22px !important';
+            buttonScale = 0.8;
             break;
         case 'medium':
-            buttonSizeStyle = '26px !important';
+            buttonScale = 0.9;
             break;
         case 'large':
-            buttonSizeStyle = '30px !important';
+            buttonScale = 1.0;
+            break;
+        case 'xl':
+            buttonScale = 1.2;
             break;
         default:
-            buttonSizeStyle = '18px !important';
+            buttonScale = 0.6;
     }
 
     return css`
@@ -164,16 +167,9 @@ const dynamicStyles = (
             z-index: 1;
         }
 
-        /* Toolbar button sizing */
-
-        .MuiIconButton-root {
-            width: ${buttonSizeStyle};
-            height: ${buttonSizeStyle};
-            margin: 3px !important;
-            transition: border-radius 0.2s ease; /* Smooth transition on hover */
+        .MuiToolbar-root {
+            scale: ${buttonScale};
         }
-
-        /* ProseMirror editor styling */
 
         .ProseMirror {
             padding-inline: 1em;
