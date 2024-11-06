@@ -5,6 +5,24 @@ import {Container, createTheme, CssBaseline, ThemeProvider} from "@mui/material"
 
 const App = () => {
 
+    const handleInsertLink = async () => {
+        // Display your custom link insertion dialog
+        const url = prompt('Enter the link URL');
+        return url; // Return the URL to be inserted
+    };
+
+    const handleInsertImage = async () => {
+        // Display your custom image insertion dialog
+        const url = prompt('Enter the URL');
+        return url; // Return the image URL to be inserted
+    };
+
+    const handleInsertFormula = async () => {
+        // Display your custom formula insertion dialog
+        const formula = prompt('Enter the Formula'); // Replace with your dialog implementation
+        return formula; // Return the LaTeX formula to be inserted
+    };
+
     return (<main>
         <ThemeProvider theme={createTheme({palette: {mode: "dark"}})}>
             <CssBaseline/>
@@ -30,6 +48,9 @@ const App = () => {
                     }}
                     onDeltaChangeIteration={() => {
                     }}
+                    onInsertLink={handleInsertLink}
+                    onInsertImage={handleInsertImage}
+                    onInsertFormula={handleInsertFormula}
                 />
             </Container>
         </ThemeProvider>
