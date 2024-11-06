@@ -31,6 +31,8 @@ npm install @bookcicle/bookcicle_editor
 
 **Note:** **Bookcicle Editor** has several peer dependencies that need to be installed alongside it:
 
+> **Note:** **TipTap Pro Extensions** Since we leverage TipTap Pro (free) extensions, its important to configure your npm auth. See TipTap docs
+
 ```bash
 npm install react react-dom @mui/material @mui/icons-material @emotion/react @emotion/styled @tiptap/react @tiptap/core @tiptap/starter-kit @tiptap/extension-underline @tiptap/extension-image @tiptap/extension-text-align @tiptap/extension-subscript @tiptap/extension-superscript @tiptap/extension-font-family @tiptap/extension-highlight @tiptap/extension-text-style @tiptap/extension-color @tiptap/extension-link @tiptap-pro/extension-mathematics katex
 ```
