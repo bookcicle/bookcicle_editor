@@ -2,7 +2,12 @@
 import {css} from "@emotion/react";
 import {alpha} from "@mui/material";
 
-const dynamicStyles = (theme, showLineNumbers, showDivider, linePadding, buttonSize = "xs") => {
+const dynamicStyles = (theme, showLineNumbers, showDivider, linePadding, buttonSize = "xs", enableDragHandle) => {
+
+    let tipTapPadding = 0
+    if (enableDragHandle) {
+        tipTapPadding = "3em"
+    }
 
     let padding = "0";
     switch (linePadding) {
@@ -55,7 +60,7 @@ const dynamicStyles = (theme, showLineNumbers, showDivider, linePadding, buttonS
 
         .tiptap-editor {
             counter-reset: line; /* Reset the line counter */
-            padding-left: 3em; /* Space for line numbers */
+            padding-left: ${tipTapPadding}; /* Space for line numbers */
             position: relative;
             flex-grow: 1;
             overflow-y: auto;
@@ -87,7 +92,7 @@ const dynamicStyles = (theme, showLineNumbers, showDivider, linePadding, buttonS
         .tiptap-editor .ProseMirror > ol > li::before {
             content: counter(line);
             position: fixed;
-            left: -1em; /* Align with gutter padding */
+            left: -0.7em; /* Align with gutter padding */
             width: 2em;
             text-align: right;
             color: ${showLineNumbers ? theme.palette.text.secondary : "transparent"};
@@ -146,18 +151,19 @@ const dynamicStyles = (theme, showLineNumbers, showDivider, linePadding, buttonS
             left: 2em;
             width: 1px;
             height: calc(100% - 2em); /* Adjust this value to stop where the editor ends */
-            background-color: ${showDivider ? (theme.palette.primary.main || '#ddd') : theme.palette.background.default};
-            transform: scaleX(0.2);
+            background-color: ${showDivider ? (theme.palette.text.primary || '#ddd') : theme.palette.background.default};
+            transform: scaleX(0.1);
             transform-origin: left;
             z-index: 1;
         }
 
         /* Toolbar button sizing */
 
-        .MuiIconButton-root {
+        .MuiButtonBase-root .MuiIconButton-root {
             width: ${buttonSizeStyle};
             height: ${buttonSizeStyle};
             margin: 3px !important;
+            transition: border-radius 0.2s ease; /* Smooth transition on hover */
         }
 
         /* ProseMirror editor styling */

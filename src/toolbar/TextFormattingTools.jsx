@@ -1,36 +1,37 @@
-import {IconButton, Tooltip} from '@mui/material';
+import {Tooltip} from '@mui/material';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatItalicIcon from '@mui/icons-material/FormatItalic';
 import FormatUnderlinedIcon from '@mui/icons-material/FormatUnderlined';
 import SuperscriptIcon from '@mui/icons-material/Superscript';
 import SubscriptIcon from '@mui/icons-material/Subscript';
+import CustomIconButton from "./ToolbarIconButton.jsx";
 
 export const TextFormattingTools = ({ handleAction }) => (
     <>
         <Tooltip title="Bold">
-            <IconButton onClick={() => handleAction('bold')}>
+            <CustomIconButton onClick={() => handleAction('bold')}>
                 <FormatBoldIcon />
-            </IconButton>
+            </CustomIconButton>
         </Tooltip>
         <Tooltip title="Italic">
-            <IconButton onClick={() => handleAction('italic')}>
+            <CustomIconButton onClick={() => handleAction('italic')}>
                 <FormatItalicIcon />
-            </IconButton>
+            </CustomIconButton>
         </Tooltip>
         <Tooltip title="Underline">
-            <IconButton onClick={() => handleAction('underline')}>
+            <CustomIconButton onClick={() => handleAction('underline')}>
                 <FormatUnderlinedIcon />
-            </IconButton>
+            </CustomIconButton>
         </Tooltip>
         <Tooltip title="Superscript">
-            <IconButton onClick={() => handleAction('superscript')}>
+            <CustomIconButton onClick={() => handleAction('superscript')}>
                 <SuperscriptIcon />
-            </IconButton>
+            </CustomIconButton>
         </Tooltip>
         <Tooltip title="Subscript">
-            <IconButton onClick={() => handleAction('subscript')}>
+            <CustomIconButton onClick={() => handleAction('subscript')}>
                 <SubscriptIcon />
-            </IconButton>
+            </CustomIconButton>
         </Tooltip>
     </>
 );

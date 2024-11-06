@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import {useState} from 'react';
 import {Box, IconButton, Menu, MenuItem, Tooltip, useTheme} from '@mui/material';
 
 const lightTextColors = [
@@ -17,7 +17,7 @@ const darkHighlightColors = [
     '#FFFF77', '#77FF77', '#77E4FF', '#FF7777', '#FFAE77'
 ];
 
-const ColorDropdown = ({ icon, title, onSelectColor }) => {
+const ColorDropdown = ({icon, title, onSelectColor}) => {
     const theme = useTheme();
     const mode = theme.palette.mode;
     const [anchorEl, setAnchorEl] = useState(null);
@@ -41,7 +41,14 @@ const ColorDropdown = ({ icon, title, onSelectColor }) => {
     return (
         <>
             <Tooltip title={title}>
-                <IconButton onClick={handleClick}>
+                <IconButton onClick={handleClick} sx={{
+                    borderRadius: '8px', // Default borderRadius
+                    transition: 'border-radius 0.3s', // Smooth transition
+                    '&:hover': {
+                        borderRadius: '4px', // Hover borderRadius
+                    },
+                }}
+                >
                     {icon}
                 </IconButton>
             </Tooltip>
