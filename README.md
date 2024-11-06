@@ -1,23 +1,25 @@
 # Bookcicle Editor
 
-**Bookcicle Editor** is a feature-rich text editor built on **Quill.js** with **React** and **Vite**, leveraging *
+**Bookcicle Editor** is a feature-rich text editor built on **TipTap** with **React** and **Vite**, leveraging *
 *Material UI (MUI)** for styling and theming. It offers a seamless rich-text editing experience with a modern,
 customizable interface, allowing users to format text, insert media, and write with style. The editor is designed to be
 responsive, flexible, and easy to integrate into various projects.
 
 ## Features
 
-- **Rich Text Editing**: Powered by **Quill.js**, the editor supports bold, italic, underline, strikethrough,
-  blockquotes, lists, and more.
+- **Rich Text Editing**: Powered by **TipTap**, the editor supports bold, italic, underline, strikethrough, blockquotes,
+  lists, headings, and more.
 - **Formula Support**: Add and display mathematical formulas using **KaTeX**.
 - **Text Alignment**: Align text to the left, center, right, or justify it.
 - **Text Color and Highlighting**: Change text color and highlight content with background colors.
 - **Image and Media Embedding**: Embed images and links directly into the editor.
-- **Tab (Indentation) Support**: Increase or decrease indentation for lists or paragraphs.
+- **Indentation Support**: Increase or decrease indentation for lists or paragraphs.
 - **Superscript and Subscript**: Support for superscript and subscript text formatting.
+- **Drag and Drop**: Easily rearrange content blocks with drag-and-drop functionality.
 - **Theming and Styling**: Fully integrated with **Material UI**, supporting light and dark themes, custom color
   palettes, and responsive design.
 - **KaTeX Support**: Render LaTeX-based mathematical expressions with **KaTeX**.
+- **Extensibility**: Leverage TipTap's extension system to add custom functionality.
 
 ## Installation
 
@@ -27,7 +29,11 @@ You can install **Bookcicle Editor** from npm:
 npm install @bookcicle/bookcicle_editor
 ```
 
-This will install the editor and all necessary dependencies.
+**Note:** **Bookcicle Editor** has several peer dependencies that need to be installed alongside it:
+
+```bash
+npm install react react-dom @mui/material @mui/icons-material @emotion/react @emotion/styled @tiptap/react @tiptap/core @tiptap/starter-kit @tiptap/extension-underline @tiptap/extension-image @tiptap/extension-text-align @tiptap/extension-subscript @tiptap/extension-superscript @tiptap/extension-font-family @tiptap/extension-highlight @tiptap/extension-text-style @tiptap/extension-color @tiptap/extension-link @tiptap-pro/extension-mathematics katex
+```
 
 ### Local Development Setup
 
@@ -79,12 +85,12 @@ The build output will be located in the `dist/` folder.
 
 ## Customization
 
-The editor is fully customizable and integrates deeply with **Material UI**. You can adjust the themes, colors, and
-typography to fit your project's needs.
+The editor is fully customizable and integrates deeply with **Material UI** and **TipTap**. You can adjust the themes,
+colors, and typography to fit your project's needs, as well as extend the editor's functionality with TipTap extensions.
 
 To modify the theme:
 
-1. Open `src/theme.js` or your theme configuration file.
+1. Open your theme configuration file.
 2. Customize the palette, typography, and component styles as needed.
 
 ### Folder Structure
@@ -99,7 +105,7 @@ bookcicle-editor/
 │   ├── assets/        # Styles, fonts, images, etc.
 │   ├── App.jsx        # Main app file
 │   ├── index.jsx      # Entry point
-│   └── Editor.jsx     # Editor EntrytPoint
+│   └── Editor.jsx     # Editor entry point
 ├── README.md          # This file
 ├── package.json       # Project metadata and scripts
 └── vite.config.js     # Vite configuration
@@ -119,28 +125,35 @@ The **Bookcicle Editor** provides a set of toolbar options for formatting conten
 - **Superscript** and **Subscript**
 - **Formula** (powered by **KaTeX**)
 - **Image** and **Link** embedding
-- **Tab (Indentation)** control
+- **Indentation** control
+- **Drag and Drop** for content blocks
 
-These options are highly customizable. To modify the toolbar or add custom functionality, you can adjust the toolbar
-configuration in the `Editor` component.
+These options are highly customizable. To modify the toolbar or add custom functionality, you can adjust the extensions
+and toolbar configuration in the `Editor` component.
 
 ### Adding New Features
 
-To add new functionality or modify existing behavior, you can update the **Quill.js** configuration in
-`src/components/Editor.jsx`. You can easily add custom modules or integrate other third-party libraries to extend the
-editor’s capabilities.
+To add new functionality or modify existing behavior, you can update the **TipTap** configuration in
+`src/components/Editor.jsx`. TipTap's extension-based architecture allows you to easily add custom extensions or
+integrate third-party extensions to extend the editor’s capabilities.
+
+For example, to add a new extension:
+
+1. Install the extension via npm.
+2. Import the extension in your `Editor.jsx` file.
+3. Add the extension to the `extensions` array in the `useEditor` hook.
 
 ### Themes
 
 **Bookcicle Editor** supports theming with **Material UI**. You can easily switch between light and dark themes or
 customize the existing theme to match your branding.
 
-An MUI `<ThemeProvider><Editor /></ThemeProvider>` should wrap this component, see App.jsx for an example.
+An MUI `<ThemeProvider><Editor /></ThemeProvider>` should wrap this component. See `App.jsx` for an example.
 
 ### Formula Support
 
-The editor includes support for LaTeX-style formulas using **KaTeX**. You can insert formulas using the `fx` button in
-the toolbar. Ensure you have **KaTeX** installed:
+The editor includes support for LaTeX-style formulas using **KaTeX**. You can insert formulas using the appropriate
+button in the toolbar. Ensure you have **KaTeX** installed:
 
 ```bash
 npm install katex
@@ -156,12 +169,15 @@ We welcome contributions to the **Bookcicle Editor**! To contribute:
 4. Push to the branch (`git push origin feature/your-feature`).
 5. Create a pull request.
 
-## Testing In Upstream
+## Testing in Upstream
 
-Since we do not build a cjs entry, make sure you add a `transformIgnorePattern`
+Since we do not build a CommonJS entry, make sure you adjust your Jest configuration if you are testing in a project
+that consumes this module.
+
+For example, you may need to configure `transformIgnorePatterns` in your Jest config:
 
 ```json
-{ 
+{
   "jest": {
     "transformIgnorePatterns": [
       "<rootDir>/node_modules/(?!@bookcicle/bookcicle_editor.*\\.js$)"
@@ -170,15 +186,7 @@ Since we do not build a cjs entry, make sure you add a `transformIgnorePattern`
 }
 ```
 
-You may also need to handle quill inside jest config. 
-
-```json
-{
-  "moduleNameMapper": {
-    "^quill$": "<rootDir>/node_modules/quill/dist/quill.js"
-  }
-}
-```
+You may also need to handle TipTap packages inside your Jest config.
 
 ## License
 
@@ -186,7 +194,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-- **Quill.js** for the powerful text editor engine.
+- **TipTap** for the powerful text editor engine.
 - **Material UI** for the design components and theming.
 - **Vite** for the fast build tool.
 - **KaTeX** for LaTeX formula rendering.
@@ -194,5 +202,3 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 Happy coding with **Bookcicle Editor**!
-
-```

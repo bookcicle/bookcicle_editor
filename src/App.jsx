@@ -1,31 +1,27 @@
 // App.jsx
 
-import {useRef} from 'react';
 import Editor from './Editor';
-import Quill from 'quill';
 import {Container, createTheme, CssBaseline, ThemeProvider} from "@mui/material";
 
-const Delta = Quill.import('delta');
-
 const App = () => {
-
-    const quillRef = useRef(null);
 
     return (<main>
         <ThemeProvider theme={createTheme({palette: {mode: "dark"}})}>
             <CssBaseline/>
             <Container maxWidth={false} style={{padding: 0}}>
                 <Editor
-                    ref={quillRef}
                     readOnly={false}
-                    defaultValue={new Delta()
-                        .insert('Hello')
-                        .insert('\n', {header: 1})
-                        .insert('Some ')
-                        .insert('initial', {bold: true})
-                        .insert(' ')
-                        .insert('content', {underline: true})
-                        .insert('\n')}
+                    defaultValue={`
+      <h1>
+        This is a unique heading.
+      </h1>
+      <p>
+        This is a unique paragraph. It’s so unique, it even has an ID attached to it.
+      </p>
+      <p>
+        And this one, too. $\\sin(x)$
+      </p>
+    `}
                     onSelectionChange={() => {
                     }}
                     onTextChange={() => {
