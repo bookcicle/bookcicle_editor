@@ -30,19 +30,19 @@ const dynamicStyles = (theme, showLineNumbers, showDivider, linePadding, buttonS
     let buttonSizeStyle;
     switch (buttonSize) {
         case "xs":
-            buttonSizeStyle = "32px !important";
+            buttonSizeStyle = "18px !important";
             break;
         case "small":
-            buttonSizeStyle = "36px !important";
+            buttonSizeStyle = "22px !important";
             break;
         case "medium":
-            buttonSizeStyle = "42px !important";
+            buttonSizeStyle = "26px !important";
             break;
         case "large":
-            buttonSizeStyle = "46px !important";
+            buttonSizeStyle = "30px !important";
             break;
         default:
-            buttonSizeStyle = "32px !important";
+            buttonSizeStyle = "18px !important";
     }
 
     return css`
@@ -159,7 +159,7 @@ const dynamicStyles = (theme, showLineNumbers, showDivider, linePadding, buttonS
 
         /* Toolbar button sizing */
 
-        .MuiButtonBase-root .MuiIconButton-root {
+        .MuiIconButton-root {
             width: ${buttonSizeStyle};
             height: ${buttonSizeStyle};
             margin: 3px !important;

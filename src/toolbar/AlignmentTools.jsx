@@ -1,9 +1,9 @@
-import {Button, Menu, MenuItem, Tooltip, useTheme} from '@mui/material';
+import {Menu, MenuItem, Tooltip, useTheme} from '@mui/material';
 import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
 import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
 import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
 import {useState} from "react";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import CustomIconButton from "./ToolbarIconButton.jsx";
 
 const AlignmentTools = ({handleAlignmentChange, selectedAlignment}) => {
     const [alignmentMenuAnchorEl, setAlignmentMenuAnchorEl] = useState(null);
@@ -24,10 +24,9 @@ const AlignmentTools = ({handleAlignmentChange, selectedAlignment}) => {
 
     return (<>
         <Tooltip title="Alignment">
-            <Button onClick={handleAlignmentMenuClick} sx={{color: theme.palette.text.primary}}>
+            <CustomIconButton onClick={handleAlignmentMenuClick} sx={{color: theme.palette.text.primary}}>
                 {getAlignmentIcon()}
-                <ArrowDropDownIcon/>
-            </Button>
+            </CustomIconButton>
         </Tooltip>
         <Menu
             anchorEl={alignmentMenuAnchorEl}
