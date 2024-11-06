@@ -19,7 +19,7 @@ const EditorToolbar = ({editor}) => {
     const handleFontMenuClose = () => setFontMenuAnchorEl(null);
 
     const handleFontStyleChange = (style) => {
-        editor.chain().focus().setMark('textStyle', { fontFamily: style }).run();
+        editor.chain().focus().setMark('textStyle', {fontFamily: style}).run();
         handleFontMenuClose();
     };
 
@@ -29,7 +29,7 @@ const EditorToolbar = ({editor}) => {
     };
 
     const handleHeadingChange = (level) => {
-        editor.chain().focus().toggleHeading({ level }).run();
+        editor.chain().focus().toggleHeading({level}).run();
         setSelectedHeading(level); // Update the selected heading level
     };
 
@@ -38,7 +38,7 @@ const EditorToolbar = ({editor}) => {
             case 'link': {
                 const url = prompt('Enter the link URL');
                 if (url) {
-                    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+                    editor.chain().focus().extendMarkRange('link').setLink({href: url}).run();
                 }
                 break;
             }
@@ -49,12 +49,12 @@ const EditorToolbar = ({editor}) => {
             case 'color':
                 console.log(color)
                 if (color) {
-                    editor.chain().focus().setMark('textStyle', { color }).run();
+                    editor.chain().focus().setMark('textStyle', {color}).run();
                 }
                 break;
             case 'highlight':
                 if (color) {
-                    editor.chain().focus().setHighlight({ color }).run();
+                    editor.chain().focus().setHighlight({color}).run();
                 }
                 break;
             case 'bold':
@@ -112,32 +112,33 @@ const EditorToolbar = ({editor}) => {
         }
     };
 
-    return (<AppBar position="static" color="transparent" elevation={0}>
-            <Toolbar variant="dense">
-                <Box sx={{flexGrow: 1, display: 'flex', justifyContent: 'center'}}>
-                    <TextFormattingTools handleAction={handleAction}/>
-                    <ListAndBlockTools handleAction={handleAction}/>
-                    <FontAndColorTools
-                        fontMenuAnchorEl={fontMenuAnchorEl}
-                        handleFontMenuClick={handleFontMenuClick}
-                        handleFontMenuClose={handleFontMenuClose}
-                        handleFontStyleChange={handleFontStyleChange}
-                        handleAction={handleAction}
-                    />
-                    <AlignmentTools
-                        selectedAlignment={selectedAlignment}
-                        handleAlignmentChange={handleAlignmentChange}
-                    />
-                    <HeadingTools
-                        selectedHeading={selectedHeading}
-                        handleHeadingChange={handleHeadingChange}
-                    />
-                    <InsertTools handleAction={handleAction} />
-                    <TextClearTools handleAction={handleAction} />
-                    <UndoRedoTools handleAction={handleAction} />
-                </Box>
-            </Toolbar>
-        </AppBar>);
+    return (<AppBar position="static" color="transparent" elevation={0}
+                    sx={{backgroundColor: 'transparent', boxShadow: 'none'}}>
+        <Toolbar variant="dense" sx={{backgroundColor: 'transparent'}}>
+            <Box sx={{flexGrow: 1, display: 'flex', justifyContent: 'center', backgroundColor: 'transparent'}}>
+                <TextFormattingTools handleAction={handleAction}/>
+                <ListAndBlockTools handleAction={handleAction}/>
+                <FontAndColorTools
+                    fontMenuAnchorEl={fontMenuAnchorEl}
+                    handleFontMenuClick={handleFontMenuClick}
+                    handleFontMenuClose={handleFontMenuClose}
+                    handleFontStyleChange={handleFontStyleChange}
+                    handleAction={handleAction}
+                />
+                <AlignmentTools
+                    selectedAlignment={selectedAlignment}
+                    handleAlignmentChange={handleAlignmentChange}
+                />
+                <HeadingTools
+                    selectedHeading={selectedHeading}
+                    handleHeadingChange={handleHeadingChange}
+                />
+                <InsertTools handleAction={handleAction}/>
+                <TextClearTools handleAction={handleAction}/>
+                <UndoRedoTools handleAction={handleAction}/>
+            </Box>
+        </Toolbar>
+    </AppBar>);
 };
 
 EditorToolbar.propTypes = {

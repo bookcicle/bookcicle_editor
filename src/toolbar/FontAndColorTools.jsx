@@ -4,6 +4,7 @@ import HighlightIcon from '@mui/icons-material/Highlight';
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
 import ColorDropdown from "./ColorDropdown.jsx";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import CustomIconButton from "./ToolbarIconButton.jsx";
 
 const FontAndColorTools = ({
                                fontMenuAnchorEl,
@@ -15,10 +16,9 @@ const FontAndColorTools = ({
     const theme = useTheme();
     return <>
         <Tooltip title="Font Style">
-            <Button onClick={handleFontMenuClick} sx={{color: theme.palette.text.primary}}>
+            <CustomIconButton onClick={handleFontMenuClick} sx={{color: theme.palette.text.primary}}>
                 <TextFieldsIcon/>
-                <ArrowDropDownIcon/>
-            </Button>
+            </CustomIconButton>
         </Tooltip>
         <Menu
             anchorEl={fontMenuAnchorEl}

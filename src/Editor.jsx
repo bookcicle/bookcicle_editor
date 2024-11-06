@@ -44,8 +44,14 @@ const EditorContainer = styled.div`
 
 const TiptapEditorWrapper = styled.div`
     height: 100%;
+    display: flex;
     width: 100%;
     position: relative;
+`;
+
+const PageEditorWrapper = styled.div`
+    width: ${({ width }) => width};
+    margin: 0 auto;
 `;
 
 /**
@@ -68,12 +74,14 @@ const Editor = ({
                     onDeltaChange,
                     editorSettings = {
                         openLinks: true,
-                        enableDragHandle: true,
+                        enableDragHandle: false,
                         showLineNumbers: true,
                         showLineHighlight: true,
                         buttonSize: "small",
                         linePadding: "small",
                         showVerticalDivider: true,
+                        enablePageEditor: false,
+                        pageEditorWidth: '800px',
                     },
                     tipTapSettings = {},
                 }) => {
@@ -84,7 +92,7 @@ const Editor = ({
     const editor = useEditor({
         // Default configurations
         extensions: [
-            StarterKit.configure({heading: {levels: [1, 2, 3]}}),
+            StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
             FontFamily,
             TextStyle,
             Color,
@@ -97,30 +105,30 @@ const Editor = ({
             Subscript,
             Superscript,
             Mathematics,
-            Highlight.configure({multicolor: true}),
+            Highlight.configure({ multicolor: true }),
             Link.configure({
                 openOnClick: editorSettings.openLinks,
             }),
         ],
         content: defaultValue || `<p>Start editing...</p>`,
         editable: !readOnly,
-        onUpdate: ({editor}) => {
+        onUpdate: ({ editor }) => {
             const jsonContent = editor.getJSON();
             onTextChange?.(editor.getText());
             onDeltaChange?.(jsonContent);
         },
-        onSelectionUpdate: ({editor}) => {
+        onSelectionUpdate: ({ editor }) => {
             const selection = editor.state.selection;
             onSelectionChange?.(selection);
 
             if (editorSettings.showLineHighlight) {
-                const {state} = editor;
-                const {$from} = state.selection;
+                const { state } = editor;
+                const { $from } = state.selection;
 
                 const start = $from.start($from.depth);
                 const end = $from.end($from.depth);
 
-                const deco = Decoration.node(start - 1, end + 1, {class: 'active-line'});
+                const deco = Decoration.node(start - 1, end + 1, { class: 'active-line' });
 
                 activeLineDecoration = DecorationSet.create(state.doc, [deco]);
 
@@ -130,7 +138,7 @@ const Editor = ({
             }
 
         },
-        onBlur: ({editor}) => {
+        onBlur: ({ editor }) => {
             if (editorSettings.showLineHighlight) {
                 editor.view.setProps({
                     decorations: () => DecorationSet.empty,
@@ -140,6 +148,17 @@ const Editor = ({
         ...tipTapSettings,
     });
 
+    const editorContent = (
+        <TiptapEditorWrapper className="tiptap-editor-wrapper">
+            <div className="tiptap-editor" style={{ paddingLeft: (editorSettings.enableDragHandle ? '3em' : "1em") }}>
+                <DragHandle editor={editor}>
+                    <DragHandleIcon />
+                </DragHandle>
+                <EditorContent editor={editor} />
+            </div>
+        </TiptapEditorWrapper>
+    );
+
     return (
         <Box>
             <Global
@@ -148,22 +167,20 @@ const Editor = ({
                     editorSettings.showLineNumbers,
                     editorSettings.showVerticalDivider,
                     editorSettings.linePadding,
-                    editorSettings.buttonSize
+                    editorSettings.buttonSize,
+                    editorSettings.enableDragHandle
                 )}
             />
-            <Box sx={{flexGrow: 1, padding: '10px', overflowY: 'hidden', height: '100%', boxSizing: 'border-box'}}>
-                <EditorToolbar editor={editor}/>
+            <Box sx={{ flexGrow: 1, padding: '10px', overflowY: 'hidden', height: '100%', boxSizing: 'border-box' }}>
+                <EditorToolbar editor={editor} />
                 <EditorContainer>
-                    <TiptapEditorWrapper className="tiptap-editor-wrapper">
-                        <div className="tiptap-editor" style={{paddingLeft: '3em'}}>
-                            {editorSettings.enableDragHandle && (
-                                <DragHandle editor={editor}>
-                                    <DragHandleIcon/>
-                                </DragHandle>
-                            )}
-                            <EditorContent editor={editor}/>
-                        </div>
-                    </TiptapEditorWrapper>
+                    {editorSettings.enablePageEditor ? (
+                        <PageEditorWrapper width={editorSettings.pageEditorWidth}>
+                            {editorContent}
+                        </PageEditorWrapper>
+                    ) : (
+                        editorContent
+                    )}
                 </EditorContainer>
             </Box>
         </Box>
@@ -186,6 +203,8 @@ Editor.propTypes = {
         buttonSize: PropTypes.oneOf(['small', 'medium', 'large']),
         linePadding: PropTypes.oneOf(['small', 'medium', 'large']),
         enableDragHandle: PropTypes.bool,
+        enablePageEditor: PropTypes.bool,
+        pageEditorWidth: PropTypes.string,
     }),
     tipTapSettings: PropTypes.object,
 };

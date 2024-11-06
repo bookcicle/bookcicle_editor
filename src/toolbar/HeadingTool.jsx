@@ -1,6 +1,8 @@
 import {Button, Menu, MenuItem, Tooltip, Typography, useTheme} from '@mui/material';
 import ArrowDropDownIcon from '@mui/icons-material/ArrowDropDown';
 import {useState} from 'react';
+import {FormatSize} from "@mui/icons-material";
+import CustomIconButton from "./ToolbarIconButton.jsx";
 
 const HeadingTools = ({handleHeadingChange, selectedHeading}) => {
     const theme = useTheme();
@@ -9,15 +11,11 @@ const HeadingTools = ({handleHeadingChange, selectedHeading}) => {
     const handleHeadingMenuClick = (event) => setHeadingMenuAnchorEl(event.currentTarget);
     const handleHeadingMenuClose = () => setHeadingMenuAnchorEl(null);
 
-    // Display selected heading level in the dropdown button
-    const getHeadingLabel = () => `H${selectedHeading || 1}`;
-
     return (<>
             <Tooltip title="Heading Level">
-                <Button onClick={handleHeadingMenuClick} sx={{color: theme.palette.text.primary}}>
-                    <Typography variant="h6">{getHeadingLabel()}</Typography>
-                    <ArrowDropDownIcon/>
-                </Button>
+                <CustomIconButton onClick={handleHeadingMenuClick} sx={{color: theme.palette.text.primary}}>
+                    <FormatSize />
+                </CustomIconButton>
             </Tooltip>
             <Menu
                 anchorEl={headingMenuAnchorEl}

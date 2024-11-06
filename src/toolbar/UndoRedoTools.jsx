@@ -1,18 +1,19 @@
-import { IconButton, Tooltip } from '@mui/material';
+import {Tooltip} from '@mui/material';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
+import CustomIconButton from "./ToolbarIconButton.jsx";
 
-const UndoRedoTools = ({ handleAction }) => (
+const UndoRedoTools = ({handleAction}) => (
     <>
         <Tooltip title="Undo">
-            <IconButton onClick={() => handleAction('undo')}>
-                <UndoIcon />
-            </IconButton>
+            <CustomIconButton onClick={() => handleAction('undo')}>
+                <UndoIcon/>
+            </CustomIconButton>
         </Tooltip>
         <Tooltip title="Redo">
-            <IconButton onClick={() => handleAction('redo')}>
-                <RedoIcon />
-            </IconButton>
+            <CustomIconButton onClick={() => handleAction('redo')}>
+                <RedoIcon/>
+            </CustomIconButton>
         </Tooltip>
     </>
 );
