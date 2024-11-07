@@ -32,6 +32,9 @@ const dynamicStyles = (
         case 'large':
             padding = '24px !important';
             break;
+        case 'xl':
+            padding = '32px !important';
+            break;
         default:
             padding = '12px !important';
     }
