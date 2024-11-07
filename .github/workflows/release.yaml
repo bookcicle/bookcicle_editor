@@ -112,9 +112,9 @@ jobs:
       - name: Create and Push Tag
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
-          git stash  # Stash uncommitted changes
+          git stash || true
           git pull --rebase origin main  # Pull latest changes
-          git stash pop  # Reapply stashed changes
+          git stash pop || true
           
           # Create and push the new tag
           git tag ${{ steps.get_version.outputs.next_version }}
