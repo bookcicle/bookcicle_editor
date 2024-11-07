@@ -3,7 +3,7 @@ import {EditorContent, useEditor} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import DragHandle from '@tiptap-pro/extension-drag-handle-react';
-import {Box, useTheme} from '@mui/material';
+import {Box, Paper, useTheme} from '@mui/material';
 import PropTypes from 'prop-types';
 import dynamicStyles from './helpers/dynamicStyles.js';
 import styled from '@emotion/styled';
@@ -49,11 +49,13 @@ const TiptapEditorWrapper = styled.div`
     position: relative;
 `;
 
-const PageEditorWrapper = styled.div`
-    width: ${({width}) => width};
-    margin: 0 auto;
-`;
 
+const PageEditorWrapper = styled(Paper)(({ width }) => ({
+    width: width,
+    margin: "10px auto",
+    padding: "5px",
+    borderRadius: 20
+}));
 /**
  * Editor component for rich text editing.
  *
@@ -83,9 +85,10 @@ const Editor = ({
                         buttonSize: "xl",
                         linePadding: "small",
                         showVerticalDivider: true,
-                        enablePageEditor: false,
+                        enablePageEditor: true,
                         pageEditorWidth: '800px',
-                        toolbarStyle: "general"
+                        pageEditorBoxShadow: true,
+                        toolbarStyle: "all"
                     },
                     tipTapSettings = {},
                 }) => {
@@ -149,7 +152,9 @@ const Editor = ({
             <EditorToolbar editor={editor} toolbarStyle={editorSettings.toolbarStyle} onInsertFormula={onInsertFormula}
                            onInsertImage={onInsertImage} onInsertLink={onInsertLink}/>
             <EditorContainer>
-                {editorSettings.enablePageEditor ? (<PageEditorWrapper width={editorSettings.pageEditorWidth}>
+                {editorSettings.enablePageEditor ? (<PageEditorWrapper
+                    width={editorSettings.pageEditorWidth}
+                >
                     {editorContent}
                 </PageEditorWrapper>) : (editorContent)}
             </EditorContainer>
@@ -173,11 +178,12 @@ Editor.propTypes = {
         showLineNumbers: PropTypes.bool,
         showVerticalDivider: PropTypes.bool,
         showSpellingSuggestions: PropTypes.bool,
-        buttonSize: PropTypes.oneOf(['small', 'medium', 'large']),
-        linePadding: PropTypes.oneOf(['small', 'medium', 'large']),
+        buttonSize: PropTypes.oneOf(['xs', 'small', 'medium', 'large', 'xl']),
+        linePadding: PropTypes.oneOf(['xs', 'small', 'medium', 'large', 'xl']),
         enableDragHandle: PropTypes.bool,
         enablePageEditor: PropTypes.bool,
         pageEditorWidth: PropTypes.string,
+        pageEditorBoxShadow: PropTypes.bool,
         toolbarStyle: PropTypes.oneOf(['science', 'general', 'fiction', 'non-fiction', 'all']),
     }),
     tipTapSettings: PropTypes.object,
