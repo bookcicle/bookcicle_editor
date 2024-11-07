@@ -47,6 +47,7 @@ const TiptapEditorWrapper = styled.div`
     display: flex;
     width: 100%;
     position: relative;
+    min-height: calc(100vh - 150px);
 `;
 
 
@@ -87,6 +88,7 @@ const Editor = ({
                         showVerticalDivider: true,
                         enablePageEditor: true,
                         pageEditorWidth: '800px',
+                        pageEditorElevation: 1,
                         pageEditorBoxShadow: true,
                         toolbarStyle: "all"
                     },
@@ -154,6 +156,10 @@ const Editor = ({
             <EditorContainer>
                 {editorSettings.enablePageEditor ? (<PageEditorWrapper
                     width={editorSettings.pageEditorWidth}
+                    elevation={editorSettings.pageEditorElevation}
+                    sx={{
+                        boxShadow: editorSettings.pageEditorBoxShadow ? theme.shadows[25] : "none"
+                    }}
                 >
                     {editorContent}
                 </PageEditorWrapper>) : (editorContent)}
@@ -183,6 +189,7 @@ Editor.propTypes = {
         enableDragHandle: PropTypes.bool,
         enablePageEditor: PropTypes.bool,
         pageEditorWidth: PropTypes.string,
+        pageEditorElevation: PropTypes.number,
         pageEditorBoxShadow: PropTypes.bool,
         toolbarStyle: PropTypes.oneOf(['science', 'general', 'fiction', 'non-fiction', 'all']),
     }),
