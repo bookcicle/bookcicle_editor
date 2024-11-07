@@ -133,8 +133,8 @@ editor's behavior and appearance. Below is a detailed explanation of each settin
  * @property {boolean} showVerticalDivider - Show vertical divider between line numbers and editor content. Default is `true`.
  * @property {boolean} openLinks - Allow opening links directly from the editor when clicked. Default is `true`.
  * @property {boolean} enableDragHandle - Enable content dragging using drag handles. Default is `false`.
- * @property {string} buttonSize - Size of the toolbar buttons. One of `['small', 'medium', 'large']`. Default is `'small'`.
- * @property {string} linePadding - Padding size between lines. One of `['small', 'medium', 'large']`. Default is `'small'`.
+ * @property {string} buttonSize - Size of the toolbar buttons. One of `['xs', 'small', 'medium', 'large', 'xl']`. Default is `'small'`.
+ * @property {string} linePadding - Padding size between lines. One of `['xs', 'small', 'medium', 'large', 'xl']`. Default is `'small'`.
  * @property {string} languageCode - The language code for the editor (e.g., `'en-US'`). Default is `'en-US'`.
  * @property {boolean} showGrammarSuggestions - Show grammar suggestions within the editor. Default is `true`.
  * @property {boolean} showLineHighlight - Highlight the current line where the cursor is located. Default is `true`.
