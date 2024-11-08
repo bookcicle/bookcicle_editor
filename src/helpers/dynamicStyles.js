@@ -136,7 +136,6 @@ const dynamicStyles = (
             background-color: ${alpha(theme.palette.primary.light, 0.1)} !important;
             width: calc(100% - 10px);
             position: relative;
-            padding: 0 5px !important;
         }
 
         .tiptap-editor .ProseMirror p,

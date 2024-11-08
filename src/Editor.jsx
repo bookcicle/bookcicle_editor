@@ -21,6 +21,10 @@ import TextStyle from '@tiptap/extension-text-style';
 import {Link} from "@tiptap/extension-link";
 import {Color} from "@tiptap/extension-color";
 import {Decoration, DecorationSet} from "prosemirror-view";
+import {Proofreader} from "./Proofreader.js";
+import {words} from "./assets/words_dictionary.js";
+import SpellcheckerExtension from "./spellchecker/index.js";
+import "./css.css";
 
 /**
  * @typedef {Object} EditorSettings
@@ -56,7 +60,7 @@ const TiptapEditorWrapper = styled.div`
 `;
 
 
-const PageEditorWrapper = styled(Paper)(({ width }) => ({
+const PageEditorWrapper = styled(Paper)(({width}) => ({
     width: width,
     margin: "10px auto",
     padding: "5px",
@@ -105,11 +109,19 @@ const Editor = ({
 
     const editor = useEditor({
         // Default configurations
-        extensions: [StarterKit.configure({heading: {levels: [1, 2, 3]}}), FontFamily, TextStyle, Color, Underline, Image, TextAlign.configure({
-            types: ['heading', 'paragraph'], alignments: ['left', 'center', 'right'],
-        }), Subscript, Superscript, Mathematics, Highlight.configure({multicolor: true}), Link.configure({
-            openOnClick: editorSettings.openLinks,
-        }),], content: defaultValue || `<p>Start editing...</p>`, editable: !readOnly, onUpdate: ({editor}) => {
+        extensions: [
+            StarterKit.configure({heading: {levels: [1, 2, 3]}}),
+            SpellcheckerExtension.configure({
+                proofreader: new Proofreader(words),
+                uiStrings: {
+                    noSuggestions: 'No suggestions found'
+                }
+            }),
+            FontFamily, TextStyle, Color, Underline, Image, TextAlign.configure({
+                types: ['heading', 'paragraph'], alignments: ['left', 'center', 'right'],
+            }), Subscript, Superscript, Mathematics, Highlight.configure({multicolor: true}), Link.configure({
+                openOnClick: editorSettings.openLinks,
+            }),], content: defaultValue || `<p>Start editing...</p>`, editable: !readOnly, onUpdate: ({editor}) => {
             const jsonContent = editor.getJSON();
             onTextChange?.(editor.getText());
             onDeltaChange?.(jsonContent);
