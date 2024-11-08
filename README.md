@@ -130,19 +130,21 @@ editor's behavior and appearance. Below is a detailed explanation of each settin
 ```javascript
 /**
  * @typedef {Object} EditorSettings
- * @property {boolean} showVerticalDivider - Show vertical divider between line numbers and editor content. Default is `true`.
- * @property {boolean} openLinks - Allow opening links directly from the editor when clicked. Default is `true`.
- * @property {boolean} enableDragHandle - Enable content dragging using drag handles. Default is `false`.
- * @property {string} buttonSize - Size of the toolbar buttons. One of `['xs', 'small', 'medium', 'large', 'xl']`. Default is `'small'`.
- * @property {string} linePadding - Padding size between lines. One of `['xs', 'small', 'medium', 'large', 'xl']`. Default is `'small'`.
- * @property {string} languageCode - The language code for the editor (e.g., `'en-US'`). Default is `'en-US'`.
- * @property {boolean} showGrammarSuggestions - Show grammar suggestions within the editor. Default is `true`.
- * @property {boolean} showLineHighlight - Highlight the current line where the cursor is located. Default is `true`.
- * @property {boolean} showLineNumbers - Display line numbers beside each line of content. Default is `true`.
- * @property {boolean} showSpellingSuggestions - Show spelling suggestions within the editor. Default is `true`.
- * @property {boolean} enablePageEditor - Display the editor in a page-like format, centered on the screen. Default is `false`.
- * @property {string} pageEditorWidth - The width of the editor when `enablePageEditor` is `true` (e.g., `'800px'`). Default is `'800px'`.
- * @property {string} toolbarStyle - Style of the toolbar. One of `['fiction', 'non-fiction', 'general', 'science', 'all']`. Default is `'all'`.
+ * @property {boolean} openLinks - Allow opening links from the editor on click. Default is true.
+ * @property {boolean} enableDragHandle - Enable a drag handle for content dragging. Default is false.
+ * @property {boolean} showLineNumbers - Whether line numbers are displayed. Default is true.
+ * @property {boolean} showLineHighlight - Enable line highlighting for the current line. Default is true.
+ * @property {string} buttonSize - The size of buttons in the editor toolbar. Options are 'xs', 'small', 'medium', 'large', 'xl'. Default is 'xl'.
+ * @property {string} linePadding - Padding for lines in the editor. Options are 'xs', 'small', 'medium', 'large', 'xl'. Default is 'small'.
+ * @property {boolean} showVerticalDivider - Show a vertical divider in the editor. Default is true.
+ * @property {boolean} enablePageEditor - Whether to enable page editor view (centered content with a width constraint). Default is true.
+ * @property {string} pageEditorWidth - Width of the page editor when `enablePageEditor` is true. Default is '800px'.
+ * @property {number} pageEditorElevation - Elevation level for the Paper component in the page editor, controlling the depth of the shadow. Default is 1.
+ * @property {boolean} pageEditorBoxShadow - Whether to display a box shadow around the page editor. Default is true.
+ * @property {string} languageCode - Language code used for the editor (e.g., "en-US"). Default is "en-US".
+ * @property {boolean} showGrammarSuggestions - Enable grammar suggestions in the editor. Default is true.
+ * @property {boolean} showSpellingSuggestions - Enable spelling suggestions in the editor. Default is true.
+ * @property {string} toolbarStyle - Style of the toolbar, used to control the button set shown. Options are 'science', 'general', 'fiction', 'non-fiction', 'all'. Default is 'all'.
  */
 ```
 
