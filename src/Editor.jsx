@@ -3,7 +3,7 @@ import {EditorContent, useEditor} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import DragHandle from '@tiptap-pro/extension-drag-handle-react';
-import {Box, Paper, useTheme} from '@mui/material';
+import {Box, Paper, Stack, useTheme} from '@mui/material';
 import PropTypes from 'prop-types';
 import dynamicStyles from './helpers/dynamicStyles.js';
 import styled from '@emotion/styled';
@@ -21,10 +21,9 @@ import TextStyle from '@tiptap/extension-text-style';
 import {Link} from "@tiptap/extension-link";
 import {Color} from "@tiptap/extension-color";
 import {Decoration, DecorationSet} from "prosemirror-view";
-import {Proofreader} from "./Proofreader.js";
-import {words} from "./assets/words_dictionary.js";
-import SpellcheckerExtension from "./spellchecker/index.js";
-import "./css.css";
+import {LanguageToolMark, LanguageToolHelpingWords} from "./extensions/langtool.js";
+import {useState} from "react";
+import {SpellingActionsMenu} from "./extensions/SpellingActionsMenu.jsx";
 
 /**
  * @typedef {Object} EditorSettings
@@ -88,7 +87,7 @@ const Editor = ({
                     onInsertLink,
                     onInsertFormula,
                     editorSettings = {
-                        openLinks: true,
+                        openLinks: false,
                         enableDragHandle: false,
                         showLineNumbers: true,
                         showLineHighlight: true,
@@ -106,16 +105,18 @@ const Editor = ({
 
     const theme = useTheme();
     let activeLineDecoration = DecorationSet.empty;
+    const [loading, setLoading] = useState(false);
+    const [match, setMatch] = useState(null);
 
     const editor = useEditor({
         // Default configurations
         extensions: [
             StarterKit.configure({heading: {levels: [1, 2, 3]}}),
-            SpellcheckerExtension.configure({
-                proofreader: new Proofreader(words),
-                uiStrings: {
-                    noSuggestions: 'No suggestions found'
-                }
+            LanguageToolMark.configure({
+                apiUrl: 'http://localhost:8010/v2/check',
+                language: 'en-US',
+                automaticMode: true,
+                documentId: 'your-document-id', // Optional
             }),
             FontFamily, TextStyle, Color, Underline, Image, TextAlign.configure({
                 types: ['heading', 'paragraph'], alignments: ['left', 'center', 'right'],
@@ -143,9 +144,16 @@ const Editor = ({
                 editor.view.setProps({
                     decorations: () => activeLineDecoration,
                 });
+
             }
 
-        }, onBlur: ({editor}) => {
+        },
+        onTransaction({transaction}) {
+            if (transaction.getMeta(LanguageToolHelpingWords.LoadingTransactionName)) setLoading(true)
+            else setLoading(false)
+            setMatch(transaction.meta.match)
+        },
+        onBlur: ({editor}) => {
             if (editorSettings.showLineHighlight) {
                 editor.view.setProps({
                     decorations: () => DecorationSet.empty,
@@ -159,7 +167,14 @@ const Editor = ({
             <DragHandle editor={editor}>
                 <DragHandleIcon/>
             </DragHandle>
-            <EditorContent editor={editor}/>
+            <EditorContent className="content" editor={editor}/>
+            {editor && <SpellingActionsMenu editor={editor} matchMessage={match?.message || 'No Message'}
+                                            replacements={match?.replacements || []}
+                                            ignoreSuggestion={() => {
+                                                editor.commands.ignoreLanguageToolSuggestion()
+                                            }}
+                                            acceptSuggestion={(sug) => editor.commands.insertContent(sug.value)}
+            />}
         </div>
     </TiptapEditorWrapper>);
 
@@ -167,7 +182,7 @@ const Editor = ({
         <Global
             styles={dynamicStyles(theme, editorSettings.showLineNumbers, editorSettings.showVerticalDivider, editorSettings.linePadding, editorSettings.buttonSize, editorSettings.enableDragHandle)}
         />
-        <Box sx={{flexGrow: 1, padding: '10px', overflowY: 'hidden', height: '100%', boxSizing: 'border-box'}}>
+        <Stack sx={{flexGrow: 1, padding: '10px', overflowY: 'hidden', height: '100%', boxSizing: 'border-box', mt: 4}}>
             <EditorToolbar editor={editor} toolbarStyle={editorSettings.toolbarStyle} onInsertFormula={onInsertFormula}
                            onInsertImage={onInsertImage} onInsertLink={onInsertLink}/>
             <EditorContainer>
@@ -181,7 +196,7 @@ const Editor = ({
                     {editorContent}
                 </PageEditorWrapper>) : (editorContent)}
             </EditorContainer>
-        </Box>
+        </Stack>
     </Box>);
 };
 

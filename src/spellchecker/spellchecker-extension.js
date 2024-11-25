@@ -31,7 +31,6 @@ export const SpellcheckerExtension = Extension.create({
     addCommands() {
         return {
             checkSpelling: () => ({ tr }) => {
-                console.log("here")
                 this.storage.spellchecker.proofreadDoc(tr.doc);
                 return true;
             },

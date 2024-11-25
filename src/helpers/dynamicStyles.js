@@ -134,7 +134,7 @@ const dynamicStyles = (
 
         .active-line {
             background-color: ${alpha(theme.palette.primary.light, 0.1)} !important;
-            width: calc(100% - 10px);
+            width: 100%;
             position: relative;
         }
 
@@ -161,7 +161,7 @@ const dynamicStyles = (
             content: '';
             position: absolute;
             top: 0;
-            left: 1.2em; /* Adjust this value to align with line numbers */
+            left: 1.2em;
             width: 1px;
             height: 100%;
             background-color: ${showDivider ? theme.palette.divider : 'transparent'};
@@ -226,6 +226,203 @@ const dynamicStyles = (
                 color: ${theme.palette.text.primary};
             }
         }
+
+        .ProseMirror {
+            .lt {
+                border-bottom: 2px solid ${theme.palette.error.main};
+                transition: background 0.25s ease-in-out;
+
+                &:hover {
+                    background: ${alpha(theme.palette.error.main, 0.2)};
+                }
+
+                &-style {
+                    border-bottom: 2px solid ${theme.palette.secondary.main};
+
+                    &:hover {
+                        background: ${alpha(theme.palette.secondary.main, 0.2)} !important;
+                    }
+                }
+
+                &-typographical,
+                &-grammar {
+                    border-bottom: 2px solid ${theme.palette.warning.main};
+
+                    &:hover {
+                        background: ${alpha(theme.palette.warning.main, 0.2)} !important;
+                    }
+                }
+
+                &-misspelling {
+                    border-bottom: 2px solid ${theme.palette.error.main};
+
+                    &:hover {
+                        background: ${alpha(theme.palette.primary.main, 0.5)} !important;
+                    }
+                }
+            }
+
+            &-focused {
+                outline: none !important;
+            }
+        }
+
+        .flex {
+            display: flex;
+
+            div {
+                width: 50%;
+            }
+        }
+
+        .bubble-menu > .bubble-menu-section-container {
+            display: flex;
+            flex-direction: column;
+            background-color: ${theme.palette.background.paper};
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px ${alpha(theme.palette.common.black, 0.25)};
+            max-width: 400px;
+
+            .suggestions-section {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 4px;
+                margin-top: 1em;
+
+                .suggestion {
+                    background-color: ${theme.palette.info.main};
+                    border-radius: 4px;
+                    color: ${theme.palette.common.white};
+                    cursor: pointer;
+                    font-weight: 500;
+                    padding: 4px;
+                    display: flex;
+                    align-items: center;
+                    font-size: 1.1em;
+                    max-width: fit-content;
+                }
+            }
+        }
+
+        /* src/index.css */
+
+        /* Highlighted words by LanguageTool */
+
+        .lt {
+            background-color: rgba(255, 0, 0, 0.3); /* Light red background */
+            cursor: pointer;
+        }
+
+        /* Suggestion box styling */
+
+        .suggestion-box {
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            z-index: 1000;
+            padding: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .suggestion-item {
+            padding: 2px 5px;
+            cursor: pointer;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f0f0f0;
+        }
+
+        .bubble-menu > .bubble-menu-section-container {
+            display: flex;
+            flex-direction: column;
+            background-color: ${theme.palette.background.paper};
+            padding: 8px;
+            border-radius: 8px;
+            max-width: 400px;
+            border: 1px solid aliceblue;
+
+            .suggestions-section {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 4px;
+                margin-top: 1em;
+
+                .suggestion {
+                    background-color: #229afe;
+                    border-radius: 4px;
+                    color: white;
+                    cursor: pointer;
+                    font-weight: 500;
+                    padding: 4px;
+                    display: flex;
+                    align-items: center;
+                    font-size: 1.1em;
+                    max-width: fit-content;
+                }
+            }
+
+            .suggestion-box {
+                background: white;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+                padding: 8px;
+                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            }
+
+            .bubble-menu-content {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .message-section {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 8px;
+            }
+
+            .ignore-suggestion-button {
+                background: transparent;
+                border: none;
+                color: #007bff;
+                cursor: pointer;
+                font-size: 0.9em;
+            }
+
+            .suggestions-section {
+                display: flex;
+                flex-direction: column;
+            }
+
+            .suggestion-item {
+                padding: 4px 8px;
+                cursor: pointer;
+                border-radius: 4px;
+            }
+
+            .suggestion-item:hover {
+                background-color: #f0f0f0;
+            }
+
+            .lt {
+                background-color: rgba(255, 0, 0, 0.3); /* Red highlight */
+                cursor: pointer; /* Indicate interactivity */
+            }
+
+            /* Styling for the spelling actions popup */
+            .spelling-actions-menu {
+                /* Customize as needed */
+                padding: 8px;
+                background-color: white;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            }
     `;
 };
 

@@ -32,8 +32,12 @@
     "@fortawesome/fontawesome-svg-core": "^6.6.0",
     "@fortawesome/free-solid-svg-icons": "^6.6.0",
     "@fortawesome/react-fontawesome": "^0.2.2",
+    "dexie": "^4.0.9",
     "hunspell-asm": "^4.0.2",
-    "prosemirror-commands": "^1.6.2"
+    "lodash": "^4.17.21",
+    "prosemirror-commands": "^1.6.2",
+    "tippy.js": "^6.3.7",
+    "uuid": "^11.0.2"
   },
   "peerDependencies": {
     "@emotion/react": "^11.13.3",
