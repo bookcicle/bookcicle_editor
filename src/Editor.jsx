@@ -3,7 +3,7 @@ import {EditorContent, useEditor} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import DragHandle from '@tiptap-pro/extension-drag-handle-react';
-import {Box, Paper, useTheme} from '@mui/material';
+import {Box, Paper, Stack, useTheme} from '@mui/material';
 import PropTypes from 'prop-types';
 import dynamicStyles from './helpers/dynamicStyles.js';
 import styled from '@emotion/styled';
@@ -21,19 +21,28 @@ import TextStyle from '@tiptap/extension-text-style';
 import {Link} from "@tiptap/extension-link";
 import {Color} from "@tiptap/extension-color";
 import {Decoration, DecorationSet} from "prosemirror-view";
+import {LanguageToolMark} from "./extensions/spellchecker/langtool.js";
+import {useState} from "react";
+import {SpellingActionsMenu} from "./extensions/spellchecker/SpellingActionsMenu.jsx";
 
 /**
  * @typedef {Object} EditorSettings
- * @property {boolean} showVerticalDivider - Show vertical divider (true)
- * @property {boolean} openLinks - Allow opening links from editor (true)
- * @property {boolean} enableDragHandle - Enable content dragging (true)
- * @property {string} buttonSize - oneOf(['small', 'medium', 'large']),
- * @property {string} linePadding - oneOf(['small', 'medium', 'large']),
- * @property {string} languageCode - The language code for the editor (e.g., "en-US"). Default is "en-US".
- * @property {boolean} showGrammarSuggestions - Whether grammar suggestions are shown. Default is true.
- * @property {boolean} showLineHighlight - Whether line highlighting is enabled. Default is true.
+ * @property {boolean} openLinks - Allow opening links from the editor on click. Default is true.
+ * @property {boolean} enableDragHandle - Enable a drag handle for content dragging. Default is false.
  * @property {boolean} showLineNumbers - Whether line numbers are displayed. Default is true.
- * @property {boolean} showSpellingSuggestions - Whether spelling suggestions are shown. Default is true.
+ * @property {boolean} showLineHighlight - Enable line highlighting for the current line. Default is true.
+ * @property {string} buttonSize - The size of buttons in the editor toolbar. Options are 'xs', 'small', 'medium', 'large', 'xl'. Default is 'xl'.
+ * @property {string} linePadding - Padding for lines in the editor. Options are 'xs', 'small', 'medium', 'large', 'xl'. Default is 'small'.
+ * @property {boolean} showVerticalDivider - Show a vertical divider in the editor. Default is true.
+ * @property {boolean} enablePageEditor - Whether to enable page editor view (centered content with a width constraint). Default is true.
+ * @property {string} pageEditorWidth - Width of the page editor when `enablePageEditor` is true. Default is '800px'.
+ * @property {number} pageEditorElevation - Elevation level for the Paper component in the page editor, controlling the depth of the shadow. Default is 1.
+ * @property {boolean} pageEditorBoxShadow - Whether to display a box shadow around the page editor. Default is true.
+ * @property {string} languageCode - Language code used for the editor (e.g., "en-US"). Default is "en-US".
+ * @property {boolean} showGrammarSuggestions - Enable grammar suggestions in the editor. Default is true.
+ * @property {boolean} showSpellingSuggestions - Enable spelling suggestions in the editor. Default is true.
+ * @property {string} langtoolUrl - The URL for Spell/Grammar checking, expecting a instance of LanguageTool v2.
+ * @property {string} toolbarStyle - Style of the toolbar, used to control the button set shown. Options are 'science', 'general', 'fiction', 'non-fiction', 'all'. Default is 'all'.
  */
 
 const EditorContainer = styled.div`
@@ -47,10 +56,11 @@ const TiptapEditorWrapper = styled.div`
     display: flex;
     width: 100%;
     position: relative;
+    min-height: calc(100vh - 150px);
 `;
 
 
-const PageEditorWrapper = styled(Paper)(({ width }) => ({
+const PageEditorWrapper = styled(Paper)(({width}) => ({
     width: width,
     margin: "10px auto",
     padding: "5px",
@@ -69,6 +79,7 @@ const PageEditorWrapper = styled(Paper)(({ width }) => ({
  * @param {Object} [props.tipTapSettings] - Configuration object for TipTap's useEditor settings.
  */
 const Editor = ({
+                    documentId,
                     readOnly,
                     defaultValue,
                     onTextChange,
@@ -78,7 +89,7 @@ const Editor = ({
                     onInsertLink,
                     onInsertFormula,
                     editorSettings = {
-                        openLinks: true,
+                        openLinks: false,
                         enableDragHandle: false,
                         showLineNumbers: true,
                         showLineHighlight: true,
@@ -87,22 +98,37 @@ const Editor = ({
                         showVerticalDivider: true,
                         enablePageEditor: true,
                         pageEditorWidth: '800px',
+                        pageEditorElevation: 1,
                         pageEditorBoxShadow: true,
-                        toolbarStyle: "all"
+                        toolbarStyle: "all",
+                        showGrammarSuggestions: true,
+                        showSpellingSuggestions: true,
+                        langtoolUrl: "http://localhost:8010/v2/check",
                     },
                     tipTapSettings = {},
                 }) => {
 
     const theme = useTheme();
     let activeLineDecoration = DecorationSet.empty;
+    const [match, setMatch] = useState(null);
 
     const editor = useEditor({
         // Default configurations
-        extensions: [StarterKit.configure({heading: {levels: [1, 2, 3]}}), FontFamily, TextStyle, Color, Underline, Image, TextAlign.configure({
-            types: ['heading', 'paragraph'], alignments: ['left', 'center', 'right'],
-        }), Subscript, Superscript, Mathematics, Highlight.configure({multicolor: true}), Link.configure({
-            openOnClick: editorSettings.openLinks,
-        }),], content: defaultValue || `<p>Start editing...</p>`, editable: !readOnly, onUpdate: ({editor}) => {
+        extensions: [
+            StarterKit.configure({heading: {levels: [1, 2, 3]}}),
+            LanguageToolMark.configure({
+                apiUrl: editorSettings.langtoolUrl,
+                language: 'auto',
+                automaticMode: true,
+                documentId,
+                enableSpellcheck: editorSettings.showSpellingSuggestions,
+                enableGrammarCheck: editorSettings.showGrammarSuggestions
+            }),
+            FontFamily, TextStyle, Color, Underline, Image, TextAlign.configure({
+                types: ['heading', 'paragraph'], alignments: ['left', 'center', 'right'],
+            }), Subscript, Superscript, Mathematics, Highlight.configure({multicolor: true}), Link.configure({
+                openOnClick: editorSettings.openLinks,
+            }),], content: defaultValue || `<p>Start editing...</p>`, editable: !readOnly, onUpdate: ({editor}) => {
             const jsonContent = editor.getJSON();
             onTextChange?.(editor.getText());
             onDeltaChange?.(jsonContent);
@@ -124,9 +150,14 @@ const Editor = ({
                 editor.view.setProps({
                     decorations: () => activeLineDecoration,
                 });
+
             }
 
-        }, onBlur: ({editor}) => {
+        },
+        onTransaction({transaction}) {
+            setMatch(transaction.meta.match)
+        },
+        onBlur: ({editor}) => {
             if (editorSettings.showLineHighlight) {
                 editor.view.setProps({
                     decorations: () => DecorationSet.empty,
@@ -140,29 +171,54 @@ const Editor = ({
             <DragHandle editor={editor}>
                 <DragHandleIcon/>
             </DragHandle>
-            <EditorContent editor={editor}/>
+            <EditorContent className="content" editor={editor}/>
+            {editor && <SpellingActionsMenu
+                documentId={documentId}
+                editor={editor} matchMessage={match?.message || 'No Message'}
+                replacements={match?.replacements || []}
+                ignoreSuggestion={() => {
+                    editor.commands.ignoreLanguageToolSuggestion()
+                }}
+                acceptSuggestion={(sug) => editor.commands.insertContent(sug.value)}
+            />}
         </div>
     </TiptapEditorWrapper>);
 
     return (<Box>
         <Global
-            styles={dynamicStyles(theme, editorSettings.showLineNumbers, editorSettings.showVerticalDivider, editorSettings.linePadding, editorSettings.buttonSize, editorSettings.enableDragHandle)}
+            styles={dynamicStyles({
+                    theme,
+                    showLineNumbers: editorSettings.showLineNumbers,
+                    showDivider: editorSettings.showVerticalDivider,
+                    linePadding: editorSettings.linePadding,
+                    buttonSize: editorSettings.buttonSize,
+                    enableDragHandle: editorSettings.enableDragHandle,
+                    enableSpellcheckDecoration: editorSettings.showSpellingSuggestions,
+                    enabledGrammarCheckDecoration: editorSettings.showGrammarSuggestions
+                }
+            )}
         />
-        <Box sx={{flexGrow: 1, padding: '10px', overflowY: 'hidden', height: '100%', boxSizing: 'border-box'}}>
+        <Stack sx={{flexGrow: 1, padding: '10px', overflowY: 'hidden', height: '100%', boxSizing: 'border-box', mt: 4}}>
             <EditorToolbar editor={editor} toolbarStyle={editorSettings.toolbarStyle} onInsertFormula={onInsertFormula}
                            onInsertImage={onInsertImage} onInsertLink={onInsertLink}/>
             <EditorContainer>
                 {editorSettings.enablePageEditor ? (<PageEditorWrapper
                     width={editorSettings.pageEditorWidth}
+                    elevation={editorSettings.pageEditorElevation}
+                    sx={{
+                        boxShadow: editorSettings.pageEditorBoxShadow ? theme.shadows[25] : "none"
+                    }}
                 >
                     {editorContent}
                 </PageEditorWrapper>) : (editorContent)}
             </EditorContainer>
-        </Box>
+        </Stack>
     </Box>);
 };
 
 Editor.propTypes = {
+    langtoolUrl: PropTypes.string,
+    documentId: PropTypes.string.isRequired,
     readOnly: PropTypes.bool.isRequired,
     defaultValue: PropTypes.string,
     onTextChange: PropTypes.func.isRequired,
@@ -183,8 +239,10 @@ Editor.propTypes = {
         enableDragHandle: PropTypes.bool,
         enablePageEditor: PropTypes.bool,
         pageEditorWidth: PropTypes.string,
+        pageEditorElevation: PropTypes.number,
         pageEditorBoxShadow: PropTypes.bool,
         toolbarStyle: PropTypes.oneOf(['science', 'general', 'fiction', 'non-fiction', 'all']),
+        langtoolUrl: PropTypes.string,
     }),
     tipTapSettings: PropTypes.object,
 };

@@ -13,14 +13,11 @@ const App = () => {
 
     const handleInsertImage = async () => {
         // Display your custom image insertion dialog
-        const url = prompt('Enter the URL');
-        return url; // Return the image URL to be inserted
+        return prompt('Enter the URL'); // Return the image URL to be inserted
     };
 
     const handleInsertFormula = async () => {
-        // Display your custom formula insertion dialog
-        const formula = prompt('Enter the Formula'); // Replace with your dialog implementation
-        return formula; // Return the LaTeX formula to be inserted
+        return prompt('Enter the Formula'); // Return the LaTeX formula to be inserted
     };
 
     return (<main>
@@ -28,6 +25,7 @@ const App = () => {
             <CssBaseline/>
             <Container maxWidth={false} style={{padding: 0}}>
                 <Editor
+                    documentId={"document_id"}
                     readOnly={false}
                     defaultValue={`
       <h1>

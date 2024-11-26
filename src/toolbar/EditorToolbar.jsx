@@ -139,12 +139,11 @@ const EditorToolbar = ({
     return (
         <Container maxWidth="md">
             <AppBar
-                position="static"
                 color="transparent"
                 elevation={0}
                 sx={{ backgroundColor: 'transparent', boxShadow: 'none' }}
             >
-                <Toolbar variant="dense" sx={{ backgroundColor: 'transparent' }}>
+                <Toolbar variant="dense" sx={{ backgroundColor: 'background.default' }}>
                     <Box
                         sx={{
                             flexGrow: 1,
@@ -154,7 +153,7 @@ const EditorToolbar = ({
                         }}
                     >
                         {/* Always included in all styles */}
-                        <TextFormattingTools handleAction={handleAction} />
+                        <TextFormattingTools handleAction={handleAction} editor={editor} />
                         <AlignmentTools
                             selectedAlignment={selectedAlignment}
                             handleAlignmentChange={handleAlignmentChange}

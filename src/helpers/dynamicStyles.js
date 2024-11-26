@@ -1,18 +1,19 @@
-// dynamicStyles.js
-import {css} from '@emotion/react';
-import {alpha} from '@mui/material';
+import { css } from '@emotion/react';
+import { alpha } from '@mui/material';
 
-const dynamicStyles = (
-    theme,
-    showLineNumbers,
-    showDivider,
-    linePadding,
-    buttonSize = 'xs',
-    enableDragHandle
-) => {
+const dynamicStyles = ({
+                           theme,
+                           showLineNumbers,
+                           showDivider,
+                           linePadding,
+                           buttonSize = 'xs',
+                           enableDragHandle,
+                           enableChecksBackgroundDecoration = false,
+                           enableSpellcheckDecoration = true,
+                           enabledGrammarCheckDecoration = true,
+                       }) => {
     let tipTapPadding = '1em';
     let dragDisplay = 'none';
-
     if (enableDragHandle) {
         tipTapPadding = '3em';
         dragDisplay = 'flex';
@@ -60,9 +61,22 @@ const dynamicStyles = (
             buttonScale = 0.6;
     }
 
+    let spellingLtBackground;
+    let grammarLtBackground;
+    let otherLtBackground;
+
+    if (enableChecksBackgroundDecoration) {
+        spellingLtBackground = alpha(theme.palette.error.main, 0.2);
+        grammarLtBackground = alpha(theme.palette.warning.main, 0.2);
+        otherLtBackground = alpha(theme.palette.primary.main, 0.2);
+    } else {
+        spellingLtBackground = 'transparent';
+        grammarLtBackground = 'transparent';
+        otherLtBackground = 'transparent';
+    }
+
     return css`
         /* Editor Wrapper */
-
         .tiptap-editor-wrapper {
             display: flex;
             position: relative; /* Ensure relative positioning */
@@ -71,7 +85,6 @@ const dynamicStyles = (
         }
 
         /* Line Numbers Gutter */
-
         .tiptap-editor {
             counter-reset: line; /* Reset the line counter */
             padding-left: ${tipTapPadding}; /* Space for line numbers */
@@ -81,7 +94,6 @@ const dynamicStyles = (
         }
 
         /* Increment the line counter only for direct children of ProseMirror */
-
         .tiptap-editor .ProseMirror > p,
         .tiptap-editor .ProseMirror > h1,
         .tiptap-editor .ProseMirror > h2,
@@ -96,7 +108,6 @@ const dynamicStyles = (
         }
 
         /* Display line numbers in the gutter */
-
         .tiptap-editor .ProseMirror > p::before,
         .tiptap-editor .ProseMirror > h1::before,
         .tiptap-editor .ProseMirror > h2::before,
@@ -116,17 +127,14 @@ const dynamicStyles = (
         }
 
         /* Indentation for blockquotes and lists */
-
         .tiptap-editor .ProseMirror > blockquote {
             padding-left: 1em; /* Indent blockquotes */
             border-left: 2px solid ${theme.palette.divider};
         }
-
         .tiptap-editor .ProseMirror > ul,
         .tiptap-editor .ProseMirror > ol {
             padding-left: 1em; /* Indent lists */
         }
-
         .tiptap-editor .ProseMirror > ul > li,
         .tiptap-editor .ProseMirror > ol > li {
             padding-left: 1em; /* Indent list items */
@@ -134,9 +142,8 @@ const dynamicStyles = (
 
         .active-line {
             background-color: ${alpha(theme.palette.primary.light, 0.1)} !important;
-            width: calc(100% - 10px);
+            width: 100%;
             position: relative;
-            padding: 0 5px !important;
         }
 
         .tiptap-editor .ProseMirror p,
@@ -157,16 +164,14 @@ const dynamicStyles = (
         }
 
         /* Vertical divider between gutter and editor */
-
         .tiptap-editor-wrapper::before {
             content: '';
             position: absolute;
             top: 0;
-            left: 1.2em; /* Adjust this value to align with line numbers */
+            left: 1.2em;
             width: 1px;
             height: 100%;
-            background-color: ${showDivider ? theme.palette.divider : 'transparent'};
-            /* Removed transform */
+            background-color: ${showDivider ? theme.palette.divider : 'transparent'}; /* Removed transform */
             z-index: 1;
         }
 
@@ -176,11 +181,9 @@ const dynamicStyles = (
 
         .ProseMirror {
             padding-inline: 1em;
-
             > * + * {
                 margin-top: 0.75em;
             }
-
             [data-id] {
                 border: 3px solid ${theme.palette.background.default};
                 border-radius: 0.5rem;
@@ -188,7 +191,6 @@ const dynamicStyles = (
                 position: relative;
                 margin-top: 1.5rem;
                 padding: 2rem 1rem 1rem;
-
                 &::before {
                     content: attr(data-id);
                     background-color: ${theme.palette.background.default};
@@ -210,7 +212,6 @@ const dynamicStyles = (
         }
 
         /* Drag handle styling */
-
         .drag-handle {
             align-items: center;
             border-radius: 0.25rem;
@@ -220,12 +221,133 @@ const dynamicStyles = (
             height: 1.5rem;
             justify-content: center;
             width: 1.5rem;
-
             svg {
                 width: 1.25rem;
                 height: 1.25rem;
                 color: ${theme.palette.text.primary};
             }
+        }
+
+        /* Styles for LanguageTool highlights */
+        .ProseMirror {
+            .lt {
+                text-decoration: none; /* Default: no underline */
+
+                ${
+                        (enableSpellcheckDecoration ||
+                                enabledGrammarCheckDecoration) &&
+                        css`
+            text-decoration: underline;
+            text-decoration-style: wavy;
+            text-decoration-color: ${theme.palette.error.main};
+            transition: background 0.25s ease-in-out;
+            &:hover {
+              background: ${alpha(theme.palette.error.main, 0.2)};
+            }
+          `
+                }
+
+                &-style {
+                    text-decoration-color: ${theme.palette.secondary.main};
+                    &:hover {
+                        background: ${alpha(theme.palette.secondary.main, 0.2)} !important;
+                    }
+                }
+
+                ${
+                        enableSpellcheckDecoration &&
+                        css`
+            &-spelling-error {
+              background: ${spellingLtBackground};
+            }
+          `
+                }
+
+                ${
+                        enabledGrammarCheckDecoration &&
+                        css`
+            &-typographical,
+            &-grammar-error {
+              text-decoration-color: ${theme.palette.warning.main};
+              background: ${grammarLtBackground} !important;
+              &:hover {
+                background: ${alpha(theme.palette.warning.main, 0.2)} !important;
+              }
+            }
+          `
+                }
+
+                    /* Other error types */
+                &-other-error {
+                    text-decoration-color: ${theme.palette.primary.main};
+                    background: ${otherLtBackground} !important;
+                    &:hover {
+                        background: ${alpha(theme.palette.primary.main, 0.2)} !important;
+                    }
+                }
+            }
+        }
+
+        .ProseMirror-focused {
+            outline: none !important;
+        }
+
+        .flex {
+            display: flex;
+            div {
+                width: 50%;
+            }
+        }
+
+        .bubble-menu > .bubble-menu-section-container {
+            display: flex;
+            flex-direction: column;
+            background-color: ${theme.palette.background.paper};
+            padding: 8px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px ${alpha(theme.palette.common.black, 0.25)};
+            max-width: 400px;
+
+            .suggestions-section {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                gap: 4px;
+                margin-top: 1em;
+
+                .suggestion {
+                    background-color: ${theme.palette.info.main};
+                    border-radius: 4px;
+                    color: ${theme.palette.common.white};
+                    cursor: pointer;
+                    font-weight: 500;
+                    padding: 4px;
+                    display: flex;
+                    align-items: center;
+                    font-size: 1.1em;
+                    max-width: fit-content;
+                }
+            }
+        }
+
+        /* Suggestion box styling */
+        .suggestion-box {
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            z-index: 1000;
+            padding: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .suggestion-item {
+            padding: 2px 5px;
+            cursor: pointer;
+        }
+
+        .suggestion-item:hover {
+            background-color: #f0f0f0;
         }
     `;
 };
