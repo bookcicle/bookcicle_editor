@@ -8,7 +8,8 @@ const dynamicStyles = (
     showDivider,
     linePadding,
     buttonSize = 'xs',
-    enableDragHandle
+    enableDragHandle,
+    enableChecksBackgroundDecoration = false,
 ) => {
     let tipTapPadding = '1em';
     let dragDisplay = 'none';
@@ -58,6 +59,20 @@ const dynamicStyles = (
             break;
         default:
             buttonScale = 0.6;
+    }
+
+    let spellingLtBackground;
+    let grammarLtBackground;
+    let otherLtBackground;
+
+    if (enableChecksBackgroundDecoration) {
+        spellingLtBackground = alpha(theme.palette.error.main, 0.2);
+        grammarLtBackground = alpha(theme.palette.warning.main, 0.2);
+        otherLtBackground = alpha(theme.palette.primary.main, 0.2);
+    } else {
+        spellingLtBackground = 'transparent';
+        grammarLtBackground = 'transparent';
+        otherLtBackground = 'transparent';
     }
 
     return css`
@@ -229,38 +244,48 @@ const dynamicStyles = (
 
         .ProseMirror {
             .lt {
-                border-bottom: 2px solid ${theme.palette.error.main};
+                text-decoration: underline;
+                text-decoration-style: wavy;
+                text-decoration-color: ${theme.palette.error.main};
                 transition: background 0.25s ease-in-out;
 
                 &:hover {
-                    background: ${alpha(theme.palette.error.main, 0.2)};
+                    background: ${enableChecksBackgroundDecoration ? alpha(theme.palette.error.main, 0.1) : 'transparent'};
                 }
 
                 &-style {
-                    border-bottom: 2px solid ${theme.palette.secondary.main};
+                    text-decoration-color: ${theme.palette.secondary.main};
 
                     &:hover {
-                        background: ${alpha(theme.palette.secondary.main, 0.2)} !important;
+                        background: ${enableChecksBackgroundDecoration ? alpha(theme.palette.secondary.main, 0.2) : 'transparent'} !important;
                     }
+                }
+
+                &-spelling-error {
+                    background: ${spellingLtBackground};
                 }
 
                 &-typographical,
-                &-grammar {
-                    border-bottom: 2px solid ${theme.palette.warning.main};
+                &-grammar-error {
+                    text-decoration-color: ${theme.palette.warning.main};
+                    background: ${grammarLtBackground} !important;
 
                     &:hover {
-                        background: ${alpha(theme.palette.warning.main, 0.2)} !important;
+                        background: ${enableChecksBackgroundDecoration ? alpha(theme.palette.warning.main, 0.1) : 'transparent'} !important;
                     }
                 }
 
-                &-misspelling {
-                    border-bottom: 2px solid ${theme.palette.error.main};
+                &-other-error {
+                    text-decoration-color: ${theme.palette.primary.main};
+                    background: ${otherLtBackground} !important;
 
                     &:hover {
-                        background: ${alpha(theme.palette.primary.main, 0.5)} !important;
+                        background: ${enableChecksBackgroundDecoration ? alpha(theme.palette.primary.main, 0.1) : 'transparent'} !important;
                     }
                 }
             }
+        }
+
 
             &-focused {
                 outline: none !important;
@@ -415,6 +440,7 @@ const dynamicStyles = (
             }
 
             /* Styling for the spelling actions popup */
+
             .spelling-actions-menu {
                 /* Customize as needed */
                 padding: 8px;

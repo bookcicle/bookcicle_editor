@@ -4,15 +4,17 @@ Certainly! Here's the updated README with the **`toolbarStyle`** attribute added
 
 # Bookcicle Editor
 
-**Bookcicle Editor** is a feature-rich text editor built on **TipTap** with **React** and **Vite**, leveraging *
-*Material UI (MUI)** for styling and theming. It offers a seamless rich-text editing experience with a modern,
-customizable interface, allowing users to format text, insert media, and write with style. The editor is designed to be
-responsive, flexible, and easy to integrate into various projects.
+**Bookcicle Editor** is a feature-rich text editor built on **TipTap** with **React**, and **Vite**,
+leveraging **Material UI (MUI)** for styling and theming. It offers a seamless rich-text editing experience with a
+modern, customizable interface, allowing users to format text, insert media, and write with style. The editor is
+designed to be responsive, flexible. It has been built to be integrated into desktop applications frontends. Bookcicle 
+uses it in its Tauri V2 cross platform desktop application. 
 
 ## Features
 
 - **Rich Text Editing**: Powered by **TipTap**, the editor supports bold, italic, underline, strikethrough, blockquotes,
   lists, headings, and more.
+- **Spellcheck and Grammer** Checking with Languagetool
 - **Formula Support**: Add and display mathematical formulas using **KaTeX**.
 - **Text Alignment**: Align text to the left, center, right, or justify it.
 - **Text Color and Highlighting**: Change text color and highlight content with background colors.
@@ -101,6 +103,53 @@ To modify the theme:
 
 1. Open your theme configuration file.
 2. Customize the palette, typography, and component styles as needed.
+
+Here's the updated README with instructions for installing `languagetool-rust` to enable spell check features.
+
+## Enabling Spell Check and Grammar Suggestions
+
+The **Bookcicle Editor** supports spell check and grammar suggestions through **LanguageTool**. To enable these
+features, you'll need to install the `languagetool-rust` dependency.
+
+### Prerequisites
+
+- Ensure you have Rust installed on your system. You can install it via [rustup](https://rustup.rs/).
+- A working installation of `npm` or `yarn`.
+
+### Installing `languagetool-rust`
+
+You can use any implementation of LanguageTool server, we use Languagetool-rust to standup a langtool server 
+using Docker.
+
+Follow these steps to install and integrate `languagetool-rust`:
+
+1. **Install `languagetool-rust`** as a project dependency:
+   ```bash
+   cargo install languagetool-rust
+   ```
+
+2. **Configure the spell check and grammar suggestion settings**:
+   Update the `editorSettings` object in your editor configuration to enable spelling and grammar suggestions:
+   ```javascript
+   const editorSettings = {
+       showGrammarSuggestions: true,
+       showSpellingSuggestions: true,
+       languageCode: 'en-US',
+   };
+   ```
+
+3. **Run the LanguageTool server**:
+   Once installed, start the LanguageTool server locally to handle spell check requests:
+   ```bash
+   ltrs docker start
+   ```
+
+4. **Connect the Editor to LanguageTool**:
+   Ensure that the editor is configured to send spell check and grammar suggestion requests to the LanguageTool server.
+   The integration code for LanguageTool should use the server's endpoint (e.g., `http://localhost:8081`).
+
+5. **Test the Integration**:
+   Type some text in the editor to verify that spelling and grammar suggestions are appearing correctly.
 
 ### Folder Structure
 

@@ -6,7 +6,6 @@ import Dexie from 'dexie';
 
 let editorView = null;
 let db = null;
-let currentMatch = undefined;
 let proofReadInitially = false;
 
 export const LanguageToolHelpingWords = {
@@ -31,9 +30,15 @@ export const LanguageToolMark = Mark.create({
 
     addAttributes() {
         return {
-            match: { default: null },
-            uuid: { default: null },
-            class: { default: null }, // Allow dynamic classes
+            match: {
+                default: null,
+            },
+            uuid: {
+                default: null,
+            },
+            class: {
+                default: null,
+            }, // Allow dynamic classes
         };
     },
 
@@ -65,53 +70,76 @@ export const LanguageToolMark = Mark.create({
 
     addCommands() {
         return {
-            proofread:
-                () =>
-                    ({ editor }) => {
-                        if (editorView && this.options.automaticMode) {
-                            const { doc } = editor.state;
-                            processDocument(doc, editorView);
-                        }
-                        return true;
-                    },
-
-            toggleProofreading:
-                () =>
-                    ({ commands }) => {
-                        this.options.automaticMode = !this.options.automaticMode;
-                        return commands.proofread();
-                    },
-
-            ignoreLanguageToolSuggestion:
-                () =>
-                    ({ editor }) => {
-                        const { selection, doc } = editor.state;
-                        const { from, to } = selection;
-                        const content = doc.textBetween(from, to);
-                        if (this.options.documentId) {
-                            db.ignoredWords.add({
-                                value: content,
-                                documentId: String(this.options.documentId),
-                            });
-                        }
-                        return editor.commands.unsetMark('languagetool', { from, to });
-                    },
+            proofread: () => ({ editor }) => {
+                if (editorView && this.options.automaticMode) {
+                    const { doc } = editor.state;
+                    // Call processDocument from the closure
+                    this.processDocument(doc, editorView);
+                }
+                return true;
+            },
+            toggleProofreading: () => ({ commands }) => {
+                this.options.automaticMode = !this.options.automaticMode;
+                return commands.proofread();
+            },
+            ignoreLanguageToolSuggestion: () => ({ editor }) => {
+                const { selection, doc } = editor.state;
+                const { from, to } = selection;
+                const content = doc.textBetween(from, to);
+                if (this.options.documentId) {
+                    db.ignoredWords.add({
+                        value: content,
+                        documentId: String(this.options.documentId),
+                    });
+                }
+                return editor.commands.unsetMark('languagetool', { from, to });
+            },
         };
     },
 
     addProseMirrorPlugins() {
-        const extension = this;
+        // noinspection JSUnusedLocalSymbols
+        // eslint-disable-next-line no-unused-vars
+        const extension = this; // Capture 'this' context
         const { apiUrl, language, automaticMode, documentId, debounceTime } = this.options;
 
         // Initialize database if documentId is provided
         if (documentId) {
             db = new Dexie('LanguageToolIgnoredSuggestions');
-            db.version(1).stores({
-                ignoredWords: '++id, &value, documentId',
+            db.version(2).stores({
+                ignoredWords: '++id, &value, documentId, [value+documentId]'
             });
         }
 
-        // Core functionality helpers
+        const getClassForCategoryId = (categoryId) => {
+            const spellingCategories = [
+                'TYPOS',
+                'CASING',
+                'COMPOUNDING',
+                'CONFUSED_WORDS',
+            ];
+
+            const grammarCategories = [
+                'GRAMMAR',
+                'PUNCTUATION',
+                'REDUNDANCY',
+                'REPETITIONS',
+                'REPETITIONS_STYLE',
+                'SEMANTICS',
+                'GENDER_NEUTRALITY',
+                'FALSE_FRIENDS',
+                'TYPOGRAPHY',
+            ];
+
+            if (spellingCategories.includes(categoryId)) {
+                return 'lt lt-spelling-error';
+            } else if (grammarCategories.includes(categoryId)) {
+                return 'lt lt-grammar-error';
+            } else {
+                return 'lt lt-other-error';
+            }
+        };
+
         const fetchSuggestions = async (text, offset = 0) => {
             if (!apiUrl) return [];
             try {
@@ -148,23 +176,8 @@ export const LanguageToolMark = Mark.create({
             return uniqueMatches;
         };
 
-        // Function to determine the class based on issue type
-        const getClassForIssueType = (issueType) => {
-            switch (issueType) {
-                case 'misspelling':
-                    return 'lt lt-spelling-error'; // Red for spelling errors
-                case 'grammar':
-                    return 'lt lt-grammar-error'; // Green for grammar errors
-                case 'typographical':
-                    return 'lt lt-typography-error'; // Yellow for typographical errors
-                default:
-                    return 'lt lt-other-error'; // Default class
-            }
-        };
-
         const applyMarks = (view, matches, mapping) => {
             const { tr, schema } = view.state;
-
             // Remove existing marks
             view.state.doc.nodesBetween(0, view.state.doc.content.size, (node, pos) => {
                 if (node.isText) {
@@ -180,10 +193,7 @@ export const LanguageToolMark = Mark.create({
                 const fromOffset = match.offset;
                 const toOffset = match.offset + match.length - 1;
                 const from = mapping[fromOffset];
-                const to =
-                    mapping[toOffset] !== undefined
-                        ? mapping[toOffset] + 1 // Include the last character
-                        : from + match.length; // Fallback in case mapping is undefined
+                const to = mapping[toOffset] !== undefined ? mapping[toOffset] + 1 : from + match.length;
 
                 if (
                     from !== undefined &&
@@ -194,10 +204,10 @@ export const LanguageToolMark = Mark.create({
                     tr.addMark(
                         from,
                         to,
-                        schema.marks.languagetool.create({
+                        view.state.schema.marks.languagetool.create({
                             match: JSON.stringify(match),
                             uuid: uuidv4(),
-                            class: getClassForIssueType(match.rule.issueType),
+                            class: getClassForCategoryId(match?.rule?.category?.id || "TYPOS"),
                         })
                     );
                 }
@@ -230,7 +240,6 @@ export const LanguageToolMark = Mark.create({
         };
 
         const updateCurrentMatch = (match) => {
-            currentMatch = match;
             if (editorView) {
                 editorView.dispatch(editorView.state.tr.setMeta('match', match));
             }
@@ -240,7 +249,7 @@ export const LanguageToolMark = Mark.create({
         const processDocument = async (doc, view) => {
             // Build mapping from text offsets to document positions
             let text = '';
-            let mapping = []; // text offset to doc position mapping
+            let mapping = [];
             let textOffset = 0;
             doc.descendants((node, pos) => {
                 if (node.isText) {
@@ -258,12 +267,15 @@ export const LanguageToolMark = Mark.create({
                     textOffset++;
                 }
             });
+
             const matches = await fetchSuggestions(text);
             const filteredMatches = await filterIgnoredMatches(matches, doc);
+
             // Apply the marks
             applyMarks(view, filteredMatches, mapping);
         };
 
+        // Debounce the processDocument function
         const debouncedProcess = debounce(processDocument, debounceTime);
 
         // Create and return the plugin
