@@ -7,14 +7,14 @@ Certainly! Here's the updated README with the **`toolbarStyle`** attribute added
 **Bookcicle Editor** is a feature-rich text editor built on **TipTap** with **React**, and **Vite**,
 leveraging **Material UI (MUI)** for styling and theming. It offers a seamless rich-text editing experience with a
 modern, customizable interface, allowing users to format text, insert media, and write with style. The editor is
-designed to be responsive, flexible. It has been built to be integrated into desktop applications frontends. Bookcicle 
-uses it in its Tauri V2 cross platform desktop application. 
+designed to be responsive, flexible. It has been built to be integrated into desktop applications frontends. Bookcicle
+uses it in its Tauri V2 cross platform desktop application.
 
 ## Features
 
 - **Rich Text Editing**: Powered by **TipTap**, the editor supports bold, italic, underline, strikethrough, blockquotes,
   lists, headings, and more.
-- **Spellcheck and Grammer** Checking with Languagetool
+- **Spellcheck and Grammar Checking** with **LanguageTool**
 - **Formula Support**: Add and display mathematical formulas using **KaTeX**.
 - **Text Alignment**: Align text to the left, center, right, or justify it.
 - **Text Color and Highlighting**: Change text color and highlight content with background colors.
@@ -52,36 +52,44 @@ npm install react react-dom @mui/material @mui/icons-material @emotion/react @em
 If you are contributing to the project or developing locally, you can set up your environment with the following steps:
 
 1. **Clone the repository:**
+
    ```bash
    git clone https://github.com/your-username/bookcicle-editor.git
    cd bookcicle-editor
    ```
 
 2. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 3. **Build the project:**
+
    ```bash
    npm run build
    ```
 
 4. **Link the editor locally for development:**
+
    In the `bookcicle-editor` project directory, run:
+
    ```bash
    npm link
    ```
 
 5. **In the project where you want to use Bookcicle Editor, run:**
+
    ```bash
    npm link @bookcicle/bookcicle_editor
    ```
 
 6. **Run the development server:**
+
    ```bash
    npm run dev
    ```
+
    The app should now be running on [http://localhost:3000](http://localhost:3000).
 
 ### Building for Production
@@ -93,18 +101,6 @@ npm run build
 ```
 
 The build output will be located in the `dist/` folder.
-
-## Customization
-
-The editor is fully customizable and integrates deeply with **Material UI** and **TipTap**. You can adjust the themes,
-colors, and typography to fit your project's needs, as well as extend the editor's functionality with TipTap extensions.
-
-To modify the theme:
-
-1. Open your theme configuration file.
-2. Customize the palette, typography, and component styles as needed.
-
-Here's the updated README with instructions for installing `languagetool-rust` to enable spell check features.
 
 ## Enabling Spell Check and Grammar Suggestions
 
@@ -118,55 +114,62 @@ features, you'll need to install the `languagetool-rust` dependency.
 
 ### Installing `languagetool-rust`
 
-You can use any implementation of LanguageTool server, we use Languagetool-rust to standup a langtool server 
-using Docker.
-
-Follow these steps to install and integrate `languagetool-rust`:
+You can use any implementation of LanguageTool server. We use `languagetool-rust` to stand up a LanguageTool server
+using Docker. Follow these steps to install and integrate `languagetool-rust`:
 
 1. **Install `languagetool-rust`** as a project dependency:
+
    ```bash
    cargo install languagetool-rust
    ```
 
 2. **Configure the spell check and grammar suggestion settings**:
-   Update the `editorSettings` object in your editor configuration to enable spelling and grammar suggestions:
+
+   Update the `editorSettings` object in your editor configuration to enable spelling and grammar suggestions and set
+   the `langtoolUrl`:
+
    ```javascript
    const editorSettings = {
-       showGrammarSuggestions: true,
-       showSpellingSuggestions: true,
-       languageCode: 'en-US',
+     showGrammarSuggestions: true,
+     showSpellingSuggestions: true,
+     languageCode: 'en-US',
+     langtoolUrl: 'http://localhost:8010/v2/check', // Replace with your LanguageTool server URL
    };
    ```
 
 3. **Run the LanguageTool server**:
+
    Once installed, start the LanguageTool server locally to handle spell check requests:
+
    ```bash
    ltrs docker start
    ```
 
 4. **Connect the Editor to LanguageTool**:
+
    Ensure that the editor is configured to send spell check and grammar suggestion requests to the LanguageTool server.
-   The integration code for LanguageTool should use the server's endpoint (e.g., `http://localhost:8081`).
+   The integration code for LanguageTool uses the server's endpoint (e.g., `http://localhost:8010/v2/check`).
 
 5. **Test the Integration**:
+
    Type some text in the editor to verify that spelling and grammar suggestions are appearing correctly.
 
 ### Folder Structure
 
 Here’s an overview of the project structure:
 
-```
+```plaintext
 bookcicle-editor/
-├── public/            # Static files
+├── public/              # Static files
 ├── src/
-│   ├── components/    # React components
-│   ├── assets/        # Styles, fonts, images, etc.
-│   ├── App.jsx        # Main app file
-│   ├── index.jsx      # Entry point
-│   └── Editor.jsx     # Editor entry point
-├── README.md          # This file
-├── package.json       # Project metadata and scripts
-└── vite.config.js     # Vite configuration
+│   ├── components/      # React components
+│   ├── assets/          # Styles, fonts, images, etc.
+│   ├── App.jsx          # Main app file
+│   ├── index.jsx        # Entry point
+│   └── Editor.jsx       # Editor entry point
+├── README.md            # This file
+├── package.json         # Project metadata and scripts
+└── vite.config.js       # Vite configuration
 ```
 
 ## Using the Bookcicle Editor
@@ -193,60 +196,53 @@ editor's behavior and appearance. Below is a detailed explanation of each settin
  * @property {string} languageCode - Language code used for the editor (e.g., "en-US"). Default is "en-US".
  * @property {boolean} showGrammarSuggestions - Enable grammar suggestions in the editor. Default is true.
  * @property {boolean} showSpellingSuggestions - Enable spelling suggestions in the editor. Default is true.
+ * @property {string} langtoolUrl - The URL for Spell/Grammar checking, expecting an instance of LanguageTool v2.
  * @property {string} toolbarStyle - Style of the toolbar, used to control the button set shown. Options are 'science', 'general', 'fiction', 'non-fiction', 'all'. Default is 'all'.
  */
 ```
 
 #### Editor Settings Explained
 
-- **`showVerticalDivider`** (`boolean`): Determines whether a vertical divider is displayed between the line numbers and
-  the editor content. Useful for visually separating line numbers from the text area.
-    - **Default**: `true`
-
 - **`openLinks`** (`boolean`): Allows users to open hyperlinks directly from the editor by clicking on them.
     - **Default**: `true`
-
 - **`enableDragHandle`** (`boolean`): Enables drag handles on content blocks, allowing users to drag and rearrange
   blocks within the editor.
     - **Default**: `false`
-
-- **`buttonSize`** (`string`): Sets the size of the toolbar buttons. Can be one of:
-    - `'small'`: Smaller buttons
-    - `'medium'`: Medium-sized buttons
-    - `'large'`: Larger buttons
-    - **Default**: `'small'`
-
-- **`linePadding`** (`string`): Adjusts the padding between lines in the editor. Can be one of:
-    - `'small'`: Less space between lines
-    - `'medium'`: Medium space between lines
-    - `'large'`: More space between lines
-    - **Default**: `'small'`
-
-- **`languageCode`** (`string`): Sets the language code for the editor, which can be used for localization and
-  spell-checking purposes.
-    - **Default**: `'en-US'`
-
-- **`showGrammarSuggestions`** (`boolean`): Enables or disables grammar suggestions within the editor.
+- **`showLineNumbers`** (`boolean`): Displays line numbers next to each line of content in the editor.
     - **Default**: `true`
-
 - **`showLineHighlight`** (`boolean`): Highlights the line where the cursor is currently positioned, helping users keep
   track of their location in the text.
     - **Default**: `true`
-
-- **`showLineNumbers`** (`boolean`): Displays line numbers next to each line of content in the editor.
+- **`buttonSize`** (`string`): Sets the size of the toolbar buttons. Can be one of:
+    - `'xs'`, `'small'`, `'medium'`, `'large'`, `'xl'`
+    - **Default**: `'xl'`
+- **`linePadding`** (`string`): Adjusts the padding between lines in the editor. Can be one of:
+    - `'xs'`, `'small'`, `'medium'`, `'large'`, `'xl'`
+    - **Default**: `'small'`
+- **`showVerticalDivider`** (`boolean`): Determines whether a vertical divider is displayed between the line numbers and
+  the editor content.
     - **Default**: `true`
-
-- **`showSpellingSuggestions`** (`boolean`): Enables or disables spelling suggestions and corrections within the editor.
-    - **Default**: `true`
-
 - **`enablePageEditor`** (`boolean`): Activates the page editor mode, which displays the editor content in a page-like
   format, centered on the screen. This provides a writing experience similar to editing a page in a book or a document.
-    - **Default**: `false`
-
+    - **Default**: `true`
 - **`pageEditorWidth`** (`string`): Sets the width of the editor when `enablePageEditor` is `true`. This allows you to
   control how wide the page appears on the screen.
     - **Default**: `'800px'`
-
+- **`pageEditorElevation`** (`number`): Elevation level for the Paper component in the page editor, controlling the
+  depth of the shadow.
+    - **Default**: `1`
+- **`pageEditorBoxShadow`** (`boolean`): Determines whether to display a box shadow around the page editor.
+    - **Default**: `true`
+- **`languageCode`** (`string`): Sets the language code for the editor, which can be used for localization and
+  spell-checking purposes.
+    - **Default**: `'en-US'`
+- **`showGrammarSuggestions`** (`boolean`): Enables or disables grammar suggestions within the editor.
+    - **Default**: `true`
+- **`showSpellingSuggestions`** (`boolean`): Enables or disables spelling suggestions and corrections within the editor.
+    - **Default**: `true`
+- **`langtoolUrl`** (`string`): The URL for spell and grammar checking, expecting an instance of LanguageTool v2. This
+  property allows you to specify a custom LanguageTool server endpoint for handling spelling and grammar suggestions.
+    - **Default**: `'http://localhost:8010/v2/check'`
 - **`toolbarStyle`** (`string`): Determines which toolbar buttons are displayed based on the writing context. Possible
   values are:
     - `'fiction'`: Simplified toolbar suitable for fiction writing.
@@ -256,8 +252,8 @@ editor's behavior and appearance. Below is a detailed explanation of each settin
     - `'all'`: Includes all available toolbar options.
     - **Default**: `'all'`
 
-  This setting allows you to tailor the editor's toolbar to match the specific needs of your writing context, providing
-  a more focused and efficient user experience.
+This setting allows you to tailor the editor's toolbar to match the specific needs of your writing context, providing a
+more focused and efficient user experience.
 
 #### Example Usage
 
@@ -275,16 +271,27 @@ function App() {
         showVerticalDivider: true,
         enablePageEditor: true,
         pageEditorWidth: '700px',
+        languageCode: 'en-US',
+        showGrammarSuggestions: true,
+        showSpellingSuggestions: true,
+        langtoolUrl: 'http://localhost:8010/v2/check',
         toolbarStyle: 'non-fiction', // Choose 'fiction', 'non-fiction', 'general', 'science', or 'all'
     };
 
     return (
         <Editor
+            documentId="your-document-id"
             readOnly={false}
             defaultValue="<p>Your initial content here...</p>"
             onTextChange={(text) => console.log('Text changed:', text)}
             onSelectionChange={(selection) => console.log('Selection changed:', selection)}
             onDeltaChange={(delta) => console.log('Delta changed:', delta)}
+            onInsertImage={() => {
+            }}
+            onInsertLink={() => {
+            }}
+            onInsertFormula={() => {
+            }}
             editorSettings={editorSettings}
         />
     );
@@ -314,21 +321,17 @@ toolbar options available:
     - **Includes**: Text Formatting, Alignment Tools, Heading Tools, Text Clear Tools, Undo/Redo
     - **Excludes**: Lists, Blockquotes, Superscript/Subscript, Font and Color Tools, Insert Tools (Images, Links),
       Formula Insertion
-
 - **`non-fiction`**:
     - **Includes**: All from 'fiction', plus Lists, Blockquotes, Superscript/Subscript, Font and Color Tools, Insert
       Tools (Images, Links)
     - **Excludes**: Formula Insertion (unless scientific content is expected)
-
 - **`general`**:
     - **Includes**: A balanced set of tools suitable for most writing contexts, including Text Formatting, Lists,
       Blockquotes, Alignment, Heading Tools, Superscript/Subscript, Font and Color Tools, Insert Tools, Text Clear
       Tools, Undo/Redo
-
 - **`science`**:
     - **Includes**: All from 'general', plus Formula Insertion for mathematical and scientific content
     - **Excludes**: May exclude certain styling tools not commonly used in scientific writing
-
 - **`all`**:
     - **Includes**: All available toolbar options, providing the most comprehensive set of tools
 
@@ -344,7 +347,9 @@ integrate third-party extensions to extend the editor’s capabilities.
 For example, to add a new extension:
 
 1. **Install the extension via npm.**
+
 2. **Import the extension in your `Editor.jsx` file.**
+
 3. **Add the extension to the `extensions` array in the `useEditor` hook.**
 
 ### Themes
@@ -368,17 +373,19 @@ npm install katex
 We welcome contributions to the **Bookcicle Editor**! To contribute:
 
 1. **Fork the repository.**
+
 2. **Create a new feature branch (`git checkout -b feature/your-feature`).**
+
 3. **Commit your changes (`git commit -m 'Add your feature'`).**
+
 4. **Push to the branch (`git push origin feature/your-feature`).**
+
 5. **Create a pull request.**
 
 ## Testing in Upstream
 
 Since we do not build a CommonJS entry, make sure you adjust your Jest configuration if you are testing in a project
-that consumes this module.
-
-For example, you may need to configure `transformIgnorePatterns` in your Jest config:
+that consumes this module. For example, you may need to configure `transformIgnorePatterns` in your Jest config:
 
 ```json
 {
@@ -402,6 +409,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - **Material UI** for the design components and theming.
 - **Vite** for the fast build tool.
 - **KaTeX** for LaTeX formula rendering.
+- **LanguageTool** and **languagetool-rust** for spell check and grammar suggestions.
 
 ---
 

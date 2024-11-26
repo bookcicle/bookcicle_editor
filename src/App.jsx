@@ -25,6 +25,7 @@ const App = () => {
             <CssBaseline/>
             <Container maxWidth={false} style={{padding: 0}}>
                 <Editor
+                    documentId={"document_id"}
                     readOnly={false}
                     defaultValue={`
       <h1>

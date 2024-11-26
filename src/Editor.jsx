@@ -21,9 +21,9 @@ import TextStyle from '@tiptap/extension-text-style';
 import {Link} from "@tiptap/extension-link";
 import {Color} from "@tiptap/extension-color";
 import {Decoration, DecorationSet} from "prosemirror-view";
-import {LanguageToolMark, LanguageToolHelpingWords} from "./extensions/langtool.js";
+import {LanguageToolMark} from "./extensions/spellchecker/langtool.js";
 import {useState} from "react";
-import {SpellingActionsMenu} from "./extensions/SpellingActionsMenu.jsx";
+import {SpellingActionsMenu} from "./extensions/spellchecker/SpellingActionsMenu.jsx";
 
 /**
  * @typedef {Object} EditorSettings
@@ -41,6 +41,7 @@ import {SpellingActionsMenu} from "./extensions/SpellingActionsMenu.jsx";
  * @property {string} languageCode - Language code used for the editor (e.g., "en-US"). Default is "en-US".
  * @property {boolean} showGrammarSuggestions - Enable grammar suggestions in the editor. Default is true.
  * @property {boolean} showSpellingSuggestions - Enable spelling suggestions in the editor. Default is true.
+ * @property {string} langtoolUrl - The URL for Spell/Grammar checking, expecting a instance of LanguageTool v2.
  * @property {string} toolbarStyle - Style of the toolbar, used to control the button set shown. Options are 'science', 'general', 'fiction', 'non-fiction', 'all'. Default is 'all'.
  */
 
@@ -78,6 +79,7 @@ const PageEditorWrapper = styled(Paper)(({width}) => ({
  * @param {Object} [props.tipTapSettings] - Configuration object for TipTap's useEditor settings.
  */
 const Editor = ({
+                    documentId,
                     readOnly,
                     defaultValue,
                     onTextChange,
@@ -98,14 +100,16 @@ const Editor = ({
                         pageEditorWidth: '800px',
                         pageEditorElevation: 1,
                         pageEditorBoxShadow: true,
-                        toolbarStyle: "all"
+                        toolbarStyle: "all",
+                        showGrammarSuggestions: true,
+                        showSpellingSuggestions: true,
+                        langtoolUrl: "http://localhost:8010/v2/check",
                     },
                     tipTapSettings = {},
                 }) => {
 
     const theme = useTheme();
     let activeLineDecoration = DecorationSet.empty;
-    const [loading, setLoading] = useState(false);
     const [match, setMatch] = useState(null);
 
     const editor = useEditor({
@@ -113,10 +117,12 @@ const Editor = ({
         extensions: [
             StarterKit.configure({heading: {levels: [1, 2, 3]}}),
             LanguageToolMark.configure({
-                apiUrl: 'http://localhost:8010/v2/check',
-                language: 'en-US',
+                apiUrl: editorSettings.langtoolUrl,
+                language: 'auto',
                 automaticMode: true,
-                documentId: 'your-document-id', // Optional
+                documentId,
+                enableSpellcheck: editorSettings.showSpellingSuggestions,
+                enableGrammarCheck: editorSettings.showGrammarSuggestions
             }),
             FontFamily, TextStyle, Color, Underline, Image, TextAlign.configure({
                 types: ['heading', 'paragraph'], alignments: ['left', 'center', 'right'],
@@ -149,8 +155,6 @@ const Editor = ({
 
         },
         onTransaction({transaction}) {
-            if (transaction.getMeta(LanguageToolHelpingWords.LoadingTransactionName)) setLoading(true)
-            else setLoading(false)
             setMatch(transaction.meta.match)
         },
         onBlur: ({editor}) => {
@@ -168,19 +172,31 @@ const Editor = ({
                 <DragHandleIcon/>
             </DragHandle>
             <EditorContent className="content" editor={editor}/>
-            {editor && <SpellingActionsMenu editor={editor} matchMessage={match?.message || 'No Message'}
-                                            replacements={match?.replacements || []}
-                                            ignoreSuggestion={() => {
-                                                editor.commands.ignoreLanguageToolSuggestion()
-                                            }}
-                                            acceptSuggestion={(sug) => editor.commands.insertContent(sug.value)}
+            {editor && <SpellingActionsMenu
+                documentId={documentId}
+                editor={editor} matchMessage={match?.message || 'No Message'}
+                replacements={match?.replacements || []}
+                ignoreSuggestion={() => {
+                    editor.commands.ignoreLanguageToolSuggestion()
+                }}
+                acceptSuggestion={(sug) => editor.commands.insertContent(sug.value)}
             />}
         </div>
     </TiptapEditorWrapper>);
 
     return (<Box>
         <Global
-            styles={dynamicStyles(theme, editorSettings.showLineNumbers, editorSettings.showVerticalDivider, editorSettings.linePadding, editorSettings.buttonSize, editorSettings.enableDragHandle)}
+            styles={dynamicStyles({
+                    theme,
+                    showLineNumbers: editorSettings.showLineNumbers,
+                    showDivider: editorSettings.showVerticalDivider,
+                    linePadding: editorSettings.linePadding,
+                    buttonSize: editorSettings.buttonSize,
+                    enableDragHandle: editorSettings.enableDragHandle,
+                    enableSpellcheckDecoration: editorSettings.showSpellingSuggestions,
+                    enabledGrammarCheckDecoration: editorSettings.showGrammarSuggestions
+                }
+            )}
         />
         <Stack sx={{flexGrow: 1, padding: '10px', overflowY: 'hidden', height: '100%', boxSizing: 'border-box', mt: 4}}>
             <EditorToolbar editor={editor} toolbarStyle={editorSettings.toolbarStyle} onInsertFormula={onInsertFormula}
@@ -201,6 +217,8 @@ const Editor = ({
 };
 
 Editor.propTypes = {
+    langtoolUrl: PropTypes.string,
+    documentId: PropTypes.string.isRequired,
     readOnly: PropTypes.bool.isRequired,
     defaultValue: PropTypes.string,
     onTextChange: PropTypes.func.isRequired,
@@ -224,6 +242,7 @@ Editor.propTypes = {
         pageEditorElevation: PropTypes.number,
         pageEditorBoxShadow: PropTypes.bool,
         toolbarStyle: PropTypes.oneOf(['science', 'general', 'fiction', 'non-fiction', 'all']),
+        langtoolUrl: PropTypes.string,
     }),
     tipTapSettings: PropTypes.object,
 };
