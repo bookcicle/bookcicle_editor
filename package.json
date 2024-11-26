@@ -42,9 +42,9 @@
   "peerDependencies": {
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
-    "@mui/icons-material": "^6.1.6",
-    "@mui/material": "^6.1.6",
-    "@mui/material-pigment-css": "^6.1.6",
+    "@mui/icons-material": "^6.1.8",
+    "@mui/material": "^6.1.8",
+    "@mui/material-pigment-css": "^6.1.8",
     "@tiptap-pro/extension-details": "^2.13.0",
     "@tiptap-pro/extension-details-content": "^2.13.0",
     "@tiptap-pro/extension-details-summary": "^2.13.0",

@@ -31,38 +31,33 @@ export const LanguageToolMark = Mark.create({
 
     addAttributes() {
         return {
-            match: {
-                default: null,
-            },
-            uuid: {
-                default: null,
-            },
-            class: {
-                default: 'lt lt-misspelled',
-            },
+            match: { default: null },
+            uuid: { default: null },
+            class: { default: null }, // Allow dynamic classes
         };
     },
 
     parseHTML() {
         return [
             {
-                tag: 'span.lt.lt-misspelled',
+                tag: 'span.lt',
                 getAttrs: (dom) => ({
                     match: dom.getAttribute('data-match') || null,
                     uuid: dom.getAttribute('data-uuid') || null,
+                    class: dom.getAttribute('class') || null,
                 }),
             },
         ];
     },
 
     renderHTML({ HTMLAttributes }) {
+        const { match, uuid, ...rest } = HTMLAttributes;
         return [
             'span',
             {
-                ...HTMLAttributes,
-                class: 'lt lt-misspelled',
-                'data-match': HTMLAttributes.match,
-                'data-uuid': HTMLAttributes.uuid,
+                ...rest, // Use the rest of the attributes, including class
+                'data-match': match,
+                'data-uuid': uuid,
             },
             0,
         ];
@@ -70,29 +65,37 @@ export const LanguageToolMark = Mark.create({
 
     addCommands() {
         return {
-            proofread: () => ({ editor }) => {
-                if (editorView && this.options.automaticMode) {
-                    const { doc } = editor.state;
-                    processDocument(doc, editorView);
-                }
-                return true;
-            },
-            toggleProofreading: () => ({ commands }) => {
-                this.options.automaticMode = !this.options.automaticMode;
-                return commands.proofread();
-            },
-            ignoreLanguageToolSuggestion: () => ({ editor }) => {
-                const { selection, doc } = editor.state;
-                const { from, to } = selection;
-                const content = doc.textBetween(from, to);
-                if (this.options.documentId) {
-                    db.ignoredWords.add({
-                        value: content,
-                        documentId: String(this.options.documentId),
-                    });
-                }
-                return editor.commands.unsetMark('languagetool', { from, to });
-            },
+            proofread:
+                () =>
+                    ({ editor }) => {
+                        if (editorView && this.options.automaticMode) {
+                            const { doc } = editor.state;
+                            processDocument(doc, editorView);
+                        }
+                        return true;
+                    },
+
+            toggleProofreading:
+                () =>
+                    ({ commands }) => {
+                        this.options.automaticMode = !this.options.automaticMode;
+                        return commands.proofread();
+                    },
+
+            ignoreLanguageToolSuggestion:
+                () =>
+                    ({ editor }) => {
+                        const { selection, doc } = editor.state;
+                        const { from, to } = selection;
+                        const content = doc.textBetween(from, to);
+                        if (this.options.documentId) {
+                            db.ignoredWords.add({
+                                value: content,
+                                documentId: String(this.options.documentId),
+                            });
+                        }
+                        return editor.commands.unsetMark('languagetool', { from, to });
+                    },
         };
     },
 
@@ -145,6 +148,20 @@ export const LanguageToolMark = Mark.create({
             return uniqueMatches;
         };
 
+        // Function to determine the class based on issue type
+        const getClassForIssueType = (issueType) => {
+            switch (issueType) {
+                case 'misspelling':
+                    return 'lt lt-spelling-error'; // Red for spelling errors
+                case 'grammar':
+                    return 'lt lt-grammar-error'; // Green for grammar errors
+                case 'typographical':
+                    return 'lt lt-typography-error'; // Yellow for typographical errors
+                default:
+                    return 'lt lt-other-error'; // Default class
+            }
+        };
+
         const applyMarks = (view, matches, mapping) => {
             const { tr, schema } = view.state;
 
@@ -158,7 +175,7 @@ export const LanguageToolMark = Mark.create({
                 }
             });
 
-            // Apply new marks using the mapping
+            // Apply new marks with appropriate classes
             matches.forEach((match) => {
                 const fromOffset = match.offset;
                 const toOffset = match.offset + match.length - 1;
@@ -166,7 +183,7 @@ export const LanguageToolMark = Mark.create({
                 const to =
                     mapping[toOffset] !== undefined
                         ? mapping[toOffset] + 1 // Include the last character
-                        : mapping[fromOffset] + match.length; // Fallback in case mapping is undefined
+                        : from + match.length; // Fallback in case mapping is undefined
 
                 if (
                     from !== undefined &&
@@ -180,6 +197,7 @@ export const LanguageToolMark = Mark.create({
                         schema.marks.languagetool.create({
                             match: JSON.stringify(match),
                             uuid: uuidv4(),
+                            class: getClassForIssueType(match.rule.issueType),
                         })
                     );
                 }
@@ -203,7 +221,7 @@ export const LanguageToolMark = Mark.create({
         };
 
         const addMarkListeners = () => {
-            document.querySelectorAll('span.lt.lt-misspelled').forEach((mark) => {
+            document.querySelectorAll('span.lt').forEach((mark) => {
                 mark.removeEventListener('mouseenter', handleMouseEnter);
                 mark.removeEventListener('mouseleave', handleMouseLeave);
                 mark.addEventListener('mouseenter', handleMouseEnter);
@@ -224,7 +242,6 @@ export const LanguageToolMark = Mark.create({
             let text = '';
             let mapping = []; // text offset to doc position mapping
             let textOffset = 0;
-
             doc.descendants((node, pos) => {
                 if (node.isText) {
                     const nodeText = node.text;
@@ -235,24 +252,21 @@ export const LanguageToolMark = Mark.create({
                     }
                 } else if (node.isInline && !node.isText) {
                     // Handle non-text inline nodes, e.g., images or formulas
-                    // You may choose to add a placeholder or adjust as necessary
                     const nodeText = ' '; // Placeholder for non-text nodes
                     text += nodeText;
                     mapping[textOffset] = pos;
                     textOffset++;
                 }
             });
-
             const matches = await fetchSuggestions(text);
             const filteredMatches = await filterIgnoredMatches(matches, doc);
-
-            // Pass mapping to applyMarks
+            // Apply the marks
             applyMarks(view, filteredMatches, mapping);
         };
 
         const debouncedProcess = debounce(processDocument, debounceTime);
 
-        // Create and return plugin
+        // Create and return the plugin
         return [
             new Plugin({
                 key: new PluginKey('languagetool'),

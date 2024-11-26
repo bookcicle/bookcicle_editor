@@ -20,3 +20,19 @@
     color: #848484;
     padding-right: 5px;
 }
+
+.lt.lt-spelling-error {
+    background-color: rgba(255, 0, 0, 0.3); /* Red background for spelling errors */
+}
+
+.lt.lt-grammar-error {
+    background-color: rgba(0, 255, 0, 0.3); /* Green background for grammar errors */
+}
+
+.lt.lt-typography-error {
+    background-color: rgba(255, 255, 0, 0.3); /* Yellow background for typographical errors */
+}
+
+.lt.lt-other-error {
+    background-color: rgba(0, 0, 255, 0.3); /* Blue background for other errors */
+}
