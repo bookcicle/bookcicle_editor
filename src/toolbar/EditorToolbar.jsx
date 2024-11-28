@@ -15,9 +15,9 @@ import FormulaTools from './FormulaTools.jsx';
 const EditorToolbar = ({
                            editor,
                            toolbarStyle,
-                           onInsertLink,
-                           onInsertImage,
-                           onInsertFormula,
+                           handleInsertLink,
+                           handleInsertImage,
+                           handleInsertFormula,
                            position
                        }) => {
     const [fontMenuAnchorEl, setFontMenuAnchorEl] = useState(null);
@@ -45,8 +45,8 @@ const EditorToolbar = ({
     const handleAction = async (action, color = null) => {
         switch (action) {
             case 'link':
-                if (onInsertLink) {
-                    const url = await onInsertLink();
+                if (handleInsertLink) {
+                    const url = await handleInsertLink();
                     if (url) {
                         editor.chain().focus().extendMarkRange('link').setLink({href: url}).run();
                     }
@@ -101,8 +101,8 @@ const EditorToolbar = ({
                 editor.chain().focus().clearNodes().unsetAllMarks().run();
                 break;
             case 'image':
-                if (onInsertImage) {
-                    const url = await onInsertImage();
+                if (handleInsertImage) {
+                    const url = await handleInsertImage();
                     if (url) {
                         editor.chain().focus().setImage({src: url}).run();
                     }
@@ -120,8 +120,8 @@ const EditorToolbar = ({
                 editor.chain().focus().toggleSubscript().run();
                 break;
             case 'formula':
-                if (onInsertFormula) {
-                    const formula = await onInsertFormula();
+                if (handleInsertFormula) {
+                    const formula = await handleInsertFormula();
                     if (formula) {
                         editor.chain().focus().insertContent(`$${formula}$`).run();
                     }
@@ -144,7 +144,12 @@ const EditorToolbar = ({
             <AppBar
                 color="transparent"
                 elevation={0}
-                sx={{zIndex: 0, backgroundColor: 'transparent', boxShadow: 'none', position: "absolute", ...positionStyle}}
+                sx={{
+                    zIndex: 0,
+                    backgroundColor: 'transparent',
+                    boxShadow: 'none',
+                    position: "absolute", ...positionStyle
+                }}
             >
                 <Toolbar variant="dense" sx={{backgroundColor: 'transparent'}}>
                     <Box
@@ -211,9 +216,9 @@ const EditorToolbar = ({
 EditorToolbar.propTypes = {
     editor: PropTypes.any.isRequired,
     toolbarStyle: PropTypes.oneOf(['science', 'general', 'fiction', 'non-fiction', 'all']).isRequired,
-    onInsertLink: PropTypes.func,
-    onInsertImage: PropTypes.func,
-    onInsertFormula: PropTypes.func,
+    handleInsertLink: PropTypes.func,
+    handleInsertImage: PropTypes.func,
+    handleInsertFormula: PropTypes.func,
     position: PropTypes.string,
 };
 

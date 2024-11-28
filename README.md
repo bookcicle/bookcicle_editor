@@ -90,7 +90,7 @@ If you are contributing to the project or developing locally, you can set up you
    npm run dev
    ```
 
-   The app should now be running on [http://localhost:3000](http://localhost:3000).
+   The app should now be running on [http://localhost:5173](http://localhost:5173).
 
 ### Building for Production
 
@@ -182,22 +182,23 @@ editor's behavior and appearance. Below is a detailed explanation of each settin
 ```javascript
 /**
  * @typedef {Object} EditorSettings
- * @property {boolean} openLinks - Allow opening links from the editor on click. Default is true.
- * @property {boolean} enableDragHandle - Enable a drag handle for content dragging. Default is false.
- * @property {boolean} showLineNumbers - Whether line numbers are displayed. Default is true.
- * @property {boolean} showLineHighlight - Enable line highlighting for the current line. Default is true.
- * @property {string} buttonSize - The size of buttons in the editor toolbar. Options are 'xs', 'small', 'medium', 'large', 'xl'. Default is 'xl'.
- * @property {string} linePadding - Padding for lines in the editor. Options are 'xs', 'small', 'medium', 'large', 'xl'. Default is 'small'.
- * @property {boolean} showVerticalDivider - Show a vertical divider in the editor. Default is true.
- * @property {boolean} enablePageEditor - Whether to enable page editor view (centered content with a width constraint). Default is true.
- * @property {string} pageEditorWidth - Width of the page editor when `enablePageEditor` is true. Default is '800px'.
- * @property {number} pageEditorElevation - Elevation level for the Paper component in the page editor, controlling the depth of the shadow. Default is 1.
- * @property {boolean} pageEditorBoxShadow - Whether to display a box shadow around the page editor. Default is true.
- * @property {string} languageCode - Language code used for the editor (e.g., "en-US"). Default is "en-US".
- * @property {boolean} showGrammarSuggestions - Enable grammar suggestions in the editor. Default is true.
- * @property {boolean} showSpellingSuggestions - Enable spelling suggestions in the editor. Default is true.
- * @property {string} langtoolUrl - The URL for Spell/Grammar checking, expecting an instance of LanguageTool v2.
- * @property {string} toolbarStyle - Style of the toolbar, used to control the button set shown. Options are 'science', 'general', 'fiction', 'non-fiction', 'all'. Default is 'all'.
+ * @property {boolean} openLinks - Allow opening links from the editor on click. Default is `false`.
+ * @property {boolean} enableDragHandle - Enable a drag handle for content dragging. Default is `false`.
+ * @property {boolean} showLineNumbers - Whether line numbers are displayed. Default is `true`.
+ * @property {boolean} showLineHighlight - Enable line highlighting for the current line. Default is `true`.
+ * @property {string} buttonSize - The size of buttons in the editor toolbar. Options are `'xs'`, `'small'`, `'medium'`, `'large'`, `'xl'`. Default is `'xl'`.
+ * @property {string} linePadding - Padding for lines in the editor. Options are `'xs'`, `'small'`, `'medium'`, `'large'`, `'xl'`. Default is `'small'`.
+ * @property {boolean} showVerticalDivider - Show a vertical divider in the editor. Default is `true`.
+ * @property {boolean} enablePageEditor - Whether to enable page editor view (centered content with a width constraint). Default is `true`.
+ * @property {string} pageEditorWidth - Width of the page editor when `enablePageEditor` is `true`. Default is `'800px'`.
+ * @property {number} pageEditorElevation - Elevation level for the Paper component in the page editor, controlling the depth of the shadow. Default is `1`.
+ * @property {boolean} pageEditorBoxShadow - Whether to display a box shadow around the page editor. Default is `true`.
+ * @property {string} toolbarStyle - Style of the toolbar, used to control the button set shown. Options are `'science'`, `'general'`, `'fiction'`, `'non-fiction'`, `'all'`. Default is `'all'`.
+ * @property {string} toolbarPlacement - Placement of the toolbar in the editor. Options are `'top'`, `'bottom'`, `'left'`, `'right'`. Default is `'top'`.
+ * @property {boolean} showGrammarSuggestions - Enable grammar suggestions in the editor. Default is `true`.
+ * @property {boolean} showSpellingSuggestions - Enable spelling suggestions in the editor. Default is `true`.
+ * @property {string} langtoolUrl - The URL for spell/grammar checking, expecting an instance of LanguageTool v2. Default is `'http://localhost:8010/v2/check'`.
+ * @property {string} [languageCode="en-US"] - (Optional) Language code used for the editor (e.g., `"en-US"`). Default is `"en-US"`.
  */
 ```
 

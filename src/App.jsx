@@ -49,6 +49,7 @@ const App = () => {
                     onInsertLink={handleInsertLink}
                     onInsertImage={handleInsertImage}
                     onInsertFormula={handleInsertFormula}
+                    onTransaction={() => {}}
                 />
             </Container>
         </ThemeProvider>
