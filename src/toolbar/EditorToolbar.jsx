@@ -144,7 +144,7 @@ const EditorToolbar = ({
             <AppBar
                 color="transparent"
                 elevation={0}
-                sx={{backgroundColor: 'transparent', boxShadow: 'none', position: "absolute", ...positionStyle}}
+                sx={{zIndex: 0, backgroundColor: 'transparent', boxShadow: 'none', position: "absolute", ...positionStyle}}
             >
                 <Toolbar variant="dense" sx={{backgroundColor: 'transparent'}}>
                     <Box
