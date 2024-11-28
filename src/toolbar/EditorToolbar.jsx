@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { AppBar, Box, Container, Toolbar } from '@mui/material';
+import {useState} from 'react';
+import {AppBar, Box, Container, Toolbar} from '@mui/material';
 import ListAndBlockTools from './ListAndBlockTools';
 import FontAndColorTools from './FontAndColorTools';
 import AlignmentTools from './AlignmentTools';
@@ -15,9 +15,10 @@ import FormulaTools from './FormulaTools.jsx';
 const EditorToolbar = ({
                            editor,
                            toolbarStyle,
-                           onInsertLink,
-                           onInsertImage,
-                           onInsertFormula,
+                           handleInsertLink,
+                           handleInsertImage,
+                           handleInsertFormula,
+                           position
                        }) => {
     const [fontMenuAnchorEl, setFontMenuAnchorEl] = useState(null);
     const [selectedAlignment, setSelectedAlignment] = useState('left');
@@ -27,7 +28,7 @@ const EditorToolbar = ({
     const handleFontMenuClose = () => setFontMenuAnchorEl(null);
 
     const handleFontStyleChange = (style) => {
-        editor.chain().focus().setMark('textStyle', { fontFamily: style }).run();
+        editor.chain().focus().setMark('textStyle', {fontFamily: style}).run();
         handleFontMenuClose();
     };
 
@@ -37,22 +38,22 @@ const EditorToolbar = ({
     };
 
     const handleHeadingChange = (level) => {
-        editor.chain().focus().toggleHeading({ level }).run();
+        editor.chain().focus().toggleHeading({level}).run();
         setSelectedHeading(level);
     };
 
     const handleAction = async (action, color = null) => {
         switch (action) {
             case 'link':
-                if (onInsertLink) {
-                    const url = await onInsertLink();
+                if (handleInsertLink) {
+                    const url = await handleInsertLink();
                     if (url) {
-                        editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+                        editor.chain().focus().extendMarkRange('link').setLink({href: url}).run();
                     }
                 } else {
                     const url = prompt('Enter the link URL');
                     if (url) {
-                        editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run();
+                        editor.chain().focus().extendMarkRange('link').setLink({href: url}).run();
                     }
                 }
                 break;
@@ -61,12 +62,12 @@ const EditorToolbar = ({
                 break;
             case 'color':
                 if (color) {
-                    editor.chain().focus().setMark('textStyle', { color }).run();
+                    editor.chain().focus().setMark('textStyle', {color}).run();
                 }
                 break;
             case 'highlight':
                 if (color) {
-                    editor.chain().focus().setHighlight({ color }).run();
+                    editor.chain().focus().setHighlight({color}).run();
                 }
                 break;
             case 'bold':
@@ -100,15 +101,15 @@ const EditorToolbar = ({
                 editor.chain().focus().clearNodes().unsetAllMarks().run();
                 break;
             case 'image':
-                if (onInsertImage) {
-                    const url = await onInsertImage();
+                if (handleInsertImage) {
+                    const url = await handleInsertImage();
                     if (url) {
-                        editor.chain().focus().setImage({ src: url }).run();
+                        editor.chain().focus().setImage({src: url}).run();
                     }
                 } else {
                     const url = prompt('Enter the image URL');
                     if (url) {
-                        editor.chain().focus().setImage({ src: url }).run();
+                        editor.chain().focus().setImage({src: url}).run();
                     }
                 }
                 break;
@@ -119,8 +120,8 @@ const EditorToolbar = ({
                 editor.chain().focus().toggleSubscript().run();
                 break;
             case 'formula':
-                if (onInsertFormula) {
-                    const formula = await onInsertFormula();
+                if (handleInsertFormula) {
+                    const formula = await handleInsertFormula();
                     if (formula) {
                         editor.chain().focus().insertContent(`$${formula}$`).run();
                     }
@@ -136,14 +137,21 @@ const EditorToolbar = ({
         }
     };
 
+    const positionStyle = position === "bottom" ? {top: 'auto', bottom: 0} : {};
+
     return (
-        <Container maxWidth="md">
+        <Container maxWidth="sm" sx={{backgroundColor: "background.default"}}>
             <AppBar
                 color="transparent"
                 elevation={0}
-                sx={{ backgroundColor: 'transparent', boxShadow: 'none' }}
+                sx={{
+                    zIndex: 0,
+                    backgroundColor: 'transparent',
+                    boxShadow: 'none',
+                    position: "absolute", ...positionStyle
+                }}
             >
-                <Toolbar variant="dense" sx={{ backgroundColor: 'background.default' }}>
+                <Toolbar variant="dense" sx={{backgroundColor: 'transparent'}}>
                     <Box
                         sx={{
                             flexGrow: 1,
@@ -152,50 +160,52 @@ const EditorToolbar = ({
                             backgroundColor: 'transparent',
                         }}
                     >
-                        {/* Always included in all styles */}
-                        <TextFormattingTools handleAction={handleAction} editor={editor} />
-                        <AlignmentTools
-                            selectedAlignment={selectedAlignment}
-                            handleAlignmentChange={handleAlignmentChange}
-                        />
-                        <HeadingTools
-                            selectedHeading={selectedHeading}
-                            handleHeadingChange={handleHeadingChange}
-                        />
-                        <TextClearTools handleAction={handleAction} />
-                        {['all'].includes(toolbarStyle) && <UndoRedoTools handleAction={handleAction} />}
-
-                        {/* Include Lists and Blockquotes except in 'fiction' */}
-                        {['non-fiction', 'all'].includes(toolbarStyle) && (
-                            <ListAndBlockTools handleAction={handleAction} />
-                        )}
-
-                        {/* Include Superscript/Subscript in 'non-fiction', 'general', 'science', 'all' */}
-                        {['non-fiction', 'general', 'science', 'all'].includes(toolbarStyle) && (
-                            <SuperscriptSubscriptTools handleAction={handleAction} />
-                        )}
-
-                        {/* Include Font and Color Tools in 'non-fiction', 'general', 'all' */}
-                        {['non-fiction', 'general', 'all'].includes(toolbarStyle) && (
-                            <FontAndColorTools
-                                fontMenuAnchorEl={fontMenuAnchorEl}
-                                handleFontMenuClick={handleFontMenuClick}
-                                handleFontMenuClose={handleFontMenuClose}
-                                handleFontStyleChange={handleFontStyleChange}
-                                handleAction={handleAction}
-                                toolbarStyle={toolbarStyle}
+                        <Box sx={{backgroundColor: "background.default"}}>
+                            {/* Always included in all styles */}
+                            <TextFormattingTools handleAction={handleAction} editor={editor}/>
+                            <AlignmentTools
+                                selectedAlignment={selectedAlignment}
+                                handleAlignmentChange={handleAlignmentChange}
                             />
-                        )}
+                            <HeadingTools
+                                selectedHeading={selectedHeading}
+                                handleHeadingChange={handleHeadingChange}
+                            />
+                            <TextClearTools handleAction={handleAction}/>
+                            {['all'].includes(toolbarStyle) && <UndoRedoTools handleAction={handleAction}/>}
 
-                        {/* Include Insert Tools in 'non-fiction', 'general', 'science', 'all' */}
-                        {['non-fiction', 'general', 'science', 'all'].includes(toolbarStyle) && (
-                            <InsertTools handleAction={handleAction} toolbarStyle={toolbarStyle} />
-                        )}
+                            {/* Include Lists and Blockquotes except in 'fiction' */}
+                            {['non-fiction', 'all'].includes(toolbarStyle) && (
+                                <ListAndBlockTools handleAction={handleAction}/>
+                            )}
 
-                        {/* Include Formula Insertion only in 'science' and 'all' */}
-                        {['science', 'all'].includes(toolbarStyle) && (
-                            <FormulaTools handleAction={handleAction} />
-                        )}
+                            {/* Include Superscript/Subscript in 'non-fiction', 'general', 'science', 'all' */}
+                            {['non-fiction', 'general', 'science', 'all'].includes(toolbarStyle) && (
+                                <SuperscriptSubscriptTools handleAction={handleAction}/>
+                            )}
+
+                            {/* Include Font and Color Tools in 'non-fiction', 'general', 'all' */}
+                            {['non-fiction', 'general', 'all'].includes(toolbarStyle) && (
+                                <FontAndColorTools
+                                    fontMenuAnchorEl={fontMenuAnchorEl}
+                                    handleFontMenuClick={handleFontMenuClick}
+                                    handleFontMenuClose={handleFontMenuClose}
+                                    handleFontStyleChange={handleFontStyleChange}
+                                    handleAction={handleAction}
+                                    toolbarStyle={toolbarStyle}
+                                />
+                            )}
+
+                            {/* Include Insert Tools in 'non-fiction', 'general', 'science', 'all' */}
+                            {['non-fiction', 'general', 'science', 'all'].includes(toolbarStyle) && (
+                                <InsertTools handleAction={handleAction} toolbarStyle={toolbarStyle}/>
+                            )}
+
+                            {/* Include Formula Insertion only in 'science' and 'all' */}
+                            {['science', 'all'].includes(toolbarStyle) && (
+                                <FormulaTools handleAction={handleAction}/>
+                            )}
+                        </Box>
                     </Box>
                 </Toolbar>
             </AppBar>
@@ -206,9 +216,10 @@ const EditorToolbar = ({
 EditorToolbar.propTypes = {
     editor: PropTypes.any.isRequired,
     toolbarStyle: PropTypes.oneOf(['science', 'general', 'fiction', 'non-fiction', 'all']).isRequired,
-    onInsertLink: PropTypes.func,
-    onInsertImage: PropTypes.func,
-    onInsertFormula: PropTypes.func,
+    handleInsertLink: PropTypes.func,
+    handleInsertImage: PropTypes.func,
+    handleInsertFormula: PropTypes.func,
+    position: PropTypes.string,
 };
 
 export default EditorToolbar;

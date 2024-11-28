@@ -27,22 +27,23 @@ import {SpellingActionsMenu} from "./extensions/spellchecker/SpellingActionsMenu
 
 /**
  * @typedef {Object} EditorSettings
- * @property {boolean} openLinks - Allow opening links from the editor on click. Default is true.
- * @property {boolean} enableDragHandle - Enable a drag handle for content dragging. Default is false.
- * @property {boolean} showLineNumbers - Whether line numbers are displayed. Default is true.
- * @property {boolean} showLineHighlight - Enable line highlighting for the current line. Default is true.
- * @property {string} buttonSize - The size of buttons in the editor toolbar. Options are 'xs', 'small', 'medium', 'large', 'xl'. Default is 'xl'.
- * @property {string} linePadding - Padding for lines in the editor. Options are 'xs', 'small', 'medium', 'large', 'xl'. Default is 'small'.
- * @property {boolean} showVerticalDivider - Show a vertical divider in the editor. Default is true.
- * @property {boolean} enablePageEditor - Whether to enable page editor view (centered content with a width constraint). Default is true.
- * @property {string} pageEditorWidth - Width of the page editor when `enablePageEditor` is true. Default is '800px'.
- * @property {number} pageEditorElevation - Elevation level for the Paper component in the page editor, controlling the depth of the shadow. Default is 1.
- * @property {boolean} pageEditorBoxShadow - Whether to display a box shadow around the page editor. Default is true.
- * @property {string} languageCode - Language code used for the editor (e.g., "en-US"). Default is "en-US".
- * @property {boolean} showGrammarSuggestions - Enable grammar suggestions in the editor. Default is true.
- * @property {boolean} showSpellingSuggestions - Enable spelling suggestions in the editor. Default is true.
- * @property {string} langtoolUrl - The URL for Spell/Grammar checking, expecting a instance of LanguageTool v2.
- * @property {string} toolbarStyle - Style of the toolbar, used to control the button set shown. Options are 'science', 'general', 'fiction', 'non-fiction', 'all'. Default is 'all'.
+ * @property {boolean} openLinks - Allow opening links from the editor on click. Default is `false`.
+ * @property {boolean} enableDragHandle - Enable a drag handle for content dragging. Default is `false`.
+ * @property {boolean} showLineNumbers - Whether line numbers are displayed. Default is `true`.
+ * @property {boolean} showLineHighlight - Enable line highlighting for the current line. Default is `true`.
+ * @property {string} buttonSize - The size of buttons in the editor toolbar. Options are `'xs'`, `'small'`, `'medium'`, `'large'`, `'xl'`. Default is `'xl'`.
+ * @property {string} linePadding - Padding for lines in the editor. Options are `'xs'`, `'small'`, `'medium'`, `'large'`, `'xl'`. Default is `'small'`.
+ * @property {boolean} showVerticalDivider - Show a vertical divider in the editor. Default is `true`.
+ * @property {boolean} enablePageEditor - Whether to enable page editor view (centered content with a width constraint). Default is `true`.
+ * @property {string} pageEditorWidth - Width of the page editor when `enablePageEditor` is `true`. Default is `'800px'`.
+ * @property {number} pageEditorElevation - Elevation level for the Paper component in the page editor, controlling the depth of the shadow. Default is `1`.
+ * @property {boolean} pageEditorBoxShadow - Whether to display a box shadow around the page editor. Default is `true`.
+ * @property {string} toolbarStyle - Style of the toolbar, used to control the button set shown. Options are `'science'`, `'general'`, `'fiction'`, `'non-fiction'`, `'all'`. Default is `'all'`.
+ * @property {string} toolbarPlacement - Placement of the toolbar in the editor. Options are `'top'`, `'bottom'`, `'left'`, `'right'`. Default is `'top'`.
+ * @property {boolean} showGrammarSuggestions - Enable grammar suggestions in the editor. Default is `true`.
+ * @property {boolean} showSpellingSuggestions - Enable spelling suggestions in the editor. Default is `true`.
+ * @property {string} langtoolUrl - The URL for spell/grammar checking, expecting an instance of LanguageTool v2. Default is `'http://localhost:8010/v2/check'`.
+ * @property {string} [languageCode="en-US"] - (Optional) Language code used for the editor (e.g., `"en-US"`). Default is `"en-US"`.
  */
 
 const EditorContainer = styled.div`
@@ -70,10 +71,15 @@ const PageEditorWrapper = styled(Paper)(({width}) => ({
  * Editor component for rich text editing.
  *
  * @param {Object} props - The properties for the Editor component.
+ * @param {string} props.documentId - The Document/Project Identifier.
  * @param {boolean} props.readOnly - Whether the editor is in read-only mode.
  * @param {string} props.defaultValue - The initial content of the editor.
  * @param {Function} props.onTextChange - Callback when the text changes.
+ * @param {Function} props.handleInsertImage - Handler when insert Image is clicked.
+ * @param {Function} props.handleInsertFormula - Handler when insert Formula is clicked.
+ * @param {Function} props.handleInsertLink - Handler when insert Link is clicked.
  * @param {Function} props.onSelectionChange - Callback when the selection changes.
+ * @param {Function} props.onTransaction - Callback when a transaction is fired bny TipTap.
  * @param {Function} props.onDeltaChange - Callback with the entire document Delta when content changes.
  * @param {EditorSettings} [props.editorSettings] - Configuration object for editor settings.
  * @param {Object} [props.tipTapSettings] - Configuration object for TipTap's useEditor settings.
@@ -85,9 +91,10 @@ const Editor = ({
                     onTextChange,
                     onSelectionChange,
                     onDeltaChange,
-                    onInsertImage,
-                    onInsertLink,
-                    onInsertFormula,
+                    onTransaction,
+                    handleInsertLink,
+                    handleInsertFormula,
+                    handleInsertImage,
                     editorSettings = {
                         openLinks: false,
                         enableDragHandle: false,
@@ -101,9 +108,11 @@ const Editor = ({
                         pageEditorElevation: 1,
                         pageEditorBoxShadow: true,
                         toolbarStyle: "all",
+                        toolbarPlacement: "top",
                         showGrammarSuggestions: true,
                         showSpellingSuggestions: true,
                         langtoolUrl: "http://localhost:8010/v2/check",
+                        languageCode: "auto"
                     },
                     tipTapSettings = {},
                 }) => {
@@ -118,7 +127,7 @@ const Editor = ({
             StarterKit.configure({heading: {levels: [1, 2, 3]}}),
             LanguageToolMark.configure({
                 apiUrl: editorSettings.langtoolUrl,
-                language: 'auto',
+                language: editorSettings.languageCode,
                 automaticMode: true,
                 documentId,
                 enableSpellcheck: editorSettings.showSpellingSuggestions,
@@ -156,6 +165,7 @@ const Editor = ({
         },
         onTransaction({transaction}) {
             setMatch(transaction.meta.match)
+            onTransaction(transaction);
         },
         onBlur: ({editor}) => {
             if (editorSettings.showLineHighlight) {
@@ -199,8 +209,14 @@ const Editor = ({
             )}
         />
         <Stack sx={{flexGrow: 1, padding: '10px', overflowY: 'hidden', height: '100%', boxSizing: 'border-box', mt: 4}}>
-            <EditorToolbar editor={editor} toolbarStyle={editorSettings.toolbarStyle} onInsertFormula={onInsertFormula}
-                           onInsertImage={onInsertImage} onInsertLink={onInsertLink}/>
+            <EditorToolbar
+                editor={editor}
+                toolbarStyle={editorSettings.toolbarStyle}
+                handleInsertFormula={handleInsertFormula}
+                handleInsertImage={handleInsertImage}
+                handleInsertLink={handleInsertLink}
+                position={editorSettings.toolbarPlacement}
+            />
             <EditorContainer>
                 {editorSettings.enablePageEditor ? (<PageEditorWrapper
                     width={editorSettings.pageEditorWidth}
@@ -217,16 +233,16 @@ const Editor = ({
 };
 
 Editor.propTypes = {
-    langtoolUrl: PropTypes.string,
     documentId: PropTypes.string.isRequired,
     readOnly: PropTypes.bool.isRequired,
     defaultValue: PropTypes.string,
     onTextChange: PropTypes.func.isRequired,
     onSelectionChange: PropTypes.func.isRequired,
     onDeltaChange: PropTypes.func.isRequired,
-    onInsertLink: PropTypes.func.isRequired,
-    onInsertImage: PropTypes.func.isRequired,
-    onInsertFormula: PropTypes.func.isRequired,
+    onTransaction: PropTypes.func.isRequired,
+    handleInsertLink: PropTypes.func.isRequired,
+    handleInsertImage: PropTypes.func.isRequired,
+    handleInsertFormula: PropTypes.func.isRequired,
     editorSettings: PropTypes.shape({
         openLinks: PropTypes.bool,
         showGrammarSuggestions: PropTypes.bool,
@@ -241,7 +257,9 @@ Editor.propTypes = {
         pageEditorWidth: PropTypes.string,
         pageEditorElevation: PropTypes.number,
         pageEditorBoxShadow: PropTypes.bool,
+        toolbarPlacement: PropTypes.oneOf(["top", "bottom"]),
         toolbarStyle: PropTypes.oneOf(['science', 'general', 'fiction', 'non-fiction', 'all']),
+        languageCode: PropTypes.string,
         langtoolUrl: PropTypes.string,
     }),
     tipTapSettings: PropTypes.object,
