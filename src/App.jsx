@@ -23,7 +23,9 @@ const App = () => {
     return (<main>
         <ThemeProvider theme={createTheme({palette: {mode: "dark"}})}>
             <CssBaseline/>
-            <Container maxWidth={false} style={{padding: 0}}>
+            <Container maxWidth={false} style={{padding: 0}}
+                       sx={{display: "flex", flexDirection: "column", justifyContent: "center", width: "100%"}}
+            >
                 <Editor
                     documentId={"document_id"}
                     readOnly={false}
@@ -46,10 +48,11 @@ const App = () => {
                     }}
                     onDeltaChangeIteration={() => {
                     }}
-                    onInsertLink={handleInsertLink}
-                    onInsertImage={handleInsertImage}
-                    onInsertFormula={handleInsertFormula}
-                    onTransaction={() => {}}
+                    handleInsertLink={handleInsertLink}
+                    handleInsertImage={handleInsertImage}
+                    handleInsertFormula={handleInsertFormula}
+                    onTransaction={() => {
+                    }}
                 />
             </Container>
         </ThemeProvider>

@@ -3,7 +3,7 @@ import {EditorContent, useEditor} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import DragHandle from '@tiptap-pro/extension-drag-handle-react';
-import {Box, Paper, Stack, useTheme} from '@mui/material';
+import {Box, Paper, useTheme} from '@mui/material';
 import PropTypes from 'prop-types';
 import dynamicStyles from './helpers/dynamicStyles.js';
 import styled from '@emotion/styled';
@@ -53,19 +53,19 @@ const EditorContainer = styled.div`
 `;
 
 const TiptapEditorWrapper = styled.div`
-    height: 100%;
     display: flex;
     width: 100%;
     position: relative;
-    min-height: calc(100vh - 150px);
 `;
 
 
-const PageEditorWrapper = styled(Paper)(({width}) => ({
-    width: width,
-    margin: "10px auto",
-    padding: "5px",
-    borderRadius: 20
+const PageEditorWrapper = styled(Box)(({ width }) => ({
+    width: '100%',
+    maxWidth: width,
+    margin: '10px auto',
+    padding: '5px',
+    borderRadius: 20,
+    alignSelf: "stretch"
 }));
 /**
  * Editor component for rich text editing.
@@ -95,6 +95,7 @@ const Editor = ({
                     handleInsertLink,
                     handleInsertFormula,
                     handleInsertImage,
+                    hOffset = "0",
                     editorSettings = {
                         openLinks: false,
                         enableDragHandle: false,
@@ -103,7 +104,7 @@ const Editor = ({
                         buttonSize: "xl",
                         linePadding: "small",
                         showVerticalDivider: true,
-                        enablePageEditor: true,
+                        enablePageEditor: false,
                         pageEditorWidth: '800px',
                         pageEditorElevation: 1,
                         pageEditorBoxShadow: true,
@@ -176,7 +177,7 @@ const Editor = ({
         }, ...tipTapSettings,
     });
 
-    const editorContent = (<TiptapEditorWrapper className="tiptap-editor-wrapper">
+    const editorContent = (<TiptapEditorWrapper className="tiptap-editor-wrapper" style={{marginBottom: editorSettings.toolbarPlacement === "bottom" ? 70 : 0, marginTop: editorSettings.toolbarPlacement ==="top" ? 10 : 0}}>
         <div className="tiptap-editor" style={{paddingLeft: (editorSettings.enableDragHandle ? '3em' : "1em")}}>
             <DragHandle editor={editor}>
                 <DragHandleIcon/>
@@ -196,7 +197,7 @@ const Editor = ({
 
     return (<Box
         sx={{
-            height: '100vh',
+            height: `calc(100vh- ${hOffset}px)`,
             display: 'flex',
             flexDirection: 'column',
         }}
@@ -214,27 +215,32 @@ const Editor = ({
                 }
             )}
         />
-        <EditorToolbar
-            editor={editor}
-            toolbarStyle={editorSettings.toolbarStyle}
-            handleInsertFormula={handleInsertFormula}
-            handleInsertImage={handleInsertImage}
-            handleInsertLink={handleInsertLink}
-            position={editorSettings.toolbarPlacement}
-        />
+        {editorSettings.toolbarPlacement === 'top' && (
+            <EditorToolbar
+                editor={editor}
+                toolbarStyle={editorSettings.toolbarStyle}
+                handleInsertFormula={handleInsertFormula}
+                handleInsertImage={handleInsertImage}
+                handleInsertLink={handleInsertLink}
+                position={editorSettings.toolbarPlacement}
+            />
+        )}
         <Box
+            id={"content-wrapper"}
             sx={{
                 flexGrow: 1,
                 overflowY: 'auto',
                 boxSizing: 'border-box',
-                mb: 1
+                minHeight: 0,
+                mb: 2,
+                zIndex: 0
             }}
         >
-            <EditorContainer style={{position: 'relative'}}>
+            <EditorContainer style={{position: 'relative', alignSelf: "stretch"}}>
                 {editorSettings.enablePageEditor ? (<PageEditorWrapper
                     width={editorSettings.pageEditorWidth}
-                    elevation={editorSettings.pageEditorElevation}
                     sx={{
+                        backgroundColor: editorSettings.pageEditorElevation === 1 ? "background.default" : "transparent",
                         boxShadow: editorSettings.pageEditorBoxShadow ? theme.shadows[25] : "none"
                     }}
                 >
@@ -242,6 +248,16 @@ const Editor = ({
                 </PageEditorWrapper>) : (editorContent)}
             </EditorContainer>
         </Box>
+        {editorSettings.toolbarPlacement === 'bottom' && (
+            <EditorToolbar
+                editor={editor}
+                toolbarStyle={editorSettings.toolbarStyle}
+                handleInsertFormula={handleInsertFormula}
+                handleInsertImage={handleInsertImage}
+                handleInsertLink={handleInsertLink}
+                position={editorSettings.toolbarPlacement}
+            />
+        )}
     </Box>);
 };
 
@@ -256,6 +272,7 @@ Editor.propTypes = {
     handleInsertLink: PropTypes.func.isRequired,
     handleInsertImage: PropTypes.func.isRequired,
     handleInsertFormula: PropTypes.func.isRequired,
+    hOffset: PropTypes.number,
     editorSettings: PropTypes.shape({
         openLinks: PropTypes.bool,
         showGrammarSuggestions: PropTypes.bool,
