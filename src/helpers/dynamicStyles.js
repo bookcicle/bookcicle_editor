@@ -98,9 +98,7 @@ const dynamicStyles = ({
         .tiptap-editor .ProseMirror > h1,
         .tiptap-editor .ProseMirror > h2,
         .tiptap-editor .ProseMirror > h3,
-        .tiptap-editor .ProseMirror > blockquote,
-        .tiptap-editor .ProseMirror > ul > li,
-        .tiptap-editor .ProseMirror > ol > li {
+        .tiptap-editor .ProseMirror > blockquote {
             counter-increment: line;
             position: relative;
             margin-left: 0; /* Remove default margin */
@@ -112,12 +110,10 @@ const dynamicStyles = ({
         .tiptap-editor .ProseMirror > h1::before,
         .tiptap-editor .ProseMirror > h2::before,
         .tiptap-editor .ProseMirror > h3::before,
-        .tiptap-editor .ProseMirror > blockquote::before,
-        .tiptap-editor .ProseMirror > ul > li::before,
-        .tiptap-editor .ProseMirror > ol > li::before {
+        .tiptap-editor .ProseMirror > blockquote::before {
             content: counter(line);
-            position: absolute; /* Changed from 'fixed' to 'absolute' */
-            left: -2em; /* Adjusted to align with the gutter */
+            position: absolute;
+            left: -2em;
             width: 2em;
             text-align: left;
             color: ${showLineNumbers ? theme.palette.text.secondary : 'transparent'};
@@ -126,20 +122,23 @@ const dynamicStyles = ({
             line-height: 1.68em;
         }
 
-        /* Indentation for blockquotes and lists */
+        /* Indentation for blockquotes */
         .tiptap-editor .ProseMirror > blockquote {
             padding-left: 1em; /* Indent blockquotes */
             border-left: 2px solid ${theme.palette.divider};
         }
+
+        /* Indentation for lists */
         .tiptap-editor .ProseMirror > ul,
         .tiptap-editor .ProseMirror > ol {
-            padding-left: 1em; /* Indent lists */
-        }
-        .tiptap-editor .ProseMirror > ul > li,
-        .tiptap-editor .ProseMirror > ol > li {
-            padding-left: 1em; /* Indent list items */
+            padding-left: 2em; /* Increased indent for lists */
         }
 
+        .tiptap-editor .ProseMirror > ul > li,
+        .tiptap-editor .ProseMirror > ol > li {
+            padding-left: 2em; /* Increased indent for list items */
+        }
+        
         .active-line {
             background-color: ${alpha(theme.palette.primary.light, 0.1)} !important;
             width: 100%;
