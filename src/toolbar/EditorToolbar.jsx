@@ -137,82 +137,76 @@ const EditorToolbar = ({
         }
     };
 
-    const positionStyle = position === "bottom" ? {top: 'auto', bottom: 0} : {};
-
     return (
-        <Container maxWidth="false" sx={{backgroundColor: "transparent"}}>
-            <AppBar
-                color="transparent"
-                elevation={0}
-                sx={{
-                    zIndex: 0,
-                    backgroundColor: 'transparent',
-                    boxShadow: 'none',
-                    position: 'sticky',
-                    top: 0,
-                    m: 0,
-                    ...positionStyle
-                }}
-            >
-                <Toolbar variant="dense" sx={{backgroundColor: 'transparent'}}>
-                    <Box
-                        sx={{
-                            flexGrow: 1,
-                            display: 'flex',
-                            justifyContent: 'center',
-                            backgroundColor: 'transparent',
-                        }}
-                    >
-                        <Box sx={{backgroundColor: "background.default"}}>
-                            {/* Always included in all styles */}
-                            <TextFormattingTools handleAction={handleAction} editor={editor}/>
-                            <AlignmentTools
-                                selectedAlignment={selectedAlignment}
-                                handleAlignmentChange={handleAlignmentChange}
+        <Box
+            sx={{
+                backgroundColor: 'transparent',
+                // Optionally, you can set fixed positioning if you want the toolbar to always be visible
+                position: 'fixed',
+                bottom: position === 'bottom' ? '20px' : 'auto',
+                top: position === 'top' ? 40 : 'auto',
+                zIndex: 1,
+                alignSelf: "center"
+            }}
+        >
+            <Toolbar variant="dense" sx={{backgroundColor: 'transparent'}}>
+                <Box
+                    sx={{
+                        flexGrow: 1,
+                        display: 'flex',
+                        justifyContent: 'center',
+                        backgroundColor: 'transparent',
+                    }}
+                >
+                    <Box sx={{backgroundColor: "background.default"}}>
+                        {/* Always included in all styles */}
+                        <TextFormattingTools handleAction={handleAction} editor={editor}/>
+                        <AlignmentTools
+                            selectedAlignment={selectedAlignment}
+                            handleAlignmentChange={handleAlignmentChange}
+                        />
+                        <HeadingTools
+                            selectedHeading={selectedHeading}
+                            handleHeadingChange={handleHeadingChange}
+                        />
+                        <TextClearTools handleAction={handleAction}/>
+                        {['all'].includes(toolbarStyle) && <UndoRedoTools handleAction={handleAction}/>}
+
+                        {/* Include Lists and Blockquotes except in 'fiction' */}
+                        {['non-fiction', 'all'].includes(toolbarStyle) && (
+                            <ListAndBlockTools handleAction={handleAction}/>
+                        )}
+
+                        {/* Include Superscript/Subscript in 'non-fiction', 'general', 'science', 'all' */}
+                        {['non-fiction', 'general', 'science', 'all'].includes(toolbarStyle) && (
+                            <SuperscriptSubscriptTools handleAction={handleAction}/>
+                        )}
+
+                        {/* Include Font and Color Tools in 'non-fiction', 'general', 'all' */}
+                        {['non-fiction', 'general', 'all'].includes(toolbarStyle) && (
+                            <FontAndColorTools
+                                fontMenuAnchorEl={fontMenuAnchorEl}
+                                handleFontMenuClick={handleFontMenuClick}
+                                handleFontMenuClose={handleFontMenuClose}
+                                handleFontStyleChange={handleFontStyleChange}
+                                handleAction={handleAction}
+                                toolbarStyle={toolbarStyle}
                             />
-                            <HeadingTools
-                                selectedHeading={selectedHeading}
-                                handleHeadingChange={handleHeadingChange}
-                            />
-                            <TextClearTools handleAction={handleAction}/>
-                            {['all'].includes(toolbarStyle) && <UndoRedoTools handleAction={handleAction}/>}
+                        )}
 
-                            {/* Include Lists and Blockquotes except in 'fiction' */}
-                            {['non-fiction', 'all'].includes(toolbarStyle) && (
-                                <ListAndBlockTools handleAction={handleAction}/>
-                            )}
+                        {/* Include Insert Tools in 'non-fiction', 'general', 'science', 'all' */}
+                        {['non-fiction', 'general', 'science', 'all'].includes(toolbarStyle) && (
+                            <InsertTools handleAction={handleAction} toolbarStyle={toolbarStyle}/>
+                        )}
 
-                            {/* Include Superscript/Subscript in 'non-fiction', 'general', 'science', 'all' */}
-                            {['non-fiction', 'general', 'science', 'all'].includes(toolbarStyle) && (
-                                <SuperscriptSubscriptTools handleAction={handleAction}/>
-                            )}
-
-                            {/* Include Font and Color Tools in 'non-fiction', 'general', 'all' */}
-                            {['non-fiction', 'general', 'all'].includes(toolbarStyle) && (
-                                <FontAndColorTools
-                                    fontMenuAnchorEl={fontMenuAnchorEl}
-                                    handleFontMenuClick={handleFontMenuClick}
-                                    handleFontMenuClose={handleFontMenuClose}
-                                    handleFontStyleChange={handleFontStyleChange}
-                                    handleAction={handleAction}
-                                    toolbarStyle={toolbarStyle}
-                                />
-                            )}
-
-                            {/* Include Insert Tools in 'non-fiction', 'general', 'science', 'all' */}
-                            {['non-fiction', 'general', 'science', 'all'].includes(toolbarStyle) && (
-                                <InsertTools handleAction={handleAction} toolbarStyle={toolbarStyle}/>
-                            )}
-
-                            {/* Include Formula Insertion only in 'science' and 'all' */}
-                            {['science', 'all'].includes(toolbarStyle) && (
-                                <FormulaTools handleAction={handleAction}/>
-                            )}
-                        </Box>
+                        {/* Include Formula Insertion only in 'science' and 'all' */}
+                        {['science', 'all'].includes(toolbarStyle) && (
+                            <FormulaTools handleAction={handleAction}/>
+                        )}
                     </Box>
-                </Toolbar>
-            </AppBar>
-        </Container>
+                </Box>
+            </Toolbar>
+        </Box>
     );
 };
 

@@ -3,7 +3,7 @@ import {EditorContent, useEditor} from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
 import DragHandle from '@tiptap-pro/extension-drag-handle-react';
-import {Box, Paper, Stack, useTheme} from '@mui/material';
+import {Box, useTheme} from '@mui/material';
 import PropTypes from 'prop-types';
 import dynamicStyles from './helpers/dynamicStyles.js';
 import styled from '@emotion/styled';
@@ -24,6 +24,8 @@ import {Decoration, DecorationSet} from "prosemirror-view";
 import {LanguageToolMark} from "./extensions/spellchecker/langtool.js";
 import {useState} from "react";
 import {SpellingActionsMenu} from "./extensions/spellchecker/SpellingActionsMenu.jsx";
+import {ListKeymap} from "@tiptap/extension-list-keymap";
+import IndentHandler from "./extensions/Indent.js";
 
 /**
  * @typedef {Object} EditorSettings
@@ -53,19 +55,14 @@ const EditorContainer = styled.div`
 `;
 
 const TiptapEditorWrapper = styled.div`
-    height: 100%;
     display: flex;
     width: 100%;
     position: relative;
-    min-height: calc(100vh - 150px);
 `;
 
 
-const PageEditorWrapper = styled(Paper)(({width}) => ({
-    width: width,
-    margin: "10px auto",
-    padding: "5px",
-    borderRadius: 20
+const PageEditorWrapper = styled(Box)(({width}) => ({
+    width: '100%', maxWidth: width, margin: '10px auto', padding: '5px', borderRadius: 20, alignSelf: "stretch"
 }));
 /**
  * Editor component for rich text editing.
@@ -95,6 +92,7 @@ const Editor = ({
                     handleInsertLink,
                     handleInsertFormula,
                     handleInsertImage,
+                    hOffset = "0",
                     editorSettings = {
                         openLinks: false,
                         enableDragHandle: false,
@@ -103,7 +101,7 @@ const Editor = ({
                         buttonSize: "xl",
                         linePadding: "small",
                         showVerticalDivider: true,
-                        enablePageEditor: true,
+                        enablePageEditor: false,
                         pageEditorWidth: '800px',
                         pageEditorElevation: 1,
                         pageEditorBoxShadow: true,
@@ -123,21 +121,21 @@ const Editor = ({
 
     const editor = useEditor({
         // Default configurations
-        extensions: [
-            StarterKit.configure({heading: {levels: [1, 2, 3]}}),
-            LanguageToolMark.configure({
-                apiUrl: editorSettings.langtoolUrl,
-                language: editorSettings.languageCode,
-                automaticMode: true,
-                documentId,
-                enableSpellcheck: editorSettings.showSpellingSuggestions,
-                enableGrammarCheck: editorSettings.showGrammarSuggestions
-            }),
-            FontFamily, TextStyle, Color, Underline, Image, TextAlign.configure({
-                types: ['heading', 'paragraph'], alignments: ['left', 'center', 'right'],
-            }), Subscript, Superscript, Mathematics, Highlight.configure({multicolor: true}), Link.configure({
-                openOnClick: editorSettings.openLinks,
-            }),], content: defaultValue || `<p>Start editing...</p>`, editable: !readOnly, onUpdate: ({editor}) => {
+        extensions: [StarterKit.configure({heading: {levels: [1, 2, 3]}}), LanguageToolMark.configure({
+            apiUrl: editorSettings.langtoolUrl,
+            language: editorSettings.languageCode,
+            automaticMode: true,
+            documentId,
+            enableSpellcheck: editorSettings.showSpellingSuggestions,
+            enableGrammarCheck: editorSettings.showGrammarSuggestions
+        }), FontFamily, TextStyle, Color, Underline, Image, TextAlign.configure({
+            types: ['heading', 'paragraph'], alignments: ['left', 'center', 'right'],
+        }), Subscript, Superscript, Mathematics, Highlight.configure({multicolor: true}), Link.configure({
+            openOnClick: editorSettings.openLinks,
+        }),
+            IndentHandler,
+            ListKeymap,
+        ], content: defaultValue || `<p>Start editing...</p>`, editable: !readOnly, onUpdate: ({editor}) => {
             const jsonContent = editor.getJSON();
             onTextChange?.(editor.getText());
             onDeltaChange?.(jsonContent);
@@ -162,12 +160,10 @@ const Editor = ({
 
             }
 
-        },
-        onTransaction({transaction}) {
+        }, onTransaction({transaction}) {
             setMatch(transaction.meta.match)
             onTransaction(transaction);
-        },
-        onBlur: ({editor}) => {
+        }, onBlur: ({editor}) => {
             if (editorSettings.showLineHighlight) {
                 editor.view.setProps({
                     decorations: () => DecorationSet.empty,
@@ -176,7 +172,10 @@ const Editor = ({
         }, ...tipTapSettings,
     });
 
-    const editorContent = (<TiptapEditorWrapper className="tiptap-editor-wrapper">
+    const editorContent = (<TiptapEditorWrapper className="tiptap-editor-wrapper" style={{
+        marginBottom: editorSettings.toolbarPlacement === "bottom" ? 70 : 0,
+        marginTop: editorSettings.toolbarPlacement === "top" ? 10 : 0
+    }}>
         <div className="tiptap-editor" style={{paddingLeft: (editorSettings.enableDragHandle ? '3em' : "1em")}}>
             <DragHandle editor={editor}>
                 <DragHandleIcon/>
@@ -196,45 +195,40 @@ const Editor = ({
 
     return (<Box
         sx={{
-            height: '100vh',
-            display: 'flex',
-            flexDirection: 'column',
+            height: `calc(100vh- ${hOffset}px)`, display: 'flex', flexDirection: 'column',
         }}
     >
         <Global
             styles={dynamicStyles({
-                    theme,
-                    showLineNumbers: editorSettings.showLineNumbers,
-                    showDivider: editorSettings.showVerticalDivider,
-                    linePadding: editorSettings.linePadding,
-                    buttonSize: editorSettings.buttonSize,
-                    enableDragHandle: editorSettings.enableDragHandle,
-                    enableSpellcheckDecoration: editorSettings.showSpellingSuggestions,
-                    enabledGrammarCheckDecoration: editorSettings.showGrammarSuggestions
-                }
-            )}
+                theme,
+                showLineNumbers: editorSettings.showLineNumbers,
+                showDivider: editorSettings.showVerticalDivider,
+                linePadding: editorSettings.linePadding,
+                buttonSize: editorSettings.buttonSize,
+                enableDragHandle: editorSettings.enableDragHandle,
+                enableSpellcheckDecoration: editorSettings.showSpellingSuggestions,
+                enabledGrammarCheckDecoration: editorSettings.showGrammarSuggestions
+            })}
         />
-        <EditorToolbar
+        {editorSettings.toolbarPlacement === 'top' && (<EditorToolbar
             editor={editor}
             toolbarStyle={editorSettings.toolbarStyle}
             handleInsertFormula={handleInsertFormula}
             handleInsertImage={handleInsertImage}
             handleInsertLink={handleInsertLink}
             position={editorSettings.toolbarPlacement}
-        />
+        />)}
         <Box
+            id={"content-wrapper"}
             sx={{
-                flexGrow: 1,
-                overflowY: 'auto',
-                boxSizing: 'border-box',
-                mb: 1
+                flexGrow: 1, overflowY: 'auto', boxSizing: 'border-box', minHeight: 0, mb: 2, zIndex: 0
             }}
         >
-            <EditorContainer style={{position: 'relative'}}>
+            <EditorContainer style={{position: 'relative', alignSelf: "stretch"}}>
                 {editorSettings.enablePageEditor ? (<PageEditorWrapper
                     width={editorSettings.pageEditorWidth}
-                    elevation={editorSettings.pageEditorElevation}
                     sx={{
+                        backgroundColor: editorSettings.pageEditorElevation === 1 ? "background.default" : "transparent",
                         boxShadow: editorSettings.pageEditorBoxShadow ? theme.shadows[25] : "none"
                     }}
                 >
@@ -242,6 +236,14 @@ const Editor = ({
                 </PageEditorWrapper>) : (editorContent)}
             </EditorContainer>
         </Box>
+        {editorSettings.toolbarPlacement === 'bottom' && (<EditorToolbar
+            editor={editor}
+            toolbarStyle={editorSettings.toolbarStyle}
+            handleInsertFormula={handleInsertFormula}
+            handleInsertImage={handleInsertImage}
+            handleInsertLink={handleInsertLink}
+            position={editorSettings.toolbarPlacement}
+        />)}
     </Box>);
 };
 
@@ -256,6 +258,7 @@ Editor.propTypes = {
     handleInsertLink: PropTypes.func.isRequired,
     handleInsertImage: PropTypes.func.isRequired,
     handleInsertFormula: PropTypes.func.isRequired,
+    hOffset: PropTypes.number,
     editorSettings: PropTypes.shape({
         openLinks: PropTypes.bool,
         showGrammarSuggestions: PropTypes.bool,
