@@ -101,8 +101,10 @@ const Editor = ({
                         pageEditorElevation: 1,
                         pageEditorBoxShadow: true,
                         toolbarStyle: "all",
+                        toolbarPlacement: "top",
                         showGrammarSuggestions: true,
                         showSpellingSuggestions: true,
+
                         langtoolUrl: "http://localhost:8010/v2/check",
                     },
                     tipTapSettings = {},
@@ -199,8 +201,13 @@ const Editor = ({
             )}
         />
         <Stack sx={{flexGrow: 1, padding: '10px', overflowY: 'hidden', height: '100%', boxSizing: 'border-box', mt: 4}}>
-            <EditorToolbar editor={editor} toolbarStyle={editorSettings.toolbarStyle} onInsertFormula={onInsertFormula}
-                           onInsertImage={onInsertImage} onInsertLink={onInsertLink}/>
+            <EditorToolbar
+                editor={editor}
+                toolbarStyle={editorSettings.toolbarStyle}
+                onInsertFormula={onInsertFormula}
+                onInsertImage={onInsertImage}
+                position={editorSettings.toolbarPlacement }
+                onInsertLink={onInsertLink}/>
             <EditorContainer>
                 {editorSettings.enablePageEditor ? (<PageEditorWrapper
                     width={editorSettings.pageEditorWidth}
@@ -241,6 +248,7 @@ Editor.propTypes = {
         pageEditorWidth: PropTypes.string,
         pageEditorElevation: PropTypes.number,
         pageEditorBoxShadow: PropTypes.bool,
+        toolbarPlacement: PropTypes.oneOf(["top", "bottom"]),
         toolbarStyle: PropTypes.oneOf(['science', 'general', 'fiction', 'non-fiction', 'all']),
         langtoolUrl: PropTypes.string,
     }),
