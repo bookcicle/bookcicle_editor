@@ -1,14 +1,10 @@
-Certainly! Here's the updated README with the **`toolbarStyle`** attribute added to the **Editor Settings** section.
-
----
-
 # Bookcicle Editor
 
-**Bookcicle Editor** is a feature-rich text editor built on **TipTap** with **React**, and **Vite**,
-leveraging **Material UI (MUI)** for styling and theming. It offers a seamless rich-text editing experience with a
-modern, customizable interface, allowing users to format text, insert media, and write with style. The editor is
-designed to be responsive, flexible. It has been built to be integrated into desktop applications frontends. Bookcicle
-uses it in its Tauri V2 cross platform desktop application.
+**Bookcicle Editor** is a feature-rich text editor built on **TipTap** with **React** and **Vite**, leveraging *
+*Material UI (MUI)** for styling and theming. It offers a seamless rich-text editing experience with a modern,
+customizable interface, allowing users to format text, insert media, and write with style. The editor is designed to be
+responsive and flexible, built to be integrated into desktop application frontends. Bookcicle uses it in its Tauri V2
+cross-platform desktop application.
 
 ## Features
 
@@ -132,7 +128,7 @@ using Docker. Follow these steps to install and integrate `languagetool-rust`:
    const editorSettings = {
      showGrammarSuggestions: true,
      showSpellingSuggestions: true,
-     languageCode: 'en-US',
+     languageCode: 'auto',
      langtoolUrl: 'http://localhost:8010/v2/check', // Replace with your LanguageTool server URL
    };
    ```
@@ -160,19 +156,97 @@ Here’s an overview of the project structure:
 
 ```plaintext
 bookcicle-editor/
-├── public/              # Static files
+├── public/             # Static files
 ├── src/
-│   ├── components/      # React components
-│   ├── assets/          # Styles, fonts, images, etc.
-│   ├── App.jsx          # Main app file
-│   ├── index.jsx        # Entry point
-│   └── Editor.jsx       # Editor entry point
-├── README.md            # This file
-├── package.json         # Project metadata and scripts
-└── vite.config.js       # Vite configuration
+│   ├── components/     # React components
+│   ├── assets/         # Styles, fonts, images, etc.
+│   ├── App.jsx         # Main app file
+│   ├── index.jsx       # Entry point
+│   └── Editor.jsx      # Editor entry point
+├── README.md           # This file
+├── package.json        # Project metadata and scripts
+└── vite.config.js      # Vite configuration
 ```
 
 ## Using the Bookcicle Editor
+
+### Editor Component Props
+
+The **Bookcicle Editor** exposes several props that allow you to control the editor's behavior and integrate it with
+your application logic. Below is a detailed explanation of each prop:
+
+```javascript
+/**
+ * @typedef {Object} EditorProps
+ * @property {string} documentId - The unique identifier for the document being edited. Required.
+ * @property {boolean} readOnly - Make the editor read-only when set to `true`. Default is `false`.
+ * @property {string} defaultValue - The initial HTML content to load into the editor.
+ * @property {function} onTextChange - Callback function invoked when the text content changes. Receives the text content as a parameter.
+ * @property {function} onSelectionChange - Callback function invoked when the text selection changes. Receives the selection object as a parameter.
+ * @property {function} onDeltaChange - Callback function invoked when the document changes, providing the change delta.
+ * @property {function} handleInsertImage - Callback function to handle custom image insertion logic.
+ * @property {function} handleInsertLink - Callback function to handle custom link insertion logic.
+ * @property {function} handleInsertFormula - Callback function to handle custom formula insertion logic.
+ * @property {EditorSettings} editorSettings - An object containing configuration options for the editor's behavior and appearance.
+ */
+```
+
+#### Editor Props Explained
+
+- **`documentId`** (`string`): A unique identifier for the document being edited. This can be used to save and retrieve
+  content specific to this document.
+
+    - **Required**: Yes
+
+- **`readOnly`** (`boolean`): Sets the editor to read-only mode when `true`. Users will not be able to edit the content.
+
+    - **Default**: `false`
+
+- **`defaultValue`** (`string`): The initial HTML content to load into the editor when it mounts.
+
+    - **Default**: `''` (empty string)
+
+- **`onTextChange`** (`function`): A callback function that is invoked whenever the text content changes. It receives
+  the current text content as a parameter.
+
+    - **Parameters**:
+        - `text` (`string`): The current text content of the editor.
+    - **Usage**: Useful for updating application state or handling auto-save functionality.
+
+- **`onSelectionChange`** (`function`): A callback function that is invoked whenever the text selection changes. It
+  receives the selection object as a parameter.
+
+    - **Parameters**:
+        - `selection` (`object`): An object representing the current selection in the editor.
+    - **Usage**: Can be used to display selection-based tools or information.
+
+- **`onDeltaChange`** (`function`): A callback function that is invoked when the document changes, providing the change
+  delta.
+
+    - **Parameters**:
+        - `delta` (`object`): An object representing the changes made to the document.
+    - **Usage**: Useful for syncing changes with a backend or implementing collaborative editing features.
+
+- **`handleInsertImage`** (`function`): A callback function to handle custom image insertion logic when the user
+  attempts to insert an image.
+
+    - **Usage**: Allows integration with image upload services or custom image management workflows.
+
+- **`handleInsertLink`** (`function`): A callback function to handle custom link insertion logic when the user attempts
+  to insert a link.
+
+    - **Usage**: Can be used to validate URLs or integrate with link management systems.
+
+- **`handleInsertFormula`** (`function`): A callback function to handle custom formula insertion logic when the user
+  attempts to insert a formula.
+
+    - **Usage**: Useful for integrating with formula editors or custom mathematical input methods.
+
+- **`editorSettings`** (`EditorSettings`): An object containing configuration options for the editor's behavior and
+  appearance.
+
+    - **Default**: `{}` (default settings are applied)
+    - **See**: [Editor Settings](#editor-settings) for detailed options.
 
 ### Editor Settings
 
@@ -182,7 +256,7 @@ editor's behavior and appearance. Below is a detailed explanation of each settin
 ```javascript
 /**
  * @typedef {Object} EditorSettings
- * @property {boolean} openLinks - Allow opening links from the editor on click. Default is `false`.
+ * @property {boolean} openLinks - Allow opening links from the editor on click. Default is `true`.
  * @property {boolean} enableDragHandle - Enable a drag handle for content dragging. Default is `false`.
  * @property {boolean} showLineNumbers - Whether line numbers are displayed. Default is `true`.
  * @property {boolean} showLineHighlight - Enable line highlighting for the current line. Default is `true`.
@@ -198,63 +272,93 @@ editor's behavior and appearance. Below is a detailed explanation of each settin
  * @property {boolean} showGrammarSuggestions - Enable grammar suggestions in the editor. Default is `true`.
  * @property {boolean} showSpellingSuggestions - Enable spelling suggestions in the editor. Default is `true`.
  * @property {string} langtoolUrl - The URL for spell/grammar checking, expecting an instance of LanguageTool v2. Default is `'http://localhost:8010/v2/check'`.
- * @property {string} [languageCode="en-US"] - (Optional) Language code used for the editor (e.g., `"en-US"`). Default is `"en-US"`.
+ * @property {string} [languageCode="auto"] - (Optional) Language code used for the editor (e.g., `'en-US'`). Default is `'auto'`.
  */
 ```
 
 #### Editor Settings Explained
 
 - **`openLinks`** (`boolean`): Allows users to open hyperlinks directly from the editor by clicking on them.
+
     - **Default**: `true`
+
 - **`enableDragHandle`** (`boolean`): Enables drag handles on content blocks, allowing users to drag and rearrange
   blocks within the editor.
+
     - **Default**: `false`
+
 - **`showLineNumbers`** (`boolean`): Displays line numbers next to each line of content in the editor.
+
     - **Default**: `true`
+
 - **`showLineHighlight`** (`boolean`): Highlights the line where the cursor is currently positioned, helping users keep
   track of their location in the text.
+
     - **Default**: `true`
-- **`buttonSize`** (`string`): Sets the size of the toolbar buttons. Can be one of:
-    - `'xs'`, `'small'`, `'medium'`, `'large'`, `'xl'`
+
+- **`buttonSize`** (`string`): Sets the size of the toolbar buttons.
+
+    - **Options**: `'xs'`, `'small'`, `'medium'`, `'large'`, `'xl'`
     - **Default**: `'xl'`
-- **`linePadding`** (`string`): Adjusts the padding between lines in the editor. Can be one of:
-    - `'xs'`, `'small'`, `'medium'`, `'large'`, `'xl'`
+
+- **`linePadding`** (`string`): Adjusts the padding between lines in the editor.
+
+    - **Options**: `'xs'`, `'small'`, `'medium'`, `'large'`, `'xl'`
     - **Default**: `'small'`
+
 - **`showVerticalDivider`** (`boolean`): Determines whether a vertical divider is displayed between the line numbers and
   the editor content.
+
     - **Default**: `true`
+
 - **`enablePageEditor`** (`boolean`): Activates the page editor mode, which displays the editor content in a page-like
   format, centered on the screen. This provides a writing experience similar to editing a page in a book or a document.
+
     - **Default**: `true`
+
 - **`pageEditorWidth`** (`string`): Sets the width of the editor when `enablePageEditor` is `true`. This allows you to
   control how wide the page appears on the screen.
+
     - **Default**: `'800px'`
+
 - **`pageEditorElevation`** (`number`): Elevation level for the Paper component in the page editor, controlling the
   depth of the shadow.
+
     - **Default**: `1`
+
 - **`pageEditorBoxShadow`** (`boolean`): Determines whether to display a box shadow around the page editor.
+
     - **Default**: `true`
+
+- **`toolbarStyle`** (`string`): Determines which toolbar buttons are displayed based on the writing context.
+
+    - **Options**: `'science'`, `'general'`, `'fiction'`, `'non-fiction'`, `'all'`
+    - **Default**: `'all'`
+    - **Description**: This setting allows you to tailor the editor's toolbar to match the specific needs of your
+      writing context, providing a more focused and efficient user experience.
+
+- **`toolbarPlacement`** (`string`): Sets the placement of the toolbar in relation to the editor content.
+
+    - **Options**: `'top'`, `'bottom'`, `'left'`, `'right'`
+    - **Default**: `'top'`
+
 - **`languageCode`** (`string`): Sets the language code for the editor, which can be used for localization and
   spell-checking purposes.
-    - **Default**: `'en-US'`
+
+    - **Default**: `'auto'`
+
 - **`showGrammarSuggestions`** (`boolean`): Enables or disables grammar suggestions within the editor.
+
     - **Default**: `true`
+
 - **`showSpellingSuggestions`** (`boolean`): Enables or disables spelling suggestions and corrections within the editor.
+
     - **Default**: `true`
+
 - **`langtoolUrl`** (`string`): The URL for spell and grammar checking, expecting an instance of LanguageTool v2. This
   property allows you to specify a custom LanguageTool server endpoint for handling spelling and grammar suggestions.
-    - **Default**: `'http://localhost:8010/v2/check'`
-- **`toolbarStyle`** (`string`): Determines which toolbar buttons are displayed based on the writing context. Possible
-  values are:
-    - `'fiction'`: Simplified toolbar suitable for fiction writing.
-    - `'non-fiction'`: Toolbar optimized for non-fiction writing, including lists and references.
-    - `'general'`: Standard toolbar suitable for most writing contexts.
-    - `'science'`: Specialized toolbar with tools for scientific writing, including formula insertion.
-    - `'all'`: Includes all available toolbar options.
-    - **Default**: `'all'`
 
-This setting allows you to tailor the editor's toolbar to match the specific needs of your writing context, providing a
-more focused and efficient user experience.
+    - **Default**: `'http://localhost:8010/v2/check'`
 
 #### Example Usage
 
@@ -272,11 +376,14 @@ function App() {
         showVerticalDivider: true,
         enablePageEditor: true,
         pageEditorWidth: '700px',
-        languageCode: 'en-US',
+        pageEditorElevation: 2,
+        pageEditorBoxShadow: true,
+        languageCode: 'auto',
         showGrammarSuggestions: true,
         showSpellingSuggestions: true,
         langtoolUrl: 'http://localhost:8010/v2/check',
         toolbarStyle: 'non-fiction', // Choose 'fiction', 'non-fiction', 'general', 'science', or 'all'
+        toolbarPlacement: 'top', // Options: 'top', 'bottom', 'left', 'right'
     };
 
     return (
@@ -287,11 +394,14 @@ function App() {
             onTextChange={(text) => console.log('Text changed:', text)}
             onSelectionChange={(selection) => console.log('Selection changed:', selection)}
             onDeltaChange={(delta) => console.log('Delta changed:', delta)}
-            onInsertImage={() => {
+            handleInsertImage={() => {
+                // Custom image insertion logic
             }}
-            onInsertLink={() => {
+            handleInsertLink={() => {
+                // Custom link insertion logic
             }}
-            onInsertFormula={() => {
+            handleInsertFormula={() => {
+                // Custom formula insertion logic
             }}
             editorSettings={editorSettings}
         />
@@ -319,21 +429,30 @@ toolbar options available:
 #### Toolbar Styles Explained
 
 - **`fiction`**:
+
     - **Includes**: Text Formatting, Alignment Tools, Heading Tools, Text Clear Tools, Undo/Redo
     - **Excludes**: Lists, Blockquotes, Superscript/Subscript, Font and Color Tools, Insert Tools (Images, Links),
       Formula Insertion
+
 - **`non-fiction`**:
+
     - **Includes**: All from 'fiction', plus Lists, Blockquotes, Superscript/Subscript, Font and Color Tools, Insert
       Tools (Images, Links)
     - **Excludes**: Formula Insertion (unless scientific content is expected)
+
 - **`general`**:
+
     - **Includes**: A balanced set of tools suitable for most writing contexts, including Text Formatting, Lists,
       Blockquotes, Alignment, Heading Tools, Superscript/Subscript, Font and Color Tools, Insert Tools, Text Clear
       Tools, Undo/Redo
+
 - **`science`**:
+
     - **Includes**: All from 'general', plus Formula Insertion for mathematical and scientific content
     - **Excludes**: May exclude certain styling tools not commonly used in scientific writing
+
 - **`all`**:
+
     - **Includes**: All available toolbar options, providing the most comprehensive set of tools
 
 These options are highly customizable. To modify the toolbar or add custom functionality, you can adjust the extensions
@@ -349,16 +468,50 @@ For example, to add a new extension:
 
 1. **Install the extension via npm.**
 
+   ```bash
+   npm install @tiptap/extension-your-extension
+   ```
+
 2. **Import the extension in your `Editor.jsx` file.**
 
+   ```javascript
+   import YourExtension from '@tiptap/extension-your-extension';
+   ```
+
 3. **Add the extension to the `extensions` array in the `useEditor` hook.**
+
+   ```javascript
+   const editor = useEditor({
+     extensions: [
+       // Existing extensions
+       YourExtension.configure(/* options */),
+     ],
+     content: defaultValue,
+     // other configurations
+   });
+   ```
 
 ### Themes
 
 **Bookcicle Editor** supports theming with **Material UI**. You can easily switch between light and dark themes or
-customize the existing theme to match your branding.
+customize the existing theme to match your branding. An MUI `<ThemeProvider><Editor /></ThemeProvider>` should wrap this
+component. See `App.jsx` for an example.
 
-An MUI `<ThemeProvider><Editor /></ThemeProvider>` should wrap this component. See `App.jsx` for an example.
+```jsx
+import {createTheme, ThemeProvider} from '@mui/material/styles';
+
+const theme = createTheme({
+    // Customize your theme here
+});
+
+function App() {
+    return (
+        <ThemeProvider theme={theme}>
+            <Editor {...props} />
+        </ThemeProvider>
+    );
+}
+```
 
 ### Formula Support
 
@@ -374,13 +527,9 @@ npm install katex
 We welcome contributions to the **Bookcicle Editor**! To contribute:
 
 1. **Fork the repository.**
-
 2. **Create a new feature branch (`git checkout -b feature/your-feature`).**
-
 3. **Commit your changes (`git commit -m 'Add your feature'`).**
-
 4. **Push to the branch (`git push origin feature/your-feature`).**
-
 5. **Create a pull request.**
 
 ## Testing in Upstream

@@ -194,7 +194,13 @@ const Editor = ({
         </div>
     </TiptapEditorWrapper>);
 
-    return (<Box>
+    return (<Box
+        sx={{
+            height: '100vh',
+            display: 'flex',
+            flexDirection: 'column',
+        }}
+    >
         <Global
             styles={dynamicStyles({
                     theme,
@@ -208,16 +214,23 @@ const Editor = ({
                 }
             )}
         />
-        <Stack sx={{flexGrow: 1, padding: '10px', overflowY: 'hidden', height: '100%', boxSizing: 'border-box', mt: 4}}>
-            <EditorToolbar
-                editor={editor}
-                toolbarStyle={editorSettings.toolbarStyle}
-                handleInsertFormula={handleInsertFormula}
-                handleInsertImage={handleInsertImage}
-                handleInsertLink={handleInsertLink}
-                position={editorSettings.toolbarPlacement}
-            />
-            <EditorContainer>
+        <EditorToolbar
+            editor={editor}
+            toolbarStyle={editorSettings.toolbarStyle}
+            handleInsertFormula={handleInsertFormula}
+            handleInsertImage={handleInsertImage}
+            handleInsertLink={handleInsertLink}
+            position={editorSettings.toolbarPlacement}
+        />
+        <Box
+            sx={{
+                flexGrow: 1,
+                overflowY: 'auto',
+                boxSizing: 'border-box',
+                mb: 1
+            }}
+        >
+            <EditorContainer style={{position: 'relative'}}>
                 {editorSettings.enablePageEditor ? (<PageEditorWrapper
                     width={editorSettings.pageEditorWidth}
                     elevation={editorSettings.pageEditorElevation}
@@ -228,7 +241,7 @@ const Editor = ({
                     {editorContent}
                 </PageEditorWrapper>) : (editorContent)}
             </EditorContainer>
-        </Stack>
+        </Box>
     </Box>);
 };
 

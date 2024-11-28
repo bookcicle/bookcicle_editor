@@ -140,7 +140,7 @@ const EditorToolbar = ({
     const positionStyle = position === "bottom" ? {top: 'auto', bottom: 0} : {};
 
     return (
-        <Container maxWidth="sm" sx={{backgroundColor: "background.default"}}>
+        <Container maxWidth="false" sx={{backgroundColor: "transparent"}}>
             <AppBar
                 color="transparent"
                 elevation={0}
@@ -148,7 +148,10 @@ const EditorToolbar = ({
                     zIndex: 0,
                     backgroundColor: 'transparent',
                     boxShadow: 'none',
-                    position: "absolute", ...positionStyle
+                    position: 'sticky',
+                    top: 0,
+                    m: 0,
+                    ...positionStyle
                 }}
             >
                 <Toolbar variant="dense" sx={{backgroundColor: 'transparent'}}>
