@@ -48,6 +48,8 @@ const App = () => {
                     }}
                     onDeltaChangeIteration={() => {
                     }}
+                    onCursorPositionChange={() => {
+                    }}
                     handleInsertLink={handleInsertLink}
                     handleInsertImage={handleInsertImage}
                     handleInsertFormula={handleInsertFormula}

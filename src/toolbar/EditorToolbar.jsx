@@ -142,9 +142,9 @@ const EditorToolbar = ({
             sx={{
                 backgroundColor: 'transparent',
                 // Optionally, you can set fixed positioning if you want the toolbar to always be visible
-                position: 'fixed',
+                position: position === 'bottom' ? 'fixed' : "sticky",
                 bottom: position === 'bottom' ? '20px' : 'auto',
-                top: position === 'top' ? 40 : 'auto',
+                top: position === 'top' ? 0 : 'auto',
                 zIndex: 1,
                 alignSelf: "center"
             }}
