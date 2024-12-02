@@ -15,8 +15,8 @@ import Image from '@tiptap/extension-image';
 import Highlight from '@tiptap/extension-highlight';
 import DragHandleIcon from '@mui/icons-material/DragHandleOutlined';
 import FontFamily from '@tiptap/extension-font-family';
-import 'katex/dist/katex.min.css'; // Import KaTeX CSS
-import {Mathematics} from '@tiptap-pro/extension-mathematics'; // Import the Mathematics extension
+import 'katex/dist/katex.min.css';
+import {Mathematics} from '@tiptap-pro/extension-mathematics';
 import TextStyle from '@tiptap/extension-text-style';
 import {Link} from "@tiptap/extension-link";
 import {Color} from "@tiptap/extension-color";
@@ -65,31 +65,34 @@ const TiptapEditorWrapper = styled.div`
 const PageEditorWrapper = styled(Box)(({width}) => ({
     width: '100%', maxWidth: width, margin: '0px auto', padding: '5px', borderRadius: 20
 }));
+
 /**
  * Editor component for rich text editing.
  *
  * @param {Object} props - The properties for the Editor component.
  * @param {string} props.documentId - The Document/Project Identifier.
  * @param {boolean} props.readOnly - Whether the editor is in read-only mode.
- * @param {string} props.defaultValue - The initial content of the editor.
- * @param {Function} props.onTextChange - Callback when the text changes.
+ * @param {string} props.content - The initial content of the editor.
+ * @param {Function} props.onTextChange - Callback when the text changes returns text content (string).
  * @param {Function} props.handleInsertImage - Handler when insert Image is clicked.
  * @param {Function} props.handleInsertFormula - Handler when insert Formula is clicked.
  * @param {Function} props.handleInsertLink - Handler when insert Link is clicked.
  * @param {Function} props.onSelectionChange - Callback when the selection changes ({selection, currentParagraph, currentColumn}).
- * @param {Function} props.onTransaction - Callback when a transaction is fired bny TipTap.
- * @param {Function} props.onDeltaChange - Callback with the entire document Delta when content changes.
+ * @param {Function} props.onTransaction - Callback when a transaction is fired bny TipTap, returns {editor, transaction}
+ * @param {Function} props.onDeltaChange - Callback with the entire document Delta when content changes returns the tiptap json doc
+ * @param {Function} props.onEditorReady - Callback with triggered when the tipTap editor first becomes ready.
  * @param {EditorSettings} [props.editorSettings] - Configuration object for editor settings.
- * @param {Object} [props.tipTapSettings] - Configuration object for TipTap's useEditor settings.
+ * @param {Object} [props.tipTapSettings] - Configuration object for TipTap's useEditor settings, or override existing configurations.
  */
 const Editor = ({
                     documentId,
                     readOnly,
-                    defaultValue,
+                    content,
                     onTextChange,
                     onSelectionChange,
                     onDeltaChange,
                     onTransaction,
+                    onEditorReady,
                     handleInsertLink,
                     handleInsertFormula,
                     handleInsertImage,
@@ -115,6 +118,9 @@ const Editor = ({
                     },
                     tipTapSettings = {},
                 }) => {
+
+    const isUpdatingEditor = useRef(false);
+    const pendingContentUpdate = useRef(null);
 
     const theme = useTheme();
     let activeLineDecoration = DecorationSet.empty;
@@ -143,15 +149,20 @@ const Editor = ({
         }),
             IndentHandler,
             ListKeymap,
-        ], content: defaultValue || `<p>Start editing...</p>`, editable: !readOnly,
+        ], content: content || `<p>Start editing...</p>`, editable: !readOnly,
+        onCreate: ({editor}) => {
+            onEditorReady?.({editor});
+        },
         onUpdate: ({editor}) => {
-            const jsonContent = editor.getJSON();
-            onTextChange?.(editor.getText());
-            onDeltaChange?.(jsonContent);
-        }, onSelectionUpdate: ({editor}) => {
+            if (!isUpdatingEditor.current) {
+                const jsonContent = editor.getJSON();
+                onTextChange?.(editor.getText());
+                onDeltaChange?.(jsonContent);
+            }
+        },
+        onSelectionUpdate: ({editor}) => {
             const selection = editor.state.selection;
             const {$from} = selection;
-            console.log("selectionChange")
             const doc = editor.state.doc;
             const {paragraphNumber, columnOffset} = getCursorPositionInfo($from, doc);
             onSelectionChange?.({selection, paragraphNumber, columnOffset});
@@ -173,11 +184,11 @@ const Editor = ({
 
             }
 
-        }, onTransaction({transaction}) {
+        }, onTransaction({transaction, editor}) {
             if (isMountedRef.current) {
                 setMatch(transaction.meta.match);
             }
-            onTransaction(transaction);
+            onTransaction?.({editor, transaction});
         }, onBlur: ({editor}) => {
             if (editorSettings.showLineHighlight) {
                 editor.view.setProps({
@@ -186,6 +197,46 @@ const Editor = ({
             }
         }, ...tipTapSettings,
     });
+
+    // Update editor content when `content` prop changes
+    useEffect(() => {
+        if (editor && content !== undefined && !isUpdatingEditor.current) {
+            if (!editor.isFocused) {
+                const currentContent = editor.getHTML();
+                if (currentContent !== content) {
+                    isUpdatingEditor.current = true;
+                    editor.commands.setContent(content, false, {
+                        preserveWhitespace: 'full',
+                    });
+                    isUpdatingEditor.current = false;
+                }
+            } else {
+                // If editor is focused, store the pending content update
+                pendingContentUpdate.current = content;
+            }
+        }
+    }, [content, editor]);
+
+    useEffect(() => {
+        if (editor) {
+            const handleBlur = () => {
+                if (pendingContentUpdate.current) {
+                    isUpdatingEditor.current = true;
+                    editor.commands.setContent(pendingContentUpdate.current, false, {
+                        preserveWhitespace: 'full',
+                    });
+                    isUpdatingEditor.current = false;
+                    pendingContentUpdate.current = null;
+                }
+            };
+
+            editor.on('blur', handleBlur);
+
+            return () => {
+                editor.off('blur', handleBlur);
+            };
+        }
+    }, [editor]);
 
     const editorContent = (<TiptapEditorWrapper className="tiptap-editor-wrapper" style={{
         marginBottom: editorSettings.toolbarPlacement === "bottom" ? 70 : 0,
@@ -245,15 +296,15 @@ const Editor = ({
                         backgroundColor: editorSettings.enablePageEditor ? "transparent" : (editorSettings.pageEditorElevation === 1 ? "background.default" : "transparent"),
                     }}
                 >
-                {editorSettings.enablePageEditor ? (<PageEditorWrapper
-                    width={editorSettings.pageEditorWidth}
-                    sx={{
-                        backgroundColor: editorSettings.pageEditorElevation === 1 ? "background.default" : "transparent",
-                        boxShadow: editorSettings.pageEditorBoxShadow ? theme.shadows[25] : "none"
-                    }}
-                >
-                    {editorContent}
-                </PageEditorWrapper>) : (editorContent)}
+                    {editorSettings.enablePageEditor ? (<PageEditorWrapper
+                        width={editorSettings.pageEditorWidth}
+                        sx={{
+                            backgroundColor: editorSettings.pageEditorElevation === 1 ? "background.default" : "transparent",
+                            boxShadow: editorSettings.pageEditorBoxShadow ? theme.shadows[25] : "none"
+                        }}
+                    >
+                        {editorContent}
+                    </PageEditorWrapper>) : (editorContent)}
                 </Box>
             </EditorContainer>
         </Box>
@@ -271,11 +322,12 @@ const Editor = ({
 Editor.propTypes = {
     documentId: PropTypes.string.isRequired,
     readOnly: PropTypes.bool.isRequired,
-    defaultValue: PropTypes.string,
-    onTextChange: PropTypes.func.isRequired,
-    onSelectionChange: PropTypes.func.isRequired,
-    onDeltaChange: PropTypes.func.isRequired,
-    onTransaction: PropTypes.func.isRequired,
+    content: PropTypes.string,
+    onTextChange: PropTypes.func,
+    onSelectionChange: PropTypes.func,
+    onDeltaChange: PropTypes.func,
+    onTransaction: PropTypes.func,
+    onEditorReady: PropTypes.func,
     handleInsertLink: PropTypes.func.isRequired,
     handleInsertImage: PropTypes.func.isRequired,
     handleInsertFormula: PropTypes.func.isRequired,
