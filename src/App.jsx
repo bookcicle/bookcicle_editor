@@ -29,32 +29,10 @@ const App = () => {
                 <Editor
                     documentId={"document_id"}
                     readOnly={false}
-                    defaultValue={`
-      <h1>
-        This is a unique heading.
-      </h1>
-      <p>
-        This is a unique paragraph. It’s so unique, it even has an ID attached to it.
-      </p>
-      <p>
-        And this one, too. $\\sin(x)$
-      </p>
-    `}
-                    onSelectionChange={() => {
-                    }}
-                    onTextChange={() => {
-                    }}
-                    onDeltaChange={() => {
-                    }}
-                    onDeltaChangeIteration={() => {
-                    }}
-                    onCursorPositionChange={() => {
-                    }}
+                    content={`<h1>This is a unique heading.</h1><p>This is a unique paragraph. It’s so unique, it even has an ID attached to it.</p><p>And this one, too. $\\sin(x)$</p>`}
                     handleInsertLink={handleInsertLink}
                     handleInsertImage={handleInsertImage}
                     handleInsertFormula={handleInsertFormula}
-                    onTransaction={() => {
-                    }}
                 />
             </Container>
         </ThemeProvider>

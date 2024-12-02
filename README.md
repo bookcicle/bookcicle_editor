@@ -1,6 +1,7 @@
 # Bookcicle Editor
 
-**Bookcicle Editor** is a feature-rich text editor built on **TipTap** with **React** and **Vite**, leveraging *
+**Bookcicle Editor** is a feature-rich, opinionated impl, text editor built on **TipTap** with **React** and **Vite**,
+leveraging *
 *Material UI (MUI)** for styling and theming. It offers a seamless rich-text editing experience with a modern,
 customizable interface, allowing users to format text, insert media, and write with style. The editor is designed to be
 responsive and flexible, built to be integrated into desktop application frontends. Bookcicle uses it in its Tauri V2
@@ -10,7 +11,7 @@ cross-platform desktop application.
 
 - **Rich Text Editing**: Powered by **TipTap**, the editor supports bold, italic, underline, strikethrough, blockquotes,
   lists, headings, and more.
-- **Spellcheck and Grammar Checking** with **LanguageTool**
+- **Spellcheck and Grammar Checking** with **LanguageTool** Support.
 - **Formula Support**: Add and display mathematical formulas using **KaTeX**.
 - **Text Alignment**: Align text to the left, center, right, or justify it.
 - **Text Color and Highlighting**: Change text color and highlight content with background colors.
@@ -49,6 +50,8 @@ If you are contributing to the project or developing locally, you can set up you
 
 1. **Clone the repository:**
 
+   Fork it... then
+
    ```bash
    git clone https://github.com/your-username/bookcicle-editor.git
    cd bookcicle-editor
@@ -66,21 +69,28 @@ If you are contributing to the project or developing locally, you can set up you
    npm run build
    ```
 
-4. **Link the editor locally for development:**
-
-   In the `bookcicle-editor` project directory, run:
+4. **In the project where you want to use Bookcicle Editor, run:**
 
    ```bash
-   npm link
+   npm install `paths/to/bookcicle_editor`
    ```
 
-5. **In the project where you want to use Bookcicle Editor, run:**
+**Import**
+`import {Editor} from @bookcicle/bookcicle_editor`
 
-   ```bash
-   npm link @bookcicle/bookcicle_editor
-   ```
+or
 
-6. **Run the development server:**
+**Lazy Import**
+
+```
+const Editor = lazy(() =>
+  import("@bookcicle/bookcicle_editor").then((module) => ({
+    default: module.Editor,
+  })),
+);
+```
+
+5. **Run the development server:**
 
    ```bash
    npm run dev
@@ -158,7 +168,11 @@ Here’s an overview of the project structure:
 bookcicle-editor/
 ├── public/             # Static files
 ├── src/
+│   ├── extensions/     # TipTap extensions
+│   ├── helpers/        # Utils and Helper functions
 │   ├── components/     # React components
+│   ├── db/             # Dexie config for local db.
+│   ├── toolbar/        # Toolbar component
 │   ├── assets/         # Styles, fonts, images, etc.
 │   ├── App.jsx         # Main app file
 │   ├── index.jsx       # Entry point
@@ -177,17 +191,22 @@ your application logic. Below is a detailed explanation of each prop:
 
 ```javascript
 /**
- * @typedef {Object} EditorProps
- * @property {string} documentId - The unique identifier for the document being edited. Required.
- * @property {boolean} readOnly - Make the editor read-only when set to `true`. Default is `false`.
- * @property {string} defaultValue - The initial HTML content to load into the editor.
- * @property {function} onTextChange - Callback function invoked when the text content changes. Receives the text content as a parameter.
- * @property {function} onSelectionChange - Callback function invoked when the text selection changes. Receives the selection object as a parameter.
- * @property {function} onDeltaChange - Callback function invoked when the document changes, providing the change delta.
- * @property {function} handleInsertImage - Callback function to handle custom image insertion logic.
- * @property {function} handleInsertLink - Callback function to handle custom link insertion logic.
- * @property {function} handleInsertFormula - Callback function to handle custom formula insertion logic.
- * @property {EditorSettings} editorSettings - An object containing configuration options for the editor's behavior and appearance.
+ * Editor component for rich text editing.
+ *
+ * @param {Object} props - The properties for the Editor component.
+ * @param {string} props.documentId - The Document/Project Identifier.
+ * @param {boolean} props.readOnly - Whether the editor is in read-only mode.
+ * @param {string} props.content - The initial content of the editor.
+ * @param {Function} props.onTextChange - Callback when the text changes returns text content (string).
+ * @param {Function} props.handleInsertImage - Handler when insert Image is clicked.
+ * @param {Function} props.handleInsertFormula - Handler when insert Formula is clicked.
+ * @param {Function} props.handleInsertLink - Handler when insert Link is clicked.
+ * @param {Function} props.onSelectionChange - Callback when the selection changes ({selection, currentParagraph, currentColumn}).
+ * @param {Function} props.onTransaction - Callback when a transaction is fired bny TipTap, returns {editor, transaction}
+ * @param {Function} props.onDeltaChange - Callback with the entire document Delta when content changes returns the tiptap json doc
+ * @param {Function} props.onEditorReady - Callback with triggered when the tipTap editor first becomes ready.
+ * @param {EditorSettings} [props.editorSettings] - Configuration object for editor settings.
+ * @param {Object} [props.tipTapSettings] - Configuration object for TipTap's useEditor settings, or override existing configurations.
  */
 ```
 
@@ -202,7 +221,7 @@ your application logic. Below is a detailed explanation of each prop:
 
     - **Default**: `false`
 
-- **`defaultValue`** (`string`): The initial HTML content to load into the editor when it mounts.
+- **`content`** (`string`): The initial (HTML, JSON) content to load into the editor when it mounts.
 
     - **Default**: `''` (empty string)
 
@@ -217,30 +236,38 @@ your application logic. Below is a detailed explanation of each prop:
   receives the selection object as a parameter.
 
     - **Parameters**:
-        - `selection` (`object`): An object representing the current selection in the editor.
-    - **Usage**: Can be used to display selection-based tools or information.
+        - `({editor, selection})`
+            - `editor` (`object`): An object representing the current editor state.
+            - `selection` (`object`): An object representing the current selection in the editor.
+            - **Usage**: Can be used to display selection-based tools or information.
 
 - **`onDeltaChange`** (`function`): A callback function that is invoked when the document changes, providing the change
   delta.
 
     - **Parameters**:
-        - `delta` (`object`): An object representing the changes made to the document.
+        - `delta` (`object`): An object representing the changes made to the document as a json document.
+    - **Usage**: Useful for syncing changes with a backend or implementing collaborative editing features.
+
+- **`onEditorReady`** (`function`): A callback function that is invoked when the document first becomes ready
+
+    - **Parameters**:
+        - `{editor}` (`object`): An object representing the current editor state.
     - **Usage**: Useful for syncing changes with a backend or implementing collaborative editing features.
 
 - **`handleInsertImage`** (`function`): A callback function to handle custom image insertion logic when the user
   attempts to insert an image.
 
-    - **Usage**: Allows integration with image upload services or custom image management workflows.
+    - **Usage**: A custom handler for inserting images via toolbar button press.
 
 - **`handleInsertLink`** (`function`): A callback function to handle custom link insertion logic when the user attempts
   to insert a link.
 
-    - **Usage**: Can be used to validate URLs or integrate with link management systems.
+    - **Usage**: A custom handler for inserting links via toolbar button press.
 
 - **`handleInsertFormula`** (`function`): A callback function to handle custom formula insertion logic when the user
   attempts to insert a formula.
 
-    - **Usage**: Useful for integrating with formula editors or custom mathematical input methods.
+    - **Usage**: A custom handler for inserting formulas via toolbar button press.
 
 - **`editorSettings`** (`EditorSettings`): An object containing configuration options for the editor's behavior and
   appearance.
@@ -256,7 +283,7 @@ editor's behavior and appearance. Below is a detailed explanation of each settin
 ```javascript
 /**
  * @typedef {Object} EditorSettings
- * @property {boolean} openLinks - Allow opening links from the editor on click. Default is `true`.
+ * @property {boolean} openLinks - Allow opening links from the editor on click. Default is `false`.
  * @property {boolean} enableDragHandle - Enable a drag handle for content dragging. Default is `false`.
  * @property {boolean} showLineNumbers - Whether line numbers are displayed. Default is `true`.
  * @property {boolean} showLineHighlight - Enable line highlighting for the current line. Default is `true`.
@@ -272,7 +299,7 @@ editor's behavior and appearance. Below is a detailed explanation of each settin
  * @property {boolean} showGrammarSuggestions - Enable grammar suggestions in the editor. Default is `true`.
  * @property {boolean} showSpellingSuggestions - Enable spelling suggestions in the editor. Default is `true`.
  * @property {string} langtoolUrl - The URL for spell/grammar checking, expecting an instance of LanguageTool v2. Default is `'http://localhost:8010/v2/check'`.
- * @property {string} [languageCode="auto"] - (Optional) Language code used for the editor (e.g., `'en-US'`). Default is `'auto'`.
+ * @property {string} [languageCode="en-US"] - (Optional) Language code used for the editor (e.g., `"en-US"`). Default is `"en-US"`.
  */
 ```
 
@@ -390,9 +417,9 @@ function App() {
         <Editor
             documentId="your-document-id"
             readOnly={false}
-            defaultValue="<p>Your initial content here...</p>"
+            content="<p>Your initial content here...</p>"
             onTextChange={(text) => console.log('Text changed:', text)}
-            onSelectionChange={(selection) => console.log('Selection changed:', selection)}
+            onSelectionChange={({editor, selection}) => console.log('Selection changed:', selection, editor)}
             onDeltaChange={(delta) => console.log('Delta changed:', delta)}
             handleInsertImage={() => {
                 // Custom image insertion logic
