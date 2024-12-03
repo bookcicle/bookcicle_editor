@@ -106,7 +106,7 @@ const dynamicStyles = ({
         }
 
         /* Display line numbers in the gutter */
-        .tiptap-editor .ProseMirror > p::before,
+        .tiptap-editor .ProseMirror p::before,
         .tiptap-editor .ProseMirror > h1::before,
         .tiptap-editor .ProseMirror > h2::before,
         .tiptap-editor .ProseMirror > h3::before,

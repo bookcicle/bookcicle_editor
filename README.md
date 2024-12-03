@@ -203,7 +203,7 @@ your application logic. Below is a detailed explanation of each prop:
  * @param {Function} props.handleInsertLink - Handler when insert Link is clicked.
  * @param {Function} props.onSelectionChange - Callback when the selection changes ({selection, currentParagraph, currentColumn}).
  * @param {Function} props.onTransaction - Callback when a transaction is fired bny TipTap, returns {editor, transaction}
- * @param {Function} props.onDeltaChange - Callback with the entire document Delta when content changes returns the tiptap json doc
+ * @param {Function} props.onJsonChange - Callback with the entire document Delta when content changes returns the tiptap json doc
  * @param {Function} props.onEditorReady - Callback with triggered when the tipTap editor first becomes ready.
  * @param {EditorSettings} [props.editorSettings] - Configuration object for editor settings.
  * @param {Object} [props.tipTapSettings] - Configuration object for TipTap's useEditor settings, or override existing configurations.
@@ -241,7 +241,7 @@ your application logic. Below is a detailed explanation of each prop:
             - `selection` (`object`): An object representing the current selection in the editor.
             - **Usage**: Can be used to display selection-based tools or information.
 
-- **`onDeltaChange`** (`function`): A callback function that is invoked when the document changes, providing the change
+- **`onJsonChange`** (`function`): A callback function that is invoked when the document changes, providing the change
   delta.
 
     - **Parameters**:
@@ -420,7 +420,7 @@ function App() {
             content="<p>Your initial content here...</p>"
             onTextChange={(text) => console.log('Text changed:', text)}
             onSelectionChange={({editor, selection}) => console.log('Selection changed:', selection, editor)}
-            onDeltaChange={(delta) => console.log('Delta changed:', delta)}
+            onJsonChange={(delta) => console.log('Delta changed:', delta)}
             handleInsertImage={() => {
                 // Custom image insertion logic
             }}
