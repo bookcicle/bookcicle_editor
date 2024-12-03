@@ -24,6 +24,7 @@ export default defineConfig({
                 '@mui/material-pigment-css',
                 'styled-components',
                 'katex',
+                'dexie',
                 // TipTap packages
                 '@tiptap/core',
                 '@tiptap/react',
@@ -41,6 +42,7 @@ export default defineConfig({
                 '@tiptap/extension-font-family',
                 '@tiptap/extension-heading',
                 '@tiptap/extension-highlight',
+                '@tiptap/extension-list-keymap',
                 '@tiptap/extension-horizontal-rule',
                 '@tiptap/extension-image',
                 '@tiptap/extension-link',

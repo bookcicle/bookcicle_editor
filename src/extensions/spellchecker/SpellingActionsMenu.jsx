@@ -4,15 +4,23 @@ import Popper from '@mui/material/Popper';
 import {Button, Card, Typography} from '@mui/material';
 import {SpellingActionsPlugin, spellingActionsPluginKey} from './SpellingActionsPlugin';
 import db from '../../db/db.js';
+import {getMarkRange} from "@tiptap/core";
+import { Grid2 } from '@mui/material';
 
 export const SpellingActionsMenu = ({editor, updateDelay, shouldShow = null, documentId}) => {
     const [popperState, setPopperState] = useState({
         open: false,
         anchorEl: null,
         matchData: null,
+        showAllSuggestions: false, // Added state
     });
 
-    const [showAllSuggestions, setShowAllSuggestions] = useState(false);
+    const handleShowAllSuggestions = () => {
+        setPopperState((prev) => ({
+            ...prev,
+            showAllSuggestions: true,
+        }));
+    };
 
     useEffect(() => {
         if (!editor || editor.isDestroyed) {
@@ -25,14 +33,19 @@ export const SpellingActionsMenu = ({editor, updateDelay, shouldShow = null, doc
         const updatePopperState = () => {
             const pluginState = spellingActionsPluginKey.getState(editor.state);
             if (pluginState) {
-                // Only update state if it has changed
                 setPopperState((prevState) => {
+                    const isSameMatchData = JSON.stringify(prevState.matchData) === JSON.stringify(pluginState.matchData);
+
                     const isSameState =
                         prevState.open === pluginState.open &&
                         prevState.anchorEl === pluginState.anchorEl &&
-                        JSON.stringify(prevState.matchData) === JSON.stringify(pluginState.matchData);
+                        isSameMatchData;
+
                     if (!isSameState) {
-                        return pluginState;
+                        return {
+                            ...pluginState,
+                            showAllSuggestions: isSameMatchData ? prevState.showAllSuggestions : false,
+                        };
                     }
                     return prevState;
                 });
@@ -53,20 +66,25 @@ export const SpellingActionsMenu = ({editor, updateDelay, shouldShow = null, doc
         };
     }, [editor, updateDelay, shouldShow]);
 
-    // Reset showAllSuggestions when matchData changes
-    useEffect(() => {
-        setShowAllSuggestions(false);
-    }, [popperState.matchData]);
-
     const handleAcceptSuggestion = useCallback(
         (suggestion) => {
-            editor
-                .chain()
-                .focus()
-                .extendMarkRange('languagetool')
-                .insertContent(suggestion)
-                .unsetMark('languagetool')
-                .run();
+            const {state} = editor;
+            const {selection} = state;
+            const type = state.schema.marks.languagetool;
+            const markRange = getMarkRange(selection.$from, type);
+
+            if (markRange) {
+                editor
+                    .chain()
+                    .focus()
+                    .setTextSelection({from: markRange.from, to: markRange.to})
+                    .insertContent(suggestion)
+                    .unsetMark('languagetool')
+                    .run();
+            } else {
+                editor.chain().focus().insertContent(suggestion).run();
+            }
+
             setPopperState((prev) => ({...prev, open: false}));
         },
         [editor]
@@ -117,7 +135,7 @@ export const SpellingActionsMenu = ({editor, updateDelay, shouldShow = null, doc
             }
         }
 
-        setPopperState((prev) => ({ ...prev, open: false }));
+        setPopperState((prev) => ({...prev, open: false}));
     }, [editor, isSpellingError, misspelledWord, matchData, documentId]);
 
     // Memoize style objects to prevent re-creations
@@ -150,28 +168,32 @@ export const SpellingActionsMenu = ({editor, updateDelay, shouldShow = null, doc
                     <Card sx={cardStyles} variant="outlined">
                         <div style={{marginBottom: '8px'}}>{matchData.message}</div>
                         {matchData.replacements.length > 0 && (
-                            <div style={{marginBottom: '8px'}}>
-                                <div>Suggestions:</div>
-                                {(
-                                    showAllSuggestions
-                                        ? matchData.replacements
-                                        : matchData.replacements.slice(0, 3)
-                                ).map((replacement, index) => (
-                                    <div key={index}>
-                                        <Button
-                                            onClick={() => handleAcceptSuggestion(replacement.value)}
-                                            variant="text"
-                                            color="primary"
-                                            sx={buttonStyles}
-                                        >
-                                            {replacement.value}
-                                        </Button>
-                                    </div>
-                                ))}
-                                {matchData.replacements.length > 3 && !showAllSuggestions && (
+                            <div style={{ marginBottom: '8px' }}>
+                                <Typography variant="subtitle2">Suggestions:</Typography>
+                                <Grid2 container columns={{ xs: 4, sm: 8, md: 12 }}>
+                                    {(
+                                        popperState.showAllSuggestions
+                                            ? matchData.replacements
+                                            : matchData.replacements.slice(0, 3)
+                                    ).map((replacement, index) => (
+                                        <Grid2 key={index} size={{ xs: 2, sm: 4, md: 4 }}>
+                                            <Button
+                                                onClick={() => handleAcceptSuggestion(replacement.value)}
+                                                variant="text"
+                                                color="primary"
+                                                fullWidth
+                                                sx={buttonStyles}
+                                            >
+                                                {replacement.value}
+                                            </Button>
+                                        </Grid2>
+                                    ))}
+                                </Grid2>
+
+                                {matchData.replacements.length > 3 && !popperState.showAllSuggestions && (
                                     <div>
                                         <Button
-                                            onClick={() => setShowAllSuggestions(true)}
+                                            onClick={handleShowAllSuggestions}
                                             variant="text"
                                             color="primary"
                                             sx={buttonStyles}

@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {AppBar, Box, Container, Toolbar} from '@mui/material';
+import {Box, Toolbar} from '@mui/material';
 import ListAndBlockTools from './ListAndBlockTools';
 import FontAndColorTools from './FontAndColorTools';
 import AlignmentTools from './AlignmentTools';
