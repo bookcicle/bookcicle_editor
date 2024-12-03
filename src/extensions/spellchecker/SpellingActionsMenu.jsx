@@ -15,12 +15,26 @@ export const SpellingActionsMenu = ({editor, updateDelay, shouldShow = null, doc
         showAllSuggestions: false, // Added state
     });
 
+    const {open, anchorEl, matchData} = popperState;
+
     const handleShowAllSuggestions = () => {
         setPopperState((prev) => ({
             ...prev,
             showAllSuggestions: true,
         }));
     };
+
+    const getReplacementLabel = useCallback((value) => {
+        if (!value || value.trim() === '') {
+            if (matchData?.rule?.id === 'CONSECUTIVE_SPACES') {
+                return 'Remove extra space';
+            } else if (matchData?.rule?.id === 'UNNECESSARY_COMMA') {
+                return 'Remove comma';
+            }
+            return 'Remove Extra';
+        }
+        return value;
+    }, [matchData]);
 
     useEffect(() => {
         if (!editor || editor.isDestroyed) {
@@ -90,7 +104,6 @@ export const SpellingActionsMenu = ({editor, updateDelay, shouldShow = null, doc
         [editor]
     );
 
-    const {open, anchorEl, matchData} = popperState;
 
     // Determine if the rule is a spelling error
     const isSpellingError = matchData?.rule?.id === 'MORFOLOGIK_RULE_EN_US'; // Adjust the rule ID as per your data
@@ -184,7 +197,7 @@ export const SpellingActionsMenu = ({editor, updateDelay, shouldShow = null, doc
                                                 fullWidth
                                                 sx={buttonStyles}
                                             >
-                                                {replacement.value}
+                                                {getReplacementLabel(replacement.value)}
                                             </Button>
                                         </Grid2>
                                     ))}

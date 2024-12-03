@@ -1,9 +1,8 @@
-import ReactDOM from 'react-dom/client';
 import PropTypes from 'prop-types';
-import { posToDOMRect } from '@tiptap/react';
+import {posToDOMRect} from '@tiptap/react';
 
 export class ActionsView {
-    constructor({ editor, view, updateDelay = 250, shouldShow }) {
+    constructor({editor, view, updateDelay = 250, shouldShow}) {
         this.editor = editor;
         this.view = view;
         this.updateDelay = updateDelay;
@@ -43,13 +42,13 @@ export class ActionsView {
 
         // Ensure update runs outside the React render cycle
         this.updateDebounceTimer = setTimeout(() => {
-            const { state, composing } = this.view;
-            const { selection } = state;
+            const {state, composing} = this.view;
+            const {selection} = state;
             if (composing) {
                 return;
             }
 
-            const { from, to } = selection;
+            const {from, to} = selection;
 
             const shouldShow = this.shouldShow?.({
                 editor: this.editor,

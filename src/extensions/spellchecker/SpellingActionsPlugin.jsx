@@ -23,22 +23,18 @@ export const SpellingActionsPlugin = ({ updateDelay = 250, shouldShow }) => {
         view(editorView) {
             let updateDebounceTimer = null;
 
-            const update = () => {
+            const handleClick = (event) => {
                 clearTimeout(updateDebounceTimer);
+
                 updateDebounceTimer = setTimeout(() => {
-                    const { state, composing } = editorView;
-                    const { selection } = state;
+                    const { state } = editorView;
+                    const pos = editorView.posAtCoords({
+                        left: event.clientX,
+                        top: event.clientY,
+                    });
 
-                    if (composing) {
-                        return;
-                    }
-
-                    const { from, to } = selection;
-                    const shouldShowPopper = shouldShow
-                        ? shouldShow({ editorView, state, from, to })
-                        : true;
-
-                    if (!shouldShowPopper) {
+                    if (!pos) {
+                        // Hide the pop-up if no position is found
                         editorView.dispatch(
                             editorView.state.tr.setMeta(spellingActionsPluginKey, {
                                 open: false,
@@ -49,12 +45,14 @@ export const SpellingActionsPlugin = ({ updateDelay = 250, shouldShow }) => {
                         return;
                     }
 
-                    const $from = selection.$from;
-                    const langToolMark = $from.marks().find(
+                    const $pos = state.doc.resolve(pos.pos);
+                    const marks = $pos.marks();
+                    const langToolMark = marks.find(
                         (mark) => mark.type.name === 'languagetool'
                     );
 
                     if (!langToolMark) {
+                        // Hide the pop-up if there is no languagetool mark at the click position
                         editorView.dispatch(
                             editorView.state.tr.setMeta(spellingActionsPluginKey, {
                                 open: false,
@@ -65,9 +63,25 @@ export const SpellingActionsPlugin = ({ updateDelay = 250, shouldShow }) => {
                         return;
                     }
 
-                    const match = JSON.parse(langToolMark.attrs.match);
+                    const shouldShowPopper = shouldShow
+                        ? shouldShow({ editorView, state, pos: pos.pos })
+                        : true;
 
-                    const domRect = posToDOMRect(editorView, from, to);
+                    if (!shouldShowPopper) {
+                        // Hide the pop-up if shouldShow returns false
+                        editorView.dispatch(
+                            editorView.state.tr.setMeta(spellingActionsPluginKey, {
+                                open: false,
+                                anchorEl: null,
+                                matchData: null,
+                            })
+                        );
+                        return;
+                    }
+
+                    // Show the pop-up if a languagetool mark is found
+                    const match = JSON.parse(langToolMark.attrs.match);
+                    const domRect = posToDOMRect(editorView, pos.pos, pos.pos);
                     const virtualAnchorEl = {
                         getBoundingClientRect: () => domRect,
                     };
@@ -84,12 +98,14 @@ export const SpellingActionsPlugin = ({ updateDelay = 250, shouldShow }) => {
                 }, updateDelay);
             };
 
-            update(); // Initial call
+            // Add click event listener to the editor's DOM
+            editorView.dom.addEventListener('click', handleClick);
 
             return {
-                update: update,
                 destroy() {
+                    // Clear any pending timeouts and remove the event listener when the plugin is destroyed
                     clearTimeout(updateDebounceTimer);
+                    editorView.dom.removeEventListener('click', handleClick);
                 },
             };
         },

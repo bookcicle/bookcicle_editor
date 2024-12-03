@@ -439,3 +439,37 @@ export const LanguageToolMark = Mark.create({
         ];
     },
 });
+
+export function removeLanguageToolMarksFromJson(jsonContent) {
+    if (Array.isArray(jsonContent.content)) {
+        jsonContent.content = jsonContent.content.map((node) => {
+            if (node.marks) {
+                node.marks = node.marks.filter(
+                    (mark) => mark.type !== 'languagetool'
+                );
+            }
+            if (node.content) {
+                node = removeLanguageToolMarksFromJson(node);
+            }
+            return node;
+        });
+    }
+    return jsonContent;
+}
+
+export function stripLanguageToolAnnotationsFromHTML(html) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(html, 'text/html');
+    const elements = doc.querySelectorAll('span.lt');
+
+    elements.forEach(el => {
+        const parent = el.parentNode;
+        // Replace the span with its child nodes
+        while (el.firstChild) {
+            parent.insertBefore(el.firstChild, el);
+        }
+        parent.removeChild(el);
+    });
+
+    return doc.body.innerHTML;
+}
