@@ -21,7 +21,11 @@ import TextStyle from '@tiptap/extension-text-style';
 import {Link} from "@tiptap/extension-link";
 import {Color} from "@tiptap/extension-color";
 import {Decoration, DecorationSet} from "prosemirror-view";
-import {LanguageToolMark} from "./extensions/spellchecker/langtool.js";
+import {
+    LanguageToolMark,
+    removeLanguageToolMarksFromJson,
+    stripLanguageToolAnnotationsFromHTML
+} from "./extensions/spellchecker/langtool.js";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {SpellingActionsMenu} from "./extensions/spellchecker/SpellingActionsMenu.jsx";
 import {ListKeymap} from "@tiptap/extension-list-keymap";
@@ -180,10 +184,11 @@ const Editor = ({
     const handleUpdate = useCallback(({ editor }) => {
         if (!isUpdatingEditor.current) {
             const jsonContent = editor.getJSON();
-            const htmlContent = editor.getHTML();
+            const cleanedJsonContent = removeLanguageToolMarksFromJson(jsonContent);
+            const cleanedHtmlContent = stripLanguageToolAnnotationsFromHTML(editor.getHTML());
             onTextChange?.(editor.getText());
-            onJsonChange?.(jsonContent);
-            onHtmlChange?.(htmlContent);
+            onJsonChange?.(cleanedJsonContent);
+            onHtmlChange?.(cleanedHtmlContent);
         }
     }, [onTextChange, onJsonChange, onHtmlChange]);
 
@@ -302,17 +307,18 @@ const EditorContentWrapper = ({
         if (editor && content !== undefined && !isUpdatingEditor.current) {
             const currentContent = editor.getHTML();
             if (currentContent !== content) {
+                const cleanedContent = stripLanguageToolAnnotationsFromHTML(content);
                 if (!editor.isFocused) {
                     isUpdatingEditor.current = true;
-                    editor.commands.setContent(content, false, { preserveWhitespace: 'full' });
+                    editor.commands.setContent(cleanedContent, false, { preserveWhitespace: 'full' });
                     isUpdatingEditor.current = false;
                 } else {
                     // If editor is focused, store the pending content update only if it's newer
-                    pendingContentUpdate.current = content;
+                    pendingContentUpdate.current = cleanedContent;
                 }
             }
         }
-    }, [content, editor]);
+    }, [content, editor, isUpdatingEditor, pendingContentUpdate]);
 
     useEffect(() => {
         if (editor) {
