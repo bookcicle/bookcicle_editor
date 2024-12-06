@@ -31,6 +31,11 @@ import {SpellingActionsMenu} from "./extensions/spellchecker/SpellingActionsMenu
 import {ListKeymap} from "@tiptap/extension-list-keymap";
 import IndentHandler from "./extensions/Indent.js";
 import {getCursorPositionInfo} from "./helpers/positionHelper.js";
+import SearchAndReplace from "./extensions/localSearch/searchAndReplace.js";
+import {SearchProvider} from "./extensions/localSearch/SearchProvider.jsx";
+import SearchComponent from "./extensions/localSearch/SearchComponent.jsx";
+import ReplaceComponent from "./extensions/localSearch/ReplaceComponent.jsx";
+import useLocalKeybindings from "./hooks/useLocalKeybindings.js";
 
 /**
  * @typedef {Object} EditorSettings
@@ -73,6 +78,13 @@ const PageEditorWrapper = styled(Box)(({width}) => ({
     borderRadius: 20,
 }));
 
+const SearchWrapper = ({children}) => {
+    useLocalKeybindings();
+    return <Box>{children}</Box>
+}
+SearchWrapper.propTypes = {
+    children: PropTypes.node.isRequired
+}
 /**
  * Editor component for rich text editing.
  *
@@ -151,6 +163,11 @@ const Editor = ({
             enableSpellcheck: editorSettings.showSpellingSuggestions,
             enableGrammarCheck: editorSettings.showGrammarSuggestions,
         }),
+        SearchAndReplace.configure({
+            searchResultClass: "search-result",
+            caseSensitive: false,
+            disableRegex: false,
+        }),
         FontFamily,
         TextStyle,
         Color,
@@ -181,7 +198,7 @@ const Editor = ({
         onEditorReady?.({editor});
     }, [onEditorReady]);
 
-    const handleUpdate = useCallback(({ editor }) => {
+    const handleUpdate = useCallback(({editor}) => {
         if (!isUpdatingEditor.current) {
             const jsonContent = editor.getJSON();
             const cleanedJsonContent = removeLanguageToolMarksFromJson(jsonContent);
@@ -256,35 +273,39 @@ const Editor = ({
 
 
     return (
-        <Box>
-            <Global styles={dynamicStyles({
-                theme,
-                showLineNumbers: editorSettings.showLineNumbers,
-                showDivider: editorSettings.showVerticalDivider,
-                linePadding: editorSettings.linePadding,
-                buttonSize: editorSettings.buttonSize,
-                enableDragHandle: editorSettings.enableDragHandle,
-                enableSpellcheckDecoration: editorSettings.showSpellingSuggestions,
-                enabledGrammarCheckDecoration: editorSettings.showGrammarSuggestions
-            })}/>
-            <EditorContentWrapper
-                documentId={documentId}
-                match={match}
-                setMatch={setMatch}
-                isUpdatingEditor={isUpdatingEditor}
-                pendingContentUpdate={pendingContentUpdate}
-                content={content}
-                onTextChange={onTextChange}
-                onSelectionChange={onSelectionChange}
-                editorSettings={editorSettings}
-                handleInsertLink={handleInsertLink}
-                handleInsertFormula={handleInsertFormula}
-                handleInsertImage={handleInsertImage}
-                theme={theme}
-                hOffset={hOffset}
-                editor={editor}
-            />
-        </Box>
+        <SearchProvider editor={editor}>
+            <SearchWrapper>
+                <Global styles={dynamicStyles({
+                    theme,
+                    showLineNumbers: editorSettings.showLineNumbers,
+                    showDivider: editorSettings.showVerticalDivider,
+                    linePadding: editorSettings.linePadding,
+                    buttonSize: editorSettings.buttonSize,
+                    enableDragHandle: editorSettings.enableDragHandle,
+                    enableSpellcheckDecoration: editorSettings.showSpellingSuggestions,
+                    enabledGrammarCheckDecoration: editorSettings.showGrammarSuggestions
+                })}/>
+                <SearchComponent/>
+                <ReplaceComponent/>
+                <EditorContentWrapper
+                    documentId={documentId}
+                    match={match}
+                    setMatch={setMatch}
+                    isUpdatingEditor={isUpdatingEditor}
+                    pendingContentUpdate={pendingContentUpdate}
+                    content={content}
+                    onTextChange={onTextChange}
+                    onSelectionChange={onSelectionChange}
+                    editorSettings={editorSettings}
+                    handleInsertLink={handleInsertLink}
+                    handleInsertFormula={handleInsertFormula}
+                    handleInsertImage={handleInsertImage}
+                    theme={theme}
+                    hOffset={hOffset}
+                    editor={editor}
+                />
+            </SearchWrapper>
+        </SearchProvider>
     );
 };
 
@@ -310,7 +331,7 @@ const EditorContentWrapper = ({
                 const cleanedContent = stripLanguageToolAnnotationsFromHTML(content);
                 if (!editor.isFocused) {
                     isUpdatingEditor.current = true;
-                    editor.commands.setContent(cleanedContent, false, { preserveWhitespace: 'full' });
+                    editor.commands.setContent(cleanedContent, false, {preserveWhitespace: 'full'});
                     isUpdatingEditor.current = false;
                 } else {
                     // If editor is focused, store the pending content update only if it's newer
@@ -327,7 +348,7 @@ const EditorContentWrapper = ({
                     const currentContent = editor.getHTML();
                     if (currentContent !== pendingContentUpdate.current) {
                         isUpdatingEditor.current = true;
-                        editor.commands.setContent(pendingContentUpdate.current, false, { preserveWhitespace: 'full' });
+                        editor.commands.setContent(pendingContentUpdate.current, false, {preserveWhitespace: 'full'});
                         isUpdatingEditor.current = false;
                     }
                     pendingContentUpdate.current = null;
@@ -338,7 +359,7 @@ const EditorContentWrapper = ({
                 editor.off('blur', handleBlur);
             };
         }
-    }, [editor]);
+    }, [editor, isUpdatingEditor, pendingContentUpdate]);
 
     const editorContent = (
         <TiptapEditorWrapper

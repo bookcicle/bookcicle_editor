@@ -1,9 +1,8 @@
-import { Plugin, PluginKey } from 'prosemirror-state';
-import { posToDOMRect } from '@tiptap/react';
+import {Plugin} from 'prosemirror-state';
+import {posToDOMRect} from '@tiptap/react';
+import {spellingActionsPluginKey} from "./spellingActionsPluginKey.js";
 
-export const spellingActionsPluginKey = new PluginKey('spellingActions');
-
-export const SpellingActionsPlugin = ({ updateDelay = 250, shouldShow }) => {
+export const SpellingActionsPlugin = ({updateDelay = 250, shouldShow}) => {
     return new Plugin({
         key: spellingActionsPluginKey,
         state: {
@@ -27,7 +26,7 @@ export const SpellingActionsPlugin = ({ updateDelay = 250, shouldShow }) => {
                 clearTimeout(updateDebounceTimer);
 
                 updateDebounceTimer = setTimeout(() => {
-                    const { state } = editorView;
+                    const {state} = editorView;
                     const pos = editorView.posAtCoords({
                         left: event.clientX,
                         top: event.clientY,
@@ -64,7 +63,7 @@ export const SpellingActionsPlugin = ({ updateDelay = 250, shouldShow }) => {
                     }
 
                     const shouldShowPopper = shouldShow
-                        ? shouldShow({ editorView, state, pos: pos.pos })
+                        ? shouldShow({editorView, state, pos: pos.pos})
                         : true;
 
                     if (!shouldShowPopper) {

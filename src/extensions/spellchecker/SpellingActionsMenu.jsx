@@ -2,10 +2,11 @@ import {useCallback, useEffect, useMemo, useState} from 'react';
 import PropTypes from 'prop-types';
 import Popper from '@mui/material/Popper';
 import {Button, Card, Typography} from '@mui/material';
-import {SpellingActionsPlugin, spellingActionsPluginKey} from './SpellingActionsPlugin';
+import {SpellingActionsPlugin} from './SpellingActionsPlugin';
 import db from '../../db/db.js';
 import {getMarkRange} from "@tiptap/core";
 import { Grid2 } from '@mui/material';
+import {spellingActionsPluginKey} from "./spellingActionsPluginKey.js";
 
 export const SpellingActionsMenu = ({editor, updateDelay, shouldShow = null, documentId}) => {
     const [popperState, setPopperState] = useState({

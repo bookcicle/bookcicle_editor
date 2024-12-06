@@ -12,6 +12,7 @@ cross-platform desktop application.
 - **Rich Text Editing**: Powered by **TipTap**, the editor supports bold, italic, underline, strikethrough, blockquotes,
   lists, headings, and more.
 - **Spellcheck and Grammar Checking** with **LanguageTool** Support.
+- **Local Find And Replace** Search local document content, navigate occurrences, and replace.
 - **Formula Support**: Add and display mathematical formulas using **KaTeX**.
 - **Text Alignment**: Align text to the left, center, right, or justify it.
 - **Text Color and Highlighting**: Change text color and highlight content with background colors.
@@ -75,11 +76,6 @@ If you are contributing to the project or developing locally, you can set up you
    npm install `paths/to/bookcicle_editor`
    ```
 
-**Import**
-`import {Editor} from @bookcicle/bookcicle_editor`
-
-or
-
 **Lazy Import**
 
 ```
@@ -88,6 +84,14 @@ const Editor = lazy(() =>
     default: module.Editor,
   })),
 );
+```
+
+And warp it in a Suspense: 
+
+```
+<Suspense fallback={<FallbackComponent />}>
+    <Editor ..../>
+</Suspense>
 ```
 
 5. **Run the development server:**

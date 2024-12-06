@@ -4,6 +4,7 @@ import FormatListNumberedIcon from '@mui/icons-material/FormatListNumbered';
 import FormatQuoteIcon from '@mui/icons-material/FormatQuote';
 import CodeIcon from '@mui/icons-material/Code';
 import CustomIconButton from "./ToolbarIconButton.jsx";
+import PropTypes from "prop-types";
 
 const ListAndBlockTools = ({handleAction, toolbarStyle}) => (<>
     <Tooltip title="Bullet List">
@@ -27,5 +28,8 @@ const ListAndBlockTools = ({handleAction, toolbarStyle}) => (<>
         </CustomIconButton>
     </Tooltip>}
 </>);
-
+ListAndBlockTools.propTypes = {
+    handleAction: PropTypes.func.isRequired,
+    toolbarStyle: PropTypes.string.isRequired,
+};
 export default ListAndBlockTools;

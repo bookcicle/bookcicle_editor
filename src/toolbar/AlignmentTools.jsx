@@ -4,6 +4,7 @@ import FormatAlignCenterIcon from '@mui/icons-material/FormatAlignCenter';
 import FormatAlignRightIcon from '@mui/icons-material/FormatAlignRight';
 import {useState} from "react";
 import CustomIconButton from "./ToolbarIconButton.jsx";
+import PropTypes from "prop-types";
 
 const AlignmentTools = ({handleAlignmentChange, selectedAlignment}) => {
     const [alignmentMenuAnchorEl, setAlignmentMenuAnchorEl] = useState(null);
@@ -52,4 +53,8 @@ const AlignmentTools = ({handleAlignmentChange, selectedAlignment}) => {
     </>);
 };
 
+AlignmentTools.propTypes = {
+    handleAlignmentChange: PropTypes.func.isRequired,
+    selectedAlignment: PropTypes.string.isRequired
+}
 export default AlignmentTools;
