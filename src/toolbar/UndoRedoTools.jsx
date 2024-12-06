@@ -2,6 +2,7 @@ import {Tooltip} from '@mui/material';
 import UndoIcon from '@mui/icons-material/Undo';
 import RedoIcon from '@mui/icons-material/Redo';
 import CustomIconButton from "./ToolbarIconButton.jsx";
+import PropTypes from "prop-types";
 
 const UndoRedoTools = ({handleAction}) => (
     <>
@@ -17,5 +18,7 @@ const UndoRedoTools = ({handleAction}) => (
         </Tooltip>
     </>
 );
-
+UndoRedoTools.propTypes = {
+    handleAction: PropTypes.func.isRequired,
+};
 export default UndoRedoTools;

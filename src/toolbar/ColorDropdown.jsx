@@ -1,5 +1,6 @@
 import {useState} from 'react';
 import {Box, IconButton, Menu, MenuItem, Tooltip, useTheme} from '@mui/material';
+import PropTypes from "prop-types";
 
 const lightTextColors = [
     '#000000', '#4A4A4A', '#7F7F7F', '#8B0000', '#006400', '#00008B', '#800080', '#8B4513', '#008080'
@@ -86,6 +87,12 @@ const ColorDropdown = ({icon, title, onSelectColor}) => {
             </Menu>
         </>
     );
+};
+
+ColorDropdown.propTypes = {
+    icon: PropTypes.node.isRequired,
+    title: PropTypes.string.isRequired,
+    onSelectColor: PropTypes.func.isRequired,
 };
 
 export default ColorDropdown;

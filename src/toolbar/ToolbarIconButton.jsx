@@ -1,7 +1,7 @@
-// CustomIconButton.js
-import React from 'react';
 import IconButton from '@mui/material/IconButton';
 import {alpha, useTheme} from "@mui/material";
+import PropTypes from "prop-types";
+import {forwardRef} from "react";
 
 /**
  * A generic IconButton with customized borderRadius on hover.
@@ -10,8 +10,7 @@ import {alpha, useTheme} from "@mui/material";
  * @param {React.ReactNode} props.children - The icon or content inside the IconButton.
  * @returns {JSX.Element} The customized IconButton component.
  */
-const CustomIconButton = React.forwardRef(function CustomIconButton(props, ref) {
-    const { children, sx, isActive, ...other } = props;
+const CustomIconButton = forwardRef(function CustomIconButton({children, sx, isActive, ...other}, ref) {
     const theme = useTheme();
     return (
         <IconButton
@@ -32,5 +31,9 @@ const CustomIconButton = React.forwardRef(function CustomIconButton(props, ref) 
         </IconButton>
     );
 });
-
+CustomIconButton.propTypes = {
+    children: PropTypes.node.isRequired,
+    sx: PropTypes.object,
+    isActive: PropTypes.bool,
+};
 export default CustomIconButton;

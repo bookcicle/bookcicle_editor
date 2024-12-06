@@ -359,7 +359,7 @@ const EditorContentWrapper = ({
                 editor.off('blur', handleBlur);
             };
         }
-    }, [editor]);
+    }, [editor, isUpdatingEditor, pendingContentUpdate]);
 
     const editorContent = (
         <TiptapEditorWrapper

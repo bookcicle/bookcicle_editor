@@ -4,6 +4,7 @@ import HighlightIcon from '@mui/icons-material/Highlight';
 import FormatColorTextIcon from '@mui/icons-material/FormatColorText';
 import ColorDropdown from "./ColorDropdown.jsx";
 import CustomIconButton from "./ToolbarIconButton.jsx";
+import PropTypes from "prop-types";
 
 const FontAndColorTools = ({
                                fontMenuAnchorEl,
@@ -43,5 +44,12 @@ const FontAndColorTools = ({
         />}
     </>
 };
-
+FontAndColorTools.propTypes = {
+    fontMenuAnchorEl: PropTypes.object,
+    handleFontMenuClick: PropTypes.func.isRequired,
+    handleFontMenuClose: PropTypes.func.isRequired,
+    handleFontStyleChange: PropTypes.func.isRequired,
+    handleAction: PropTypes.func.isRequired,
+    toolbarStyle: PropTypes.string.isRequired,
+};
 export default FontAndColorTools;
