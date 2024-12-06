@@ -9,7 +9,8 @@ import PropTypes from 'prop-types';
 const Search = styled('div')(({theme}) => ({
     position: 'relative',
     borderRadius: theme.shape.borderRadius,
-    boxShadow: theme.shadows[25],
+    border: `1px solid ${theme.palette.primary.main}`,
+    backgroundColor: theme.palette.background.default,
     margin: theme.spacing(1),
     width: '100%',
     display: 'flex',
@@ -70,8 +71,8 @@ export const SearchBar = ({label = "Search", value, onChange, onClose, autoFocus
         <Search>
             {/* Search or Replace Icon */}
             <SearchIconWrapper>
-                {label === "Search" && <SearchIcon/>}
-                {label === "Replace" && <FindReplaceIcon/>}
+                {label === "Search" && <SearchIcon sx={{fontSize: 20}}/>}
+                {label === "Replace" && <FindReplaceIcon sx={{fontSize: 20}}/>}
             </SearchIconWrapper>
 
             {/* Input Field */}
@@ -97,7 +98,7 @@ export const SearchBar = ({label = "Search", value, onChange, onClose, autoFocus
                             color: 'inherit',
                         }}
                     >
-                        <CloseIcon fontSize="small"/>
+                        <CloseIcon sx={{fontSize: 20}}/>
                     </IconButton>
                 </CloseIconWrapper>
             )}

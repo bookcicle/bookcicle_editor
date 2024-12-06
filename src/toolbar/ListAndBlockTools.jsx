@@ -6,7 +6,7 @@ import CodeIcon from '@mui/icons-material/Code';
 import CustomIconButton from "./ToolbarIconButton.jsx";
 import PropTypes from "prop-types";
 
-const ListAndBlockTools = ({handleAction, toolbarStyle}) => (<>
+const ListAndBlockTools = ({handleAction, toolbarStyle = "all"}) => (<>
     <Tooltip title="Bullet List">
         <CustomIconButton onClick={() => handleAction('bulletList')}>
             <FormatListBulletedIcon/>
@@ -30,6 +30,6 @@ const ListAndBlockTools = ({handleAction, toolbarStyle}) => (<>
 </>);
 ListAndBlockTools.propTypes = {
     handleAction: PropTypes.func.isRequired,
-    toolbarStyle: PropTypes.string.isRequired,
+    toolbarStyle: PropTypes.string,
 };
 export default ListAndBlockTools;

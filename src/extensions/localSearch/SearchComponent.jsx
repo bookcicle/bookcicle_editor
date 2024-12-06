@@ -29,7 +29,7 @@ const SearchComponent = () => {
                 onClose={closeSearch}
                 autoFocus={true}
             >
-                <Stack direction="row" spacing={1} sx={{ marginLeft: 1 }}>
+                <Stack direction="row" spacing={1} sx={{ marginLeft: 1, scale: 0.9 }} >
                     <Button variant="text" size="small" onClick={goToPrevious}>
                         Previous
                     </Button>
