@@ -1,7 +1,7 @@
-import { defineConfig } from 'vite';
+import {defineConfig} from 'vite';
 import react from '@vitejs/plugin-react';
 import cssInjectedByJsPlugin from 'vite-plugin-css-injected-by-js';
-import { visualizer } from 'rollup-plugin-visualizer';
+import {visualizer} from 'rollup-plugin-visualizer';
 
 export default defineConfig({
     plugins: [react(), cssInjectedByJsPlugin()],
@@ -10,7 +10,7 @@ export default defineConfig({
             entry: './src/index.js',
             name: 'bookcicle_editor',
             fileName: () => `index.js`,
-            formats: ['es'], // Use 'umd' if you need UMD format
+            formats: ['es'],
         },
         rollupOptions: {
             plugins: [visualizer()],
@@ -20,6 +20,7 @@ export default defineConfig({
                 '@emotion/react',
                 '@emotion/styled',
                 '@mui/material',
+                "@mui/system",
                 '@mui/icons-material',
                 '@mui/material-pigment-css',
                 'styled-components',
@@ -81,7 +82,6 @@ export default defineConfig({
                 assetFileNames: 'index.[ext]',
                 format: 'es',
                 exports: 'named',
-                // 'globals' are not necessary for 'es' format
             },
         },
     },

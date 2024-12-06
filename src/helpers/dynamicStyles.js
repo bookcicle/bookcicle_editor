@@ -1,5 +1,6 @@
 import { css } from '@emotion/react';
 import { alpha } from '@mui/material';
+import {adjustColorForTheme, generateActiveColor} from "./colorUtils.js";
 
 const dynamicStyles = ({
                            theme,
@@ -75,7 +76,19 @@ const dynamicStyles = ({
         otherLtBackground = 'transparent';
     }
 
+    const searchHighlightColor = adjustColorForTheme(theme.palette.mode === "dark" ? theme.palette.primary.dark : theme.palette.primary.light, theme, 0.1);
+    const searchActiveColor = generateActiveColor(searchHighlightColor, theme, 0.4);
+
     return css`
+        /* Search and Replace */
+        .search-result {
+            background-color: ${searchHighlightColor};
+        }
+
+        .search-result-current {
+            background-color: ${searchActiveColor};
+        }
+        
         /* Editor Wrapper */
         .tiptap-editor-wrapper {
             display: flex;
