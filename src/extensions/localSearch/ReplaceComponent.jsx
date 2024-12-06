@@ -28,7 +28,7 @@ const ReplaceComponent = () => {
                 onChange={handleChange}
                 onClose={closeReplace}
             >
-                <Stack direction="row" spacing={1} sx={{ marginLeft: 1 }}>
+                <Stack direction="row" spacing={1} sx={{ marginLeft: 1, scale: 0.9 }}>
                     <Button variant="text" size="small" onClick={handleReplace}>
                         Replace
                     </Button>
