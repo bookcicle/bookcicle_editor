@@ -76,11 +76,6 @@ If you are contributing to the project or developing locally, you can set up you
    npm install `paths/to/bookcicle_editor`
    ```
 
-**Import**
-`import {Editor} from @bookcicle/bookcicle_editor`
-
-or
-
 **Lazy Import**
 
 ```
@@ -89,6 +84,14 @@ const Editor = lazy(() =>
     default: module.Editor,
   })),
 );
+```
+
+And warp it in a Suspense: 
+
+```
+<Suspense fallback={<FallbackComponent />}>
+    <Editor ..../>
+</Suspense>
 ```
 
 5. **Run the development server:**
