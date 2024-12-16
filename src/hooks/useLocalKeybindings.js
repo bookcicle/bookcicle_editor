@@ -11,7 +11,10 @@ const useLocalKeybindings = () => {
 
     useEffect(() => {
         const handleKeyDown = (event) => {
-            if (event.ctrlKey && (event.key === "f" || event.key === "F")) {
+            const isCtrlOrCommandKey = event.ctrlKey || event.metaKey;
+            const isFKey = event.key === "f" || event.key === "F"
+            const isRKey = event.key === "r" || event.key === "R";
+            if (isCtrlOrCommandKey && isFKey) {
                 event.preventDefault();
                 const selectedText = window.getSelection().toString().trim();
                 if (selectedText) {
@@ -19,7 +22,7 @@ const useLocalKeybindings = () => {
                 }
                 openSearch();
             }
-            else if (event.ctrlKey && (event.key === "r" || event.key === "R")) {
+            else if (isCtrlOrCommandKey && isRKey) {
                 event.preventDefault();
                 const selectedText = window.getSelection().toString().trim();
                 if (selectedText) {
