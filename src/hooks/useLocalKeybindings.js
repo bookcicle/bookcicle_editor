@@ -12,8 +12,15 @@ const useLocalKeybindings = () => {
     useEffect(() => {
         const handleKeyDown = (event) => {
             const isCtrlOrCommandKey = event.ctrlKey || event.metaKey;
-            const isFKey = event.key === "f" || event.key === "F"
+            const isShiftKey = event.shiftKey;
+            const isFKey = event.key === "f" || event.key === "F";
             const isRKey = event.key === "r" || event.key === "R";
+
+            // Ignore CtrlOrCommand + Shift + F/R
+            if (isCtrlOrCommandKey && isShiftKey && (isFKey || isRKey)) {
+                return;
+            }
+
             if (isCtrlOrCommandKey && isFKey) {
                 event.preventDefault();
                 const selectedText = window.getSelection().toString().trim();
@@ -21,8 +28,7 @@ const useLocalKeybindings = () => {
                     setSearchQuery(selectedText);
                 }
                 openSearch();
-            }
-            else if (isCtrlOrCommandKey && isRKey) {
+            } else if (isCtrlOrCommandKey && isRKey) {
                 event.preventDefault();
                 const selectedText = window.getSelection().toString().trim();
                 if (selectedText) {
