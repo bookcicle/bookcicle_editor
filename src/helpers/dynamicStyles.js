@@ -1,61 +1,61 @@
-import { css } from '@emotion/react';
-import { alpha } from '@mui/material';
-import {adjustColorForTheme, generateActiveColor} from "./colorUtils.js";
+import { css } from "@emotion/react";
+import { alpha } from "@mui/material";
+import { adjustColorForTheme, generateActiveColor } from "./colorUtils.js";
 
 const dynamicStyles = ({
                            theme,
                            showLineNumbers,
                            showDivider,
                            linePadding,
-                           buttonSize = 'xs',
+                           buttonSize = "xs",
                            enableDragHandle,
                            enableChecksBackgroundDecoration = false,
                            enableSpellcheckDecoration = true,
                            enabledGrammarCheckDecoration = true,
                        }) => {
-    let tipTapPadding = '1em';
-    let dragDisplay = 'none';
+    let tipTapPadding = "1em";
+    let dragDisplay = "none";
     if (enableDragHandle) {
-        tipTapPadding = '3em';
-        dragDisplay = 'flex';
+        tipTapPadding = "3em";
+        dragDisplay = "flex";
     }
 
-    let padding = '0';
+    let padding = "0";
     switch (linePadding) {
-        case 'xs':
-            padding = '8px !important';
+        case "xs":
+            padding = "8px !important";
             break;
-        case 'small':
-            padding = '12px !important';
+        case "small":
+            padding = "12px !important";
             break;
-        case 'medium':
-            padding = '16px !important';
+        case "medium":
+            padding = "16px !important";
             break;
-        case 'large':
-            padding = '24px !important';
+        case "large":
+            padding = "24px !important";
             break;
-        case 'xl':
-            padding = '32px !important';
+        case "xl":
+            padding = "32px !important";
             break;
         default:
-            padding = '12px !important';
+            padding = "12px !important";
     }
 
     let buttonScale;
     switch (buttonSize) {
-        case 'xs':
+        case "xs":
             buttonScale = 0.7;
             break;
-        case 'small':
+        case "small":
             buttonScale = 0.8;
             break;
-        case 'medium':
+        case "medium":
             buttonScale = 0.9;
             break;
-        case 'large':
+        case "large":
             buttonScale = 1.0;
             break;
-        case 'xl':
+        case "xl":
             buttonScale = 1.2;
             break;
         default:
@@ -71,12 +71,18 @@ const dynamicStyles = ({
         grammarLtBackground = alpha(theme.palette.warning.main, 0.2);
         otherLtBackground = alpha(theme.palette.primary.main, 0.2);
     } else {
-        spellingLtBackground = 'transparent';
-        grammarLtBackground = 'transparent';
-        otherLtBackground = 'transparent';
+        spellingLtBackground = "transparent";
+        grammarLtBackground = "transparent";
+        otherLtBackground = "transparent";
     }
 
-    const searchHighlightColor = adjustColorForTheme(theme.palette.mode === "dark" ? theme.palette.primary.dark : theme.palette.primary.light, theme, 0.1);
+    const searchHighlightColor = adjustColorForTheme(
+        theme.palette.mode === "dark"
+            ? theme.palette.primary.dark
+            : theme.palette.primary.light,
+        theme,
+        0.1
+    );
     const searchActiveColor = generateActiveColor(searchHighlightColor, theme, 0.4);
 
     return css`
@@ -88,70 +94,75 @@ const dynamicStyles = ({
         .search-result-current {
             background-color: ${searchActiveColor};
         }
-        
+
         /* Editor Wrapper */
         .tiptap-editor-wrapper {
             display: flex;
-            position: relative; /* Ensure relative positioning */
+            position: relative;
             height: 100%;
             width: 100%;
         }
 
-        /* Line Numbers Gutter */
+        /* 
+         * LINE NUMBERS GUTTER
+         * We first reset the line counter for the editor. 
+         */
         .tiptap-editor {
-            counter-reset: line; /* Reset the line counter */
-            padding-left: ${tipTapPadding}; /* Space for line numbers */
-            position: relative; /* Ensure relative positioning */
+            counter-reset: line;
+            padding-left: ${tipTapPadding};
+            position: relative;
             flex-grow: 1;
             overflow-y: auto;
         }
 
-        /* Increment the line counter only for direct children of ProseMirror */
-        .tiptap-editor .ProseMirror > p,
-        .tiptap-editor .ProseMirror > h1,
-        .tiptap-editor .ProseMirror > h2,
-        .tiptap-editor .ProseMirror > h3,
-        .tiptap-editor .ProseMirror > blockquote {
+        /*
+         * ONLY increment the line counter and show ::before 
+         * for top-level elements that are NOT blockquote, ul, ol, pre, or code.
+         * This completely excludes them from line numbering.
+         */
+        .tiptap-editor .ProseMirror > *:not(blockquote):not(ul):not(ol):not(pre):not(code) {
             counter-increment: line;
             position: relative;
-            margin-left: 0; /* Remove default margin */
-            padding-left: 0; /* Remove default padding */
+            margin-left: 0;
+            padding-left: 0;
         }
 
-        /* Display line numbers in the gutter */
-        .tiptap-editor .ProseMirror p::before,
-        .tiptap-editor .ProseMirror > h1::before,
-        .tiptap-editor .ProseMirror > h2::before,
-        .tiptap-editor .ProseMirror > h3::before,
-        .tiptap-editor .ProseMirror > blockquote::before {
+        /*
+         * Show the actual line number with ::before
+         * on those same elements only.
+         */
+        .tiptap-editor .ProseMirror > *:not(blockquote):not(ul):not(ol):not(pre):not(code)::before {
             content: counter(line);
             position: absolute;
             left: -2em;
             width: 2em;
             text-align: left;
-            color: ${showLineNumbers ? theme.palette.text.secondary : 'transparent'};
+            color: ${showLineNumbers ? theme.palette.text.secondary : "transparent"};
             user-select: none;
             font-size: 14px;
             line-height: 1.68em;
         }
 
-        /* Indentation for blockquotes */
+        /* 
+         * Indentation for blockquotes, lists, etc.
+         * Because we excluded them above, they won't get line numbers or increment the counter.
+         */
         .tiptap-editor .ProseMirror > blockquote {
-            padding-left: 1em; /* Indent blockquotes */
+            padding-left: 1em;
             border-left: 2px solid ${theme.palette.divider};
         }
 
-        /* Indentation for lists */
         .tiptap-editor .ProseMirror > ul,
         .tiptap-editor .ProseMirror > ol {
-            padding-left: 2em; /* Increased indent for lists */
+            padding-left: 2em;
         }
 
         .tiptap-editor .ProseMirror > ul > li,
         .tiptap-editor .ProseMirror > ol > li {
-            padding-left: 2em; /* Increased indent for list items */
+            padding-left: 2em;
         }
-        
+
+        /* Code blocks (pre, code) remain unnumbered */
         .active-line {
             background-color: ${alpha(theme.palette.primary.light, 0.1)} !important;
             width: 100%;
@@ -175,15 +186,15 @@ const dynamicStyles = ({
             margin-bottom: ${padding};
         }
 
-        /* Vertical divider between gutter and editor */
+        /* Divider between gutter and editor */
         .tiptap-editor-wrapper::before {
-            content: '';
+            content: "";
             position: absolute;
             top: 0;
             left: 1.2em;
             width: 1px;
             height: 100%;
-            background-color: ${showDivider ? theme.palette.divider : 'transparent'}; /* Removed transform */
+            background-color: ${showDivider ? theme.palette.divider : "transparent"};
             z-index: 1;
         }
 
@@ -191,6 +202,9 @@ const dynamicStyles = ({
             scale: ${buttonScale};
         }
 
+        /* 
+         * The main ProseMirror content area 
+         */
         .ProseMirror {
             padding-inline: 1em;
             > * + * {
@@ -240,23 +254,21 @@ const dynamicStyles = ({
             }
         }
 
-        /* Styles for LanguageTool highlights */
+        /* LanguageTool highlights */
         .ProseMirror {
             .lt {
                 text-decoration: none; /* Default: no underline */
-
                 ${
-                        (enableSpellcheckDecoration ||
-                                enabledGrammarCheckDecoration) &&
+                        (enableSpellcheckDecoration || enabledGrammarCheckDecoration) &&
                         css`
-            text-decoration: underline;
-            text-decoration-style: wavy;
-            text-decoration-color: ${theme.palette.error.main};
-            transition: background 0.25s ease-in-out;
-            &:hover {
-              background: ${alpha(theme.palette.error.main, 0.2)};
-            }
-          `
+                            text-decoration: underline;
+                            text-decoration-style: wavy;
+                            text-decoration-color: ${theme.palette.error.main};
+                            transition: background 0.25s ease-in-out;
+                            &:hover {
+                                background: ${alpha(theme.palette.error.main, 0.2)};
+                            }
+                        `
                 }
 
                 &-style {
@@ -269,24 +281,24 @@ const dynamicStyles = ({
                 ${
                         enableSpellcheckDecoration &&
                         css`
-            &-spelling-error {
-              background: ${spellingLtBackground};
-            }
-          `
+                            &-spelling-error {
+                                background: ${spellingLtBackground};
+                            }
+                        `
                 }
 
                 ${
                         enabledGrammarCheckDecoration &&
                         css`
-            &-typographical,
-            &-grammar-error {
-              text-decoration-color: ${theme.palette.warning.main};
-              background: ${grammarLtBackground} !important;
-              &:hover {
-                background: ${alpha(theme.palette.warning.main, 0.2)} !important;
-              }
-            }
-          `
+                            &-typographical,
+                            &-grammar-error {
+                                text-decoration-color: ${theme.palette.warning.main};
+                                background: ${grammarLtBackground} !important;
+                                &:hover {
+                                    background: ${alpha(theme.palette.warning.main, 0.2)} !important;
+                                }
+                            }
+                        `
                 }
 
                     /* Other error types */
