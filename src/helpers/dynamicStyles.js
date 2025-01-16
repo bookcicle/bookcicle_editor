@@ -90,7 +90,6 @@ const dynamicStyles = ({
         .search-result {
             background-color: ${searchHighlightColor};
         }
-
         .search-result-current {
             background-color: ${searchActiveColor};
         }
@@ -105,7 +104,7 @@ const dynamicStyles = ({
 
         /* 
          * LINE NUMBERS GUTTER
-         * We first reset the line counter for the editor. 
+         * We reset the line counter for the editor.
          */
         .tiptap-editor {
             counter-reset: line;
@@ -115,23 +114,21 @@ const dynamicStyles = ({
             overflow-y: auto;
         }
 
-        /*
-         * ONLY increment the line counter and show ::before 
-         * for top-level elements that are NOT blockquote, ul, ol, pre, or code.
-         * This completely excludes them from line numbering.
+        /* 
+         * 1) For top-level elements EXCEPT blockquote, ul, ol, pre, code:
+         *    - increment the line
+         *    - show the line number at left: -2em
          */
-        .tiptap-editor .ProseMirror > *:not(blockquote):not(ul):not(ol):not(pre):not(code) {
+        .tiptap-editor .ProseMirror
+        > *:not(blockquote):not(ul):not(ol):not(pre):not(code) {
             counter-increment: line;
             position: relative;
             margin-left: 0;
             padding-left: 0;
         }
 
-        /*
-         * Show the actual line number with ::before
-         * on those same elements only.
-         */
-        .tiptap-editor .ProseMirror > *:not(blockquote):not(ul):not(ol):not(pre):not(code)::before {
+        .tiptap-editor .ProseMirror
+        > *:not(blockquote):not(ul):not(ol):not(pre):not(code)::before {
             content: counter(line);
             position: absolute;
             left: -2em;
@@ -143,32 +140,51 @@ const dynamicStyles = ({
             line-height: 1.68em;
         }
 
-        /* 
-         * Indentation for blockquotes, lists, etc.
-         * Because we excluded them above, they won't get line numbers or increment the counter.
+        /*
+         * 2) For blockquote specifically, we STILL increment the line,
+         *    but we handle the number differently so it's effectively "hidden."
          */
         .tiptap-editor .ProseMirror > blockquote {
+            /* increment the line */
+            counter-increment: line;
+            position: relative;
+            margin-left: 0;
             padding-left: 1em;
             border-left: 2px solid ${theme.palette.divider};
         }
 
+        .tiptap-editor .ProseMirror > blockquote::before {
+            /* We could either hide it entirely or shift it further left. 
+               Here, we shift it to -3em and make color transparent. */
+            content: counter(line);
+            position: absolute;
+            left: -3em;
+            width: 2em;
+            text-align: left;
+            color: transparent; /* or you could use 'visibility: hidden' */
+            user-select: none;
+            font-size: 14px;
+            line-height: 1.68em;
+        }
+
+        /* Indentation for lists, etc. */
         .tiptap-editor .ProseMirror > ul,
         .tiptap-editor .ProseMirror > ol {
             padding-left: 2em;
         }
-
         .tiptap-editor .ProseMirror > ul > li,
         .tiptap-editor .ProseMirror > ol > li {
             padding-left: 2em;
         }
 
-        /* Code blocks (pre, code) remain unnumbered */
+        /* Code blocks (pre, code) remain unnumbered. */
         .active-line {
             background-color: ${alpha(theme.palette.primary.light, 0.1)} !important;
             width: 100%;
             position: relative;
         }
 
+        /* Basic spacing for paragraphs, headings, blockquotes, etc. */
         .tiptap-editor .ProseMirror p,
         .tiptap-editor .ProseMirror h1,
         .tiptap-editor .ProseMirror h2,
@@ -203,13 +219,15 @@ const dynamicStyles = ({
         }
 
         /* 
-         * The main ProseMirror content area 
+         * The main ProseMirror content area
          */
         .ProseMirror {
             padding-inline: 1em;
+
             > * + * {
                 margin-top: 0.75em;
             }
+
             [data-id] {
                 border: 3px solid ${theme.palette.background.default};
                 border-radius: 0.5rem;
