@@ -1,38 +1,38 @@
-import {Global} from '@emotion/react';
-import {EditorContent, useEditor} from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import Underline from '@tiptap/extension-underline';
-import DragHandle from '@tiptap-pro/extension-drag-handle-react';
-import {Box, useTheme} from '@mui/material';
-import PropTypes from 'prop-types';
-import dynamicStyles from './helpers/dynamicStyles.js';
-import styled from '@emotion/styled';
-import EditorToolbar from './toolbar/EditorToolbar.jsx';
-import Superscript from '@tiptap/extension-superscript';
-import Subscript from '@tiptap/extension-subscript';
-import TextAlign from '@tiptap/extension-text-align';
-import Image from '@tiptap/extension-image';
-import Highlight from '@tiptap/extension-highlight';
-import DragHandleIcon from '@mui/icons-material/DragHandleOutlined';
-import FontFamily from '@tiptap/extension-font-family';
-import 'katex/dist/katex.min.css';
-import {Mathematics} from '@tiptap-pro/extension-mathematics';
-import TextStyle from '@tiptap/extension-text-style';
-import {Link} from "@tiptap/extension-link";
-import {Color} from "@tiptap/extension-color";
-import {Decoration, DecorationSet} from "prosemirror-view";
+import { Global } from "@emotion/react";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Underline from "@tiptap/extension-underline";
+import DragHandle from "@tiptap-pro/extension-drag-handle-react";
+import { Box, useTheme } from "@mui/material";
+import PropTypes from "prop-types";
+import dynamicStyles from "./helpers/dynamicStyles.js";
+import styled from "@emotion/styled";
+import EditorToolbar from "./toolbar/EditorToolbar.jsx";
+import Superscript from "@tiptap/extension-superscript";
+import Subscript from "@tiptap/extension-subscript";
+import TextAlign from "@tiptap/extension-text-align";
+import Image from "@tiptap/extension-image";
+import Highlight from "@tiptap/extension-highlight";
+import DragHandleIcon from "@mui/icons-material/DragHandleOutlined";
+import FontFamily from "@tiptap/extension-font-family";
+import "katex/dist/katex.min.css";
+import { Mathematics } from "@tiptap-pro/extension-mathematics";
+import TextStyle from "@tiptap/extension-text-style";
+import { Link } from "@tiptap/extension-link";
+import { Color } from "@tiptap/extension-color";
+import { Decoration, DecorationSet } from "prosemirror-view";
 import {
     LanguageToolMark,
     removeLanguageToolMarksFromJson,
-    stripLanguageToolAnnotationsFromHTML
+    stripLanguageToolAnnotationsFromHTML,
 } from "./extensions/spellchecker/langtool.js";
-import {useCallback, useEffect, useMemo, useRef, useState} from "react";
-import {SpellingActionsMenu} from "./extensions/spellchecker/SpellingActionsMenu.jsx";
-import {ListKeymap} from "@tiptap/extension-list-keymap";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { SpellingActionsMenu } from "./extensions/spellchecker/SpellingActionsMenu.jsx";
+import { ListKeymap } from "@tiptap/extension-list-keymap";
 import IndentHandler from "./extensions/Indent.js";
-import {getCursorPositionInfo} from "./helpers/positionHelper.js";
+import { getCursorPositionInfo } from "./helpers/positionHelper.js";
 import SearchAndReplace from "./extensions/localSearch/searchAndReplace.js";
-import {SearchProvider} from "./extensions/localSearch/SearchProvider.jsx";
+import { SearchProvider } from "./extensions/localSearch/SearchProvider.jsx";
 import SearchComponent from "./extensions/localSearch/SearchComponent.jsx";
 import ReplaceComponent from "./extensions/localSearch/ReplaceComponent.jsx";
 import useLocalKeybindings from "./hooks/useLocalKeybindings.js";
@@ -70,21 +70,22 @@ const TiptapEditorWrapper = styled.div`
     position: relative;
 `;
 
-const PageEditorWrapper = styled(Box)(({width}) => ({
-    width: '100%',
+const PageEditorWrapper = styled(Box)(({ width }) => ({
+    width: "100%",
     maxWidth: width,
-    margin: '0px auto',
-    padding: '5px',
+    margin: "0px auto",
+    padding: "5px",
     borderRadius: 20,
 }));
 
-const SearchWrapper = ({children}) => {
+const SearchWrapper = ({ children }) => {
     useLocalKeybindings();
-    return <Box>{children}</Box>
-}
+    return <Box>{children}</Box>;
+};
 SearchWrapper.propTypes = {
-    children: PropTypes.node.isRequired
-}
+    children: PropTypes.node.isRequired,
+};
+
 /**
  * Editor component for rich text editing.
  *
@@ -92,16 +93,17 @@ SearchWrapper.propTypes = {
  * @param {string} props.documentId - The Document/Project Identifier.
  * @param {boolean} props.readOnly - Whether the editor is in read-only mode.
  * @param {string} props.content - The initial content of the editor.
- * @param {Function} props.onTextChange - Callback when the text changes returns text content (string).
+ * @param {Function} props.onTextChange - Callback when the text changes (returns text content as a string).
  * @param {Function} props.handleInsertImage - Handler when insert Image is clicked.
  * @param {Function} props.handleInsertFormula - Handler when insert Formula is clicked.
  * @param {Function} props.handleInsertLink - Handler when insert Link is clicked.
- * @param {Function} props.onSelectionChange - Callback when the selection changes ({selection, currentParagraph, currentColumn}).
- * @param {Function} props.onTransaction - Callback when a transaction is fired by TipTap, returns {editor, transaction}
- * @param {Function} props.onJsonChange - Callback with the entire document Delta when content changes returns the tiptap json doc
- * @param {Function} props.onEditorReady - Callback triggered when the tipTap editor first becomes ready.
+ * @param {Function} props.onSelectionChange - Callback when the selection changes: ({selection, paragraphNumber, columnOffset}).
+ * @param {Function} props.onTransaction - Callback when a transaction is fired by TipTap, returns {editor, transaction}.
+ * @param {Function} props.onJsonChange - Callback with the entire document (JSON) when content changes.
+ * @param {Function} props.onHtmlChange - Callback with the entire document’s HTML string, stripped of LanguageTool annotations.
+ * @param {Function} props.onEditorReady - Callback triggered when the TipTap editor first becomes ready.
  * @param {EditorSettings} [props.editorSettings] - Configuration object for editor settings.
- * @param {Object} [props.tipTapSettings] - Configuration object for TipTap's useEditor settings, or override existing configurations.
+ * @param {Object} [props.tipTapSettings] - Additional TipTap editor configuration or overrides.
  */
 const Editor = ({
                     documentId,
@@ -111,6 +113,7 @@ const Editor = ({
                     onSelectionChange,
                     onJsonChange,
                     onHtmlChange,
+                    onFocus,
                     onTransaction,
                     onEditorReady,
                     handleInsertLink,
@@ -126,7 +129,7 @@ const Editor = ({
                         linePadding: "small",
                         showVerticalDivider: true,
                         enablePageEditor: true,
-                        pageEditorWidth: '800px',
+                        pageEditorWidth: "800px",
                         pageEditorElevation: 1,
                         pageEditorBoxShadow: true,
                         toolbarStyle: "all",
@@ -134,7 +137,7 @@ const Editor = ({
                         showGrammarSuggestions: true,
                         showSpellingSuggestions: true,
                         langtoolUrl: "http://localhost:8010/v2/check",
-                        languageCode: "auto"
+                        languageCode: "auto",
                     },
                     tipTapSettings = {},
                 }) => {
@@ -142,9 +145,12 @@ const Editor = ({
     const pendingContentUpdate = useRef(null);
     const theme = useTheme();
     const activeLineDecoration = useRef(DecorationSet.empty);
-    const [match, setMatch] = useState(null);
-    const isMountedRef = useRef(true);
 
+    // The "match" is the flagged grammar/spelling item from LanguageTool
+    const [match, setMatch] = useState(null);
+
+    // Track mount status to avoid setState on unmounted
+    const isMountedRef = useRef(true);
     useEffect(() => {
         isMountedRef.current = true;
         return () => {
@@ -152,141 +158,198 @@ const Editor = ({
         };
     }, []);
 
-    // Memoize extensions to prevent unnecessary re-renders
-    const editorExtensions = useMemo(() => [
-        StarterKit.configure({heading: {levels: [1, 2, 3]}}),
-        LanguageToolMark.configure({
-            apiUrl: editorSettings.langtoolUrl,
-            language: editorSettings.languageCode,
-            automaticMode: true,
+    // Build your editor extensions once
+    const editorExtensions = useMemo(
+        () => [
+            StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
+            LanguageToolMark.configure({
+                apiUrl: editorSettings.langtoolUrl,
+                language: editorSettings.languageCode,
+                automaticMode: true,
+                documentId,
+                enableSpellcheck: editorSettings.showSpellingSuggestions,
+                enableGrammarCheck: editorSettings.showGrammarSuggestions,
+            }),
+            SearchAndReplace.configure({
+                searchResultClass: "search-result",
+                caseSensitive: false,
+                disableRegex: false,
+            }),
+            FontFamily,
+            TextStyle,
+            Color,
+            Underline,
+            Image,
+            TextAlign.configure({
+                types: ["heading", "paragraph"],
+                alignments: ["left", "center", "right"],
+            }),
+            Subscript,
+            Superscript,
+            Mathematics,
+            Highlight.configure({ multicolor: true }),
+            Link.configure({ openOnClick: editorSettings.openLinks }),
+            IndentHandler,
+            ListKeymap,
+        ],
+        [
+            editorSettings.langtoolUrl,
+            editorSettings.languageCode,
+            editorSettings.showSpellingSuggestions,
+            editorSettings.showGrammarSuggestions,
+            editorSettings.openLinks,
             documentId,
-            enableSpellcheck: editorSettings.showSpellingSuggestions,
-            enableGrammarCheck: editorSettings.showGrammarSuggestions,
-        }),
-        SearchAndReplace.configure({
-            searchResultClass: "search-result",
-            caseSensitive: false,
-            disableRegex: false,
-        }),
-        FontFamily,
-        TextStyle,
-        Color,
-        Underline,
-        Image,
-        TextAlign.configure({
-            types: ['heading', 'paragraph'],
-            alignments: ['left', 'center', 'right'],
-        }),
-        Subscript,
-        Superscript,
-        Mathematics,
-        Highlight.configure({multicolor: true}),
-        Link.configure({openOnClick: editorSettings.openLinks}),
-        IndentHandler,
-        ListKeymap,
-    ], [
-        editorSettings.langtoolUrl,
-        editorSettings.languageCode,
-        editorSettings.showSpellingSuggestions,
-        editorSettings.showGrammarSuggestions,
-        editorSettings.openLinks,
-        documentId,
-    ]);
+        ]
+    );
 
-    // Memoize event handlers
-    const handleCreate = useCallback(({editor}) => {
-        onEditorReady?.({editor});
-    }, [onEditorReady]);
+    // Triggered once on editor creation
+    const handleCreate = useCallback(
+        ({ editor }) => {
+            if (!isMountedRef.current) return; // << ADDED GUARD
+            onEditorReady?.({ editor });
+        },
+        [onEditorReady]
+    );
 
-    const handleUpdate = useCallback(({editor}) => {
-        if (!isUpdatingEditor.current) {
-            const jsonContent = editor.getJSON();
-            const cleanedJsonContent = removeLanguageToolMarksFromJson(jsonContent);
-            const cleanedHtmlContent = stripLanguageToolAnnotationsFromHTML(editor.getHTML());
-            onTextChange?.(editor.getText());
-            onJsonChange?.(cleanedJsonContent);
-            onHtmlChange?.(cleanedHtmlContent);
-        }
-    }, [onTextChange, onJsonChange, onHtmlChange]);
+    // Triggered on every content update
+    const handleUpdate = useCallback(
+        ({ editor }) => {
+            if (!isMountedRef.current) return; // << ADDED GUARD
 
-    const handleSelectionUpdate = useCallback(({editor}) => {
-        const selection = editor.state.selection;
-        const {$from} = selection;
-        const doc = editor.state.doc;
-        const {paragraphNumber, columnOffset} = getCursorPositionInfo($from, doc);
-        onSelectionChange?.({selection, paragraphNumber, columnOffset});
+            if (!isUpdatingEditor.current) {
+                const jsonContent = editor.getJSON();
+                // Strip LanguageTool marks from the JSON
+                const cleanedJsonContent = removeLanguageToolMarksFromJson(jsonContent);
+                // Also remove them from the raw HTML
+                const cleanedHtmlContent = stripLanguageToolAnnotationsFromHTML(
+                    editor.getHTML()
+                );
 
-        if (editorSettings.showLineHighlight) {
-            const {state} = editor;
-            const {$from} = state.selection;
-            const start = $from.start($from.depth);
-            const end = $from.end($from.depth);
-            const deco = Decoration.node(start - 1, end + 1, {class: 'active-line'});
-            activeLineDecoration.current = DecorationSet.create(state.doc, [deco]);
-            editor.view.setProps({
-                decorations: () => activeLineDecoration.current,
-            });
-        }
-    }, [onSelectionChange, editorSettings.showLineHighlight]);
+                // Fire your callbacks if provided
+                onTextChange?.(editor.getText());
+                onJsonChange?.(cleanedJsonContent);
+                onHtmlChange?.(cleanedHtmlContent);
+            }
+        },
+        [onTextChange, onJsonChange, onHtmlChange]
+    );
 
-    const handleTransaction = useCallback(({transaction, editor}) => {
-        if (isMountedRef.current) {
+    // Triggered on selection changes
+    const handleSelectionUpdate = useCallback(
+        ({ editor }) => {
+            if (!isMountedRef.current) return; // << ADDED GUARD
+
+            const selection = editor.state.selection;
+            const { $from } = selection;
+            const doc = editor.state.doc;
+
+            const { paragraphNumber, columnOffset } = getCursorPositionInfo($from, doc);
+            onSelectionChange?.({ selection, paragraphNumber, columnOffset });
+
+            // Active line highlighting
+            if (editorSettings.showLineHighlight) {
+                const { state } = editor;
+                const { $from } = state.selection;
+                const start = $from.start($from.depth);
+                const end = $from.end($from.depth);
+                const deco = Decoration.node(start - 1, end + 1, {
+                    class: "active-line",
+                });
+                activeLineDecoration.current = DecorationSet.create(state.doc, [deco]);
+                editor.view.setProps({
+                    decorations: () => activeLineDecoration.current,
+                });
+            }
+        },
+        [onSelectionChange, editorSettings.showLineHighlight]
+    );
+
+    // Called on each ProseMirror transaction
+    const handleTransaction = useCallback(
+        ({ transaction, editor }) => {
+            if (!isMountedRef.current) return; // << ADDED GUARD
+
+            // If the transaction has LanguageTool match metadata, store it
             setMatch(transaction.meta.match);
-        }
-        onTransaction?.({editor, transaction});
-    }, [onTransaction]);
 
-    const handleBlur = useCallback(({editor}) => {
-        if (editorSettings.showLineHighlight) {
-            editor.view.setProps({
-                decorations: () => DecorationSet.empty,
-            });
-        }
-    }, [editorSettings.showLineHighlight]);
+            // Fire your callback (if any)
+            onTransaction?.({ editor, transaction });
+        },
+        [onTransaction]
+    );
 
-    // Memoize editor options
-    const editorOptions = useMemo(() => ({
-        extensions: editorExtensions,
-        content: content || '<p>Start editing...</p>',
-        editable: !readOnly,
-        onCreate: handleCreate,
-        onUpdate: handleUpdate,
-        onSelectionUpdate: handleSelectionUpdate,
-        onTransaction: handleTransaction,
-        onBlur: handleBlur,
-        immediatelyRender: true,
-        shouldRerenderOnTransaction: false,
-        ...tipTapSettings,
-    }), [
-        editorExtensions,
-        content,
-        readOnly,
-        handleCreate,
-        handleUpdate,
-        handleSelectionUpdate,
-        handleTransaction,
-        handleBlur,
-        tipTapSettings,
-    ]);
+    // Clear highlight decorations on blur
+    const handleBlur = useCallback(
+        ({ editor }) => {
+            if (!isMountedRef.current) return; // << ADDED GUARD
 
-    const editor = useEditor(editorOptions)
+            if (editorSettings.showLineHighlight) {
+                editor.view.setProps({
+                    decorations: () => DecorationSet.empty,
+                });
+            }
+        },
+        [editorSettings.showLineHighlight]
+    );
 
+    // Setup TipTap editor
+    const editorOptions = useMemo(
+        () => ({
+            extensions: editorExtensions,
+            content: content || "<p>Start editing...</p>",
+            editable: !readOnly,
+            onCreate: handleCreate,
+            onUpdate: handleUpdate,
+            onSelectionUpdate: handleSelectionUpdate,
+            onTransaction: handleTransaction,
+            onBlur: handleBlur,
+            onFocus: onFocus,
+            immediatelyRender: true,
+            shouldRerenderOnTransaction: false,
+            ...tipTapSettings,
+        }),
+        [
+            editorExtensions,
+            content,
+            readOnly,
+            handleCreate,
+            handleUpdate,
+            handleSelectionUpdate,
+            handleTransaction,
+            handleBlur,
+            tipTapSettings,
+        ]
+    );
+
+    // The TipTap editor instance
+    const editor = useEditor(editorOptions);
+
+    // ✅ Destroy editor on unmount to stop TipTap from running updates
+    useEffect(() => {
+        return () => {
+            editor?.destroy();
+        };
+    }, [editor]);
 
     return (
         <SearchProvider editor={editor}>
             <SearchWrapper>
-                <Global styles={dynamicStyles({
-                    theme,
-                    showLineNumbers: editorSettings.showLineNumbers,
-                    showDivider: editorSettings.showVerticalDivider,
-                    linePadding: editorSettings.linePadding,
-                    buttonSize: editorSettings.buttonSize,
-                    enableDragHandle: editorSettings.enableDragHandle,
-                    enableSpellcheckDecoration: editorSettings.showSpellingSuggestions,
-                    enabledGrammarCheckDecoration: editorSettings.showGrammarSuggestions
-                })}/>
-                <SearchComponent/>
-                <ReplaceComponent/>
+                <Global
+                    styles={dynamicStyles({
+                        theme,
+                        showLineNumbers: editorSettings.showLineNumbers,
+                        showDivider: editorSettings.showVerticalDivider,
+                        linePadding: editorSettings.linePadding,
+                        buttonSize: editorSettings.buttonSize,
+                        enableDragHandle: editorSettings.enableDragHandle,
+                        enableSpellcheckDecoration: editorSettings.showSpellingSuggestions,
+                        enabledGrammarCheckDecoration:
+                        editorSettings.showGrammarSuggestions,
+                    })}
+                />
+                <SearchComponent />
+                <ReplaceComponent />
+
                 <EditorContentWrapper
                     documentId={documentId}
                     match={match}
@@ -294,8 +357,6 @@ const Editor = ({
                     isUpdatingEditor={isUpdatingEditor}
                     pendingContentUpdate={pendingContentUpdate}
                     content={content}
-                    onTextChange={onTextChange}
-                    onSelectionChange={onSelectionChange}
                     editorSettings={editorSettings}
                     handleInsertLink={handleInsertLink}
                     handleInsertFormula={handleInsertFormula}
@@ -321,66 +382,81 @@ const EditorContentWrapper = ({
                                   handleInsertImage,
                                   theme,
                                   hOffset,
-                                  editor
+                                  editor,
                               }) => {
-
+    // Update content if changed externally
     useEffect(() => {
-        if (editor && content !== undefined && !isUpdatingEditor.current) {
-            const currentContent = editor.getHTML();
-            if (currentContent !== content) {
-                const cleanedContent = stripLanguageToolAnnotationsFromHTML(content);
-                if (!editor.isFocused) {
-                    isUpdatingEditor.current = true;
-                    editor.commands.setContent(cleanedContent, false, {preserveWhitespace: 'full'});
-                    isUpdatingEditor.current = false;
-                } else {
-                    // If editor is focused, store the pending content update only if it's newer
-                    pendingContentUpdate.current = cleanedContent;
-                }
+        if (!editor || content === undefined) return;
+        if (isUpdatingEditor.current) return;
+
+        const currentContent = editor.getHTML();
+        if (currentContent !== content) {
+            const cleanedContent = stripLanguageToolAnnotationsFromHTML(content);
+
+            // If editor isn't focused, set content immediately
+            if (!editor.isFocused) {
+                isUpdatingEditor.current = true;
+                editor.commands.setContent(cleanedContent, false, {
+                    preserveWhitespace: "full",
+                });
+                isUpdatingEditor.current = false;
+            } else {
+                // If editor is focused, store the pending content update
+                pendingContentUpdate.current = cleanedContent;
             }
         }
     }, [content, editor, isUpdatingEditor, pendingContentUpdate]);
 
+    // Listen for blur events to apply any pending content updates
     useEffect(() => {
-        if (editor) {
-            const handleBlur = () => {
-                if (pendingContentUpdate.current) {
-                    const currentContent = editor.getHTML();
-                    if (currentContent !== pendingContentUpdate.current) {
-                        isUpdatingEditor.current = true;
-                        editor.commands.setContent(pendingContentUpdate.current, false, {preserveWhitespace: 'full'});
-                        isUpdatingEditor.current = false;
-                    }
-                    pendingContentUpdate.current = null;
+        if (!editor) return;
+
+        const handleBlur = () => {
+            if (pendingContentUpdate.current) {
+                const currentContent = editor.getHTML();
+                if (currentContent !== pendingContentUpdate.current) {
+                    isUpdatingEditor.current = true;
+                    editor.commands.setContent(pendingContentUpdate.current, false, {
+                        preserveWhitespace: "full",
+                    });
+                    isUpdatingEditor.current = false;
                 }
-            };
-            editor.on('blur', handleBlur);
-            return () => {
-                editor.off('blur', handleBlur);
-            };
-        }
+                pendingContentUpdate.current = null;
+            }
+        };
+
+        editor.on("blur", handleBlur);
+        return () => {
+            editor.off("blur", handleBlur);
+        };
     }, [editor, isUpdatingEditor, pendingContentUpdate]);
 
     const editorContent = (
         <TiptapEditorWrapper
             className="tiptap-editor-wrapper"
-            style={{marginBottom: editorSettings.toolbarPlacement === "bottom" ? 70 : 0, marginTop: 0}}
+            style={{
+                marginBottom: editorSettings.toolbarPlacement === "bottom" ? 70 : 0,
+                marginTop: 0,
+            }}
         >
-            <div className="tiptap-editor" style={{paddingLeft: editorSettings.enableDragHandle ? '3em' : "1em"}}>
+            <div
+                className="tiptap-editor"
+                style={{ paddingLeft: editorSettings.enableDragHandle ? "3em" : "1em" }}
+            >
                 {editorSettings.enableDragHandle && (
                     <DragHandle editor={editor}>
-                        <DragHandleIcon/>
+                        <DragHandleIcon />
                     </DragHandle>
                 )}
-                <EditorContent className="content" editor={editor}/>
+                <EditorContent className="content" editor={editor} />
                 {editor && (
                     <SpellingActionsMenu
                         documentId={documentId}
                         editor={editor}
-                        matchMessage={match?.message || 'No Message'}
+                        matchMessage={match?.message || "No Message"}
                         replacements={match?.replacements || []}
                         ignoreSuggestion={() => {
-                            editor.commands.ignoreLanguageToolSuggestion()
+                            editor.commands.ignoreLanguageToolSuggestion();
                         }}
                         acceptSuggestion={(sug) => editor.commands.insertContent(sug.value)}
                     />
@@ -390,8 +466,14 @@ const EditorContentWrapper = ({
     );
 
     return (
-        <Box sx={{height: `calc(100vh - ${hOffset}px)`, display: 'flex', flexDirection: 'column'}}>
-            {editorSettings.toolbarPlacement === 'top' && (
+        <Box
+            sx={{
+                height: `calc(100vh - ${hOffset}px)`,
+                display: "flex",
+                flexDirection: "column",
+            }}
+        >
+            {editorSettings.toolbarPlacement === "top" && (
                 <EditorToolbar
                     editor={editor}
                     toolbarStyle={editorSettings.toolbarStyle}
@@ -401,18 +483,41 @@ const EditorContentWrapper = ({
                     position={editorSettings.toolbarPlacement}
                 />
             )}
+
             <Box
                 id={"content-wrapper"}
-                sx={{flexGrow: 1, overflowY: 'auto', boxSizing: 'border-box', minHeight: 0, mb: 2, zIndex: 0}}
+                sx={{
+                    flexGrow: 1,
+                    overflowY: "auto",
+                    boxSizing: "border-box",
+                    minHeight: 0,
+                    mb: 2,
+                    zIndex: 0,
+                }}
             >
-                <EditorContainer style={{position: 'relative', alignSelf: "stretch"}}>
+                <EditorContainer style={{ position: "relative", alignSelf: "stretch" }}>
                     <Box
-                        sx={{backgroundColor: editorSettings.enablePageEditor ? "transparent" : (editorSettings.pageEditorElevation === 1 ? "background.default" : "transparent")}}>
+                        sx={{
+                            backgroundColor: editorSettings.enablePageEditor
+                                ? "transparent"
+                                : editorSettings.pageEditorElevation === 1
+                                    ? "background.default"
+                                    : "transparent",
+                        }}
+                    >
                         {editorSettings.enablePageEditor ? (
-                            <PageEditorWrapper width={editorSettings.pageEditorWidth} sx={{
-                                backgroundColor: editorSettings.pageEditorElevation === 1 ? "background.default" : "transparent",
-                                boxShadow: editorSettings.pageEditorBoxShadow ? theme.shadows[25] : "none"
-                            }}>
+                            <PageEditorWrapper
+                                width={editorSettings.pageEditorWidth}
+                                sx={{
+                                    backgroundColor:
+                                        editorSettings.pageEditorElevation === 1
+                                            ? "background.default"
+                                            : "transparent",
+                                    boxShadow: editorSettings.pageEditorBoxShadow
+                                        ? theme.shadows[25]
+                                        : "none",
+                                }}
+                            >
                                 {editorContent}
                             </PageEditorWrapper>
                         ) : (
@@ -421,7 +526,8 @@ const EditorContentWrapper = ({
                     </Box>
                 </EditorContainer>
             </Box>
-            {editorSettings.toolbarPlacement === 'bottom' && (
+
+            {editorSettings.toolbarPlacement === "bottom" && (
                 <EditorToolbar
                     editor={editor}
                     toolbarStyle={editorSettings.toolbarStyle}
@@ -443,6 +549,7 @@ Editor.propTypes = {
     onSelectionChange: PropTypes.func,
     onJsonChange: PropTypes.func,
     onHtmlChange: PropTypes.func,
+    onFocus: PropTypes.func,
     onTransaction: PropTypes.func,
     onEditorReady: PropTypes.func,
     handleInsertLink: PropTypes.func.isRequired,
@@ -454,15 +561,21 @@ Editor.propTypes = {
         enableDragHandle: PropTypes.bool,
         showLineNumbers: PropTypes.bool,
         showLineHighlight: PropTypes.bool,
-        buttonSize: PropTypes.oneOf(['xs', 'small', 'medium', 'large', 'xl']),
-        linePadding: PropTypes.oneOf(['xs', 'small', 'medium', 'large', 'xl']),
+        buttonSize: PropTypes.oneOf(["xs", "small", "medium", "large", "xl"]),
+        linePadding: PropTypes.oneOf(["xs", "small", "medium", "large", "xl"]),
         showVerticalDivider: PropTypes.bool,
         enablePageEditor: PropTypes.bool,
         pageEditorWidth: PropTypes.string,
         pageEditorElevation: PropTypes.number,
         pageEditorBoxShadow: PropTypes.bool,
-        toolbarStyle: PropTypes.oneOf(['science', 'general', 'fiction', 'non-fiction', 'all']),
-        toolbarPlacement: PropTypes.oneOf(['top', 'bottom', 'left', 'right']),
+        toolbarStyle: PropTypes.oneOf([
+            "science",
+            "general",
+            "fiction",
+            "non-fiction",
+            "all",
+        ]),
+        toolbarPlacement: PropTypes.oneOf(["top", "bottom", "left", "right"]),
         showGrammarSuggestions: PropTypes.bool,
         showSpellingSuggestions: PropTypes.bool,
         langtoolUrl: PropTypes.string,
@@ -474,23 +587,29 @@ Editor.propTypes = {
 EditorContentWrapper.propTypes = {
     documentId: PropTypes.string.isRequired,
     match: PropTypes.object,
-    isUpdatingEditor: PropTypes.shape({current: PropTypes.bool}).isRequired,
-    pendingContentUpdate: PropTypes.shape({current: PropTypes.string}).isRequired,
+    isUpdatingEditor: PropTypes.shape({ current: PropTypes.bool }).isRequired,
+    pendingContentUpdate: PropTypes.shape({ current: PropTypes.string }).isRequired,
     content: PropTypes.string,
     editorSettings: PropTypes.shape({
         openLinks: PropTypes.bool,
         enableDragHandle: PropTypes.bool,
         showLineNumbers: PropTypes.bool,
         showLineHighlight: PropTypes.bool,
-        buttonSize: PropTypes.oneOf(['xs', 'small', 'medium', 'large', 'xl']),
-        linePadding: PropTypes.oneOf(['xs', 'small', 'medium', 'large', 'xl']),
+        buttonSize: PropTypes.oneOf(["xs", "small", "medium", "large", "xl"]),
+        linePadding: PropTypes.oneOf(["xs", "small", "medium", "large", "xl"]),
         showVerticalDivider: PropTypes.bool,
         enablePageEditor: PropTypes.bool,
         pageEditorWidth: PropTypes.string,
         pageEditorElevation: PropTypes.number,
         pageEditorBoxShadow: PropTypes.bool,
-        toolbarStyle: PropTypes.oneOf(['science', 'general', 'fiction', 'non-fiction', 'all']),
-        toolbarPlacement: PropTypes.oneOf(['top', 'bottom', 'left', 'right']),
+        toolbarStyle: PropTypes.oneOf([
+            "science",
+            "general",
+            "fiction",
+            "non-fiction",
+            "all",
+        ]),
+        toolbarPlacement: PropTypes.oneOf(["top", "bottom", "left", "right"]),
         showGrammarSuggestions: PropTypes.bool,
         showSpellingSuggestions: PropTypes.bool,
         langtoolUrl: PropTypes.string,
