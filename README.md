@@ -1,7 +1,8 @@
 # Bookcicle Editor
 
 **Bookcicle Editor** is a feature-rich, opinionated text editor built on **TipTap** with **React** and **Vite**,
-leveraging **Material UI (MUI)** for styling and theming. It offers a seamless rich-text editing experience with a modern,
+leveraging **Material UI (MUI)** for styling and theming. It offers a seamless rich-text editing experience with a
+modern,
 customizable interface, allowing users to format text, insert media, and write with style. The editor is designed to be
 responsive and flexible, built to be integrated into desktop application frontends. Bookcicle uses it in its Tauri V2
 cross-platform desktop application.
@@ -11,7 +12,7 @@ cross-platform desktop application.
 - **Rich Text Editing**: Powered by **TipTap**, the editor supports bold, italic, underline, strikethrough, blockquotes,
   lists, headings, and more.
 - **Spellcheck and Grammar Checking** with **LanguageTool** Support.
-- **Local Find And Replace** Search local document content, navigate occurrences, and replace.
+- **Local Find And Replace**: Search local document content, navigate occurrences, and replace.
 - **Formula Support**: Add and display mathematical formulas using **KaTeX**.
 - **Text Alignment**: Align text to the left, center, right, or justify it.
 - **Text Color and Highlighting**: Change text color and highlight content with background colors.
@@ -26,6 +27,8 @@ cross-platform desktop application.
 - **Page Editor Mode**: Option to display the editor in a page-like format, centered on the screen.
 - **Customizable Toolbar**: Adjust the toolbar buttons based on the writing context (e.g., fiction, non-fiction,
   science).
+- **AI Generation** *(New!)*: Type `/// ai [your prompt]` on a line, press **Enter**, and watch partial text from an AI
+  stream in real time. (See [AI Generation with AiEnterExtension](#ai-generation-with-aienterextension) below.)
 
 ## Installation
 
@@ -45,7 +48,7 @@ npm install react react-dom @mui/material @mui/icons-material @emotion/react @em
 
 If you are contributing to the project or developing locally, you can set up your environment with the following steps:
 
-1. **Clone the repository:**
+1. **Clone the repository**:
 
    Fork it... then:
 
@@ -54,43 +57,51 @@ If you are contributing to the project or developing locally, you can set up you
    cd bookcicle-editor
    ```
 
-2. **Install dependencies:**
+2. **Install dependencies**:
 
    ```bash
    npm install
    ```
 
-3. **Build the project:**
+3. **Build the project**:
 
    ```bash
    npm run build
    ```
 
-4. **In the project where you want to use Bookcicle Editor, run:**
+4. **In the project where you want to use Bookcicle Editor, run**:
 
    ```bash
    npm install path/to/bookcicle_editor
    ```
 
-**Lazy Import**
+**Import** examples:
 
 ```js
+import {lazy, Suspense} from "react";
+
 const Editor = lazy(() =>
-  import("@bookcicle/bookcicle_editor").then((module) => ({
-    default: module.Editor,
-  })),
+    import("@bookcicle/bookcicle_editor").then((module) => ({
+        default: module.Editor,
+    })),
 );
+
+// or
+
+import {Editor} from "@bookcicle/bookcicle_editor"
+
+function App() {
+    return (
+        <Suspense fallback={<div>Loading Editor...</div>}>
+            <Editor
+                // your props...
+            />
+        </Suspense>
+    );
+}
 ```
 
-Wrap it in a Suspense:
-
-```jsx
-<Suspense fallback={<FallbackComponent />}>
-    <Editor .../>
-</Suspense>
-```
-
-5. **Run the development server:**
+5. **Run the development server**:
 
    ```bash
    npm run dev
@@ -198,15 +209,16 @@ your application logic. Below is a detailed explanation of each prop:
  * @param {boolean} props.readOnly - Whether the editor is in read-only mode.
  * @param {string} props.content - The initial content of the editor.
  * @param {Function} props.onTextChange - Callback when the text changes (returns text content as a string).
- * @param {Function} props.onSelectionChange - Callback when the selection changes 
+ * @param {Function} props.onSelectionChange - Callback when the selection changes
  * @param {Function} props.onJsonChange - Callback with the entire document Delta (JSON) when content changes
  * @param {Function} props.onHtmlChange - Callback with the HTML when content changes
- * @param {Function} props.onTransaction - Callback when a transaction is fired by TipTap, 
+ * @param {Function} props.onTransaction - Callback when a transaction is fired by TipTap,
  * @param {Function} props.onFocus - Callback when the editor gains focus (see "Handling focus events" below).
  * @param {Function} props.onEditorReady - Callback triggered when the TipTap editor first becomes ready.
  * @param {Function} props.handleInsertImage - Handler when insert Image is clicked.
  * @param {Function} props.handleInsertFormula - Handler when insert Formula is clicked.
  * @param {Function} props.handleInsertLink - Handler when insert Link is clicked.
+ * @param {Function} props.handleAi - Optional callback for AI generation. (See "AI Generation with AiEnterExtension")
  * @param {EditorSettings} [props.editorSettings] - Configuration object for editor settings.
  * @param {Object} [props.tipTapSettings] - Configuration object for TipTap's useEditor settings,
  */
@@ -232,32 +244,36 @@ your application logic. Below is a detailed explanation of each prop:
 
 ### Handling Focus Events
 
-The editor supports an **`onFocus`** callback if you need to respond whenever the user clicks into or tabs into the editor. For example, you might want to update some global state about which editor is currently active, or dispatch a Redux action when the editor is focused.
+The editor supports an **`onFocus`** callback if you need to respond whenever the user clicks into or tabs into the
+editor. For example, you might want to update some global state about which editor is currently active, or dispatch a
+Redux action when the editor is focused.
 
 **Example:**
 
 ```jsx
-import { Editor } from '@bookcicle/bookcicle_editor';
+import {Editor} from '@bookcicle/bookcicle_editor';
 
 function MyComponent() {
-  const handleEditorFocus = () => {
-    console.log("The editor has focus!");
-    // e.g., dispatch some redux action:
-    // dispatch(updateActiveTabProperties({ path: "/my/doc/path", fileType: "document" }));
-  };
+    const handleEditorFocus = () => {
+        console.log("The editor has focus!");
+        // e.g., dispatch some redux action:
+        // dispatch(updateActiveTabProperties({ path: "/my/doc/path", fileType: "document" }));
+    };
 
-  return (
-    <Editor
-      content="<p>Hello World</p>"
-      onFocus={handleEditorFocus}
-      onTextChange={(text) => console.log("Text changed:", text)}
-      // ...other props
-    />
-  );
+    return (
+        <Editor
+            content="<p>Hello World</p>"
+            onFocus={handleEditorFocus}
+            onTextChange={(text) => console.log("Text changed:", text)}
+            // ...other props
+        />
+    );
 }
 ```
 
-> **Implementation Note**: Internally, we either pass the native HTML focus event or use a TipTap plugin that listens to focus. The net effect is that your `onFocus` callback will trigger whenever the editor or its editable area gains focus.
+> **Implementation Note**: Internally, we either pass the native HTML focus event or use a TipTap plugin that listens to
+> focus. The net effect is that your `onFocus` callback will trigger whenever the editor or its editable area gains
+> focus.
 
 ### Editor Settings
 
@@ -309,7 +325,7 @@ editor's behavior and appearance. Below is a detailed explanation of each settin
 #### Example Usage
 
 ```jsx
-import { Editor } from '@bookcicle/bookcicle_editor';
+import {Editor} from '@bookcicle/bookcicle_editor';
 
 function App() {
     const editorSettings = {
@@ -333,7 +349,7 @@ function App() {
     };
 
     const handleFocus = () => {
-      console.log("Editor focused!");
+        console.log("Editor focused!");
     };
 
     return (
@@ -346,9 +362,12 @@ function App() {
             onSelectionChange={({editor, selection}) => console.log('Selection changed:', selection, editor)}
             onJsonChange={(delta) => console.log('Delta changed:', delta)}
             onHtmlChange={(html) => console.log('HTML changed:', html)}
-            handleInsertImage={() => {/* custom image insertion logic */}}
-            handleInsertLink={() => {/* custom link insertion logic */}}
-            handleInsertFormula={() => {/* custom formula insertion logic */}}
+            handleInsertImage={() => {/* custom image insertion logic */
+            }}
+            handleInsertLink={() => {/* custom link insertion logic */
+            }}
+            handleInsertFormula={() => {/* custom formula insertion logic */
+            }}
             editorSettings={editorSettings}
         />
     );
@@ -389,25 +408,82 @@ customize the existing theme to match your branding. An MUI `<ThemeProvider><Edi
 component. Example:
 
 ```jsx
-import { createTheme, ThemeProvider } from '@mui/material/styles';
-import { Editor } from '@bookcicle/bookcicle_editor';
+import React from "react";
+import {Editor} from "@bookcicle/bookcicle_editor";
 
-const theme = createTheme({
-  // Customize your theme here
-});
+function MyComponent() {
 
-function App() {
+    /**
+     * Mocks an AI streaming function with a "typing" effect.
+     *
+     * Yields partial text in increments (characters, in this example).
+     *
+     * @param {string} prompt The user's prompt.
+     * @returns {AsyncGenerator<string>} An async generator that yields *incremental* text.
+     */
+    async function handleAi(prompt, abortSignal) {
+        async function* generator() {
+            const fullResponse =
+                `Sure, let's continue from your prompt: "${prompt}"\n` +
+                "This is a typing effect demo, so each character arrives individually.\n" +
+                "It might take a while if the text is long, but you see partial updates.\n";
+
+            let partial = "";
+            // Break into characters
+            const chars = fullResponse.split("");
+
+            for (const ch of chars) {
+                partial += ch;
+
+                if (abortSignal && abortSignal.aborted) {
+                    throw new Error('User canceled streaming')
+                }
+                yield partial;
+                // Add a short delay to simulate typing
+                await new Promise((resolve) => setTimeout(resolve, 100));
+            }
+        }
+
+        // Return the async generator
+        return generator();
+    }
+
     return (
         <ThemeProvider theme={theme}>
             <Editor
-                documentId="my-doc"
-                content="<p>Hello world!</p>"
-                // ...
+                documentId="doc-123"
+                content="<p>Try typing: <code>/// ai Hello World</code> and press enter.</p>"
+                handleAi={handleAi}  // <<--- wire up your AI callback
+                // ...other props
             />
         </ThemeProvider>
     );
 }
+
+export default MyComponent;
 ```
+
+### Canceling or Aborting
+
+A simple approach is to ignore user input and let the AI finish. For a more advanced approach—where the user can press a
+key to cancel, or click a “Stop” button—you can:
+
+- Track a **cancel** flag or use an **AbortController** inside `handleAi`.
+- In your extension or code, set that flag/abort if the user hits a key.
+- Check that flag each time you yield a chunk, and `throw new Error("User canceled")` if set.
+
+### Example Flow
+
+1. The user types `/// ai Write a short poem about the moon.` on a line.
+2. Presses **Enter**.
+3. Editor replaces that line with a “Generating...” placeholder.
+4. Calls `handleAi("Write a short poem about the moon.")`.
+    - If it’s a simple function returning a string, the final text is inserted all at once.
+    - If it’s an async generator yielding partial text, the extension inserts each chunk in real time.
+5. When done, the placeholder is removed, and the final text remains in the document. If an error occurs, an error
+   message is shown.
+
+---
 
 ### Formula Support
 
@@ -453,59 +529,60 @@ mock out **Bookcicle Editor**. For example, create `__mocks__/@bookcicle/bookcic
 ```js
 // __mocks__/@bookcicle/bookcicle_editor.js
 
-import React, { useEffect, useRef } from "react";
+import React, {useEffect, useRef} from "react";
 
 // A minimal mock of the Editor component from @bookcicle/bookcicle_editor
 export function Editor({
-  content = "",
-  readOnly,
-  onSelectionChange,
-  onTextChange,
-  onJsonChange,
-  onHtmlChange,
-  onTransaction,
-  handleInsertLink,
-  handleInsertImage,
-  handleInsertFormula,
-  documentId,
-  hOffset,
-  editorSettings,
-}) {
-  // Mock an editorRef with getHTML() and commands.setContent
-  const editorRef = useRef({
-    getHTML: () => content,
-    commands: {
-      setContent: (newContent, _, __) => {
-        // In a real mock, you might store or check newContent if needed
-      },
-    },
-  });
+                           content = "",
+                           readOnly,
+                           onSelectionChange,
+                           onTextChange,
+                           onJsonChange,
+                           onHtmlChange,
+                           onTransaction,
+                           handleInsertLink,
+                           handleInsertImage,
+                           handleInsertFormula,
+                           documentId,
+                           hOffset,
+                           editorSettings,
+                       }) {
+    // Mock an editorRef with getHTML() and commands.setContent
+    const editorRef = useRef({
+        getHTML: () => content,
+        commands: {
+            setContent: (newContent, _, __) => {
+                // In a real mock, you might store or check newContent if needed
+            },
+        },
+    });
 
-  // Simulate the editor being “ready” by calling onTransaction with the mocked editorRef
-  useEffect(() => {
-    if (onTransaction) {
-      onTransaction({ editor: editorRef.current });
-    }
-  }, [onTransaction]);
+    // Simulate the editor being “ready” by calling onTransaction with the mocked editorRef
+    useEffect(() => {
+        if (onTransaction) {
+            onTransaction({editor: editorRef.current});
+        }
+    }, [onTransaction]);
 
-  // Fire text/html callbacks whenever `content` changes
-  useEffect(() => {
-    if (onTextChange) {
-      onTextChange(content);
-    }
-    if (onHtmlChange) {
-      onHtmlChange(content);
-    }
-  }, [content, onTextChange, onHtmlChange]);
+    // Fire text/html callbacks whenever `content` changes
+    useEffect(() => {
+        if (onTextChange) {
+            onTextChange(content);
+        }
+        if (onHtmlChange) {
+            onHtmlChange(content);
+        }
+    }, [content, onTextChange, onHtmlChange]);
 
-  return (
-    <div data-testid="mock-bookcicle-editor">
-      <p>
-        <strong>Mock Bookcicle Editor</strong> (documentId: {documentId})
-      </p>
-      <div>Mock content: {content}</div>
-    </div>
-  );
+    return (
+        <div data-testid="mock-bookcicle-editor">
+            <p>
+                <strong>Mock Bookcicle Editor</strong>
+                (documentId: {documentId})
+            </p>
+            <div>Mock content: {content}</div>
+        </div>
+    );
 }
 ```
 

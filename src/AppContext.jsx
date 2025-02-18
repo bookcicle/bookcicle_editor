@@ -4,6 +4,7 @@ import {createContext, useReducer} from 'react';
 import {INITIAL_STATE, reducer} from './application';
 import PropTypes from "prop-types"; // Adjust path if necessary
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const AppContext = createContext({
     state: INITIAL_STATE
 })
