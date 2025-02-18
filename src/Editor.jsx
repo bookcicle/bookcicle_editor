@@ -1,9 +1,9 @@
-import { Global } from "@emotion/react";
-import { EditorContent, useEditor } from "@tiptap/react";
+import {Global} from "@emotion/react";
+import {EditorContent, useEditor} from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import DragHandle from "@tiptap-pro/extension-drag-handle-react";
-import { Box, useTheme } from "@mui/material";
+import {Box, useTheme} from "@mui/material";
 import PropTypes from "prop-types";
 import dynamicStyles from "./helpers/dynamicStyles.js";
 import styled from "@emotion/styled";
@@ -16,26 +16,27 @@ import Highlight from "@tiptap/extension-highlight";
 import DragHandleIcon from "@mui/icons-material/DragHandleOutlined";
 import FontFamily from "@tiptap/extension-font-family";
 import "katex/dist/katex.min.css";
-import { Mathematics } from "@tiptap-pro/extension-mathematics";
+import {Mathematics} from "@tiptap-pro/extension-mathematics";
 import TextStyle from "@tiptap/extension-text-style";
-import { Link } from "@tiptap/extension-link";
-import { Color } from "@tiptap/extension-color";
-import { Decoration, DecorationSet } from "prosemirror-view";
+import {Link} from "@tiptap/extension-link";
+import {Color} from "@tiptap/extension-color";
+import {Decoration, DecorationSet} from "prosemirror-view";
 import {
     LanguageToolMark,
     removeLanguageToolMarksFromJson,
     stripLanguageToolAnnotationsFromHTML,
 } from "./extensions/spellchecker/langtool.js";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { SpellingActionsMenu } from "./extensions/spellchecker/SpellingActionsMenu.jsx";
-import { ListKeymap } from "@tiptap/extension-list-keymap";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
+import {SpellingActionsMenu} from "./extensions/spellchecker/SpellingActionsMenu.jsx";
+import {ListKeymap} from "@tiptap/extension-list-keymap";
 import IndentHandler from "./extensions/Indent.js";
-import { getCursorPositionInfo } from "./helpers/positionHelper.js";
+import {getCursorPositionInfo} from "./helpers/positionHelper.js";
 import SearchAndReplace from "./extensions/localSearch/searchAndReplace.js";
-import { SearchProvider } from "./extensions/localSearch/SearchProvider.jsx";
+import {SearchProvider} from "./extensions/localSearch/SearchProvider.jsx";
 import SearchComponent from "./extensions/localSearch/SearchComponent.jsx";
 import ReplaceComponent from "./extensions/localSearch/ReplaceComponent.jsx";
 import useLocalKeybindings from "./hooks/useLocalKeybindings.js";
+import {AiEnterExtension} from "./extensions/genai/AiExtension.js";
 
 /**
  * @typedef {Object} EditorSettings
@@ -70,7 +71,7 @@ const TiptapEditorWrapper = styled.div`
     position: relative;
 `;
 
-const PageEditorWrapper = styled(Box)(({ width }) => ({
+const PageEditorWrapper = styled(Box)(({width}) => ({
     width: "100%",
     maxWidth: width,
     margin: "0px auto",
@@ -78,7 +79,7 @@ const PageEditorWrapper = styled(Box)(({ width }) => ({
     borderRadius: 20,
 }));
 
-const SearchWrapper = ({ children }) => {
+const SearchWrapper = ({children}) => {
     useLocalKeybindings();
     return <Box>{children}</Box>;
 };
@@ -116,6 +117,7 @@ const Editor = ({
                     onFocus,
                     onTransaction,
                     onEditorReady,
+                    handleAi,
                     handleInsertLink,
                     handleInsertFormula,
                     handleInsertImage,
@@ -134,8 +136,8 @@ const Editor = ({
                         pageEditorBoxShadow: true,
                         toolbarStyle: "all",
                         toolbarPlacement: "bottom",
-                        showGrammarSuggestions: true,
-                        showSpellingSuggestions: true,
+                        showGrammarSuggestions: false,
+                        showSpellingSuggestions: false,
                         langtoolUrl: "http://localhost:8010/v2/check",
                         languageCode: "auto",
                     },
@@ -161,7 +163,10 @@ const Editor = ({
     // Build your editor extensions once
     const editorExtensions = useMemo(
         () => [
-            StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
+            StarterKit.configure({heading: {levels: [1, 2, 3]}}),
+            AiEnterExtension.configure({
+                handleAi,
+            }),
             LanguageToolMark.configure({
                 apiUrl: editorSettings.langtoolUrl,
                 language: editorSettings.languageCode,
@@ -187,12 +192,13 @@ const Editor = ({
             Subscript,
             Superscript,
             Mathematics,
-            Highlight.configure({ multicolor: true }),
-            Link.configure({ openOnClick: editorSettings.openLinks }),
+            Highlight.configure({multicolor: true}),
+            Link.configure({openOnClick: editorSettings.openLinks}),
             IndentHandler,
             ListKeymap,
         ],
         [
+            handleAi,
             editorSettings.langtoolUrl,
             editorSettings.languageCode,
             editorSettings.showSpellingSuggestions,
@@ -204,16 +210,16 @@ const Editor = ({
 
     // Triggered once on editor creation
     const handleCreate = useCallback(
-        ({ editor }) => {
+        ({editor}) => {
             if (!isMountedRef.current) return; // << ADDED GUARD
-            onEditorReady?.({ editor });
+            onEditorReady?.({editor});
         },
         [onEditorReady]
     );
 
     // Triggered on every content update
     const handleUpdate = useCallback(
-        ({ editor }) => {
+        ({editor}) => {
             if (!isMountedRef.current) return; // << ADDED GUARD
 
             if (!isUpdatingEditor.current) {
@@ -236,20 +242,20 @@ const Editor = ({
 
     // Triggered on selection changes
     const handleSelectionUpdate = useCallback(
-        ({ editor }) => {
+        ({editor}) => {
             if (!isMountedRef.current) return; // << ADDED GUARD
 
             const selection = editor.state.selection;
-            const { $from } = selection;
+            const {$from} = selection;
             const doc = editor.state.doc;
 
-            const { paragraphNumber, columnOffset } = getCursorPositionInfo($from, doc);
-            onSelectionChange?.({ selection, paragraphNumber, columnOffset });
+            const {paragraphNumber, columnOffset} = getCursorPositionInfo($from, doc);
+            onSelectionChange?.({selection, paragraphNumber, columnOffset});
 
             // Active line highlighting
             if (editorSettings.showLineHighlight) {
-                const { state } = editor;
-                const { $from } = state.selection;
+                const {state} = editor;
+                const {$from} = state.selection;
                 const start = $from.start($from.depth);
                 const end = $from.end($from.depth);
                 const deco = Decoration.node(start - 1, end + 1, {
@@ -266,21 +272,21 @@ const Editor = ({
 
     // Called on each ProseMirror transaction
     const handleTransaction = useCallback(
-        ({ transaction, editor }) => {
+        ({transaction, editor}) => {
             if (!isMountedRef.current) return; // << ADDED GUARD
 
             // If the transaction has LanguageTool match metadata, store it
             setMatch(transaction.meta.match);
 
             // Fire your callback (if any)
-            onTransaction?.({ editor, transaction });
+            onTransaction?.({editor, transaction});
         },
         [onTransaction]
     );
 
     // Clear highlight decorations on blur
     const handleBlur = useCallback(
-        ({ editor }) => {
+        ({editor}) => {
             if (!isMountedRef.current) return; // << ADDED GUARD
 
             if (editorSettings.showLineHighlight) {
@@ -309,6 +315,7 @@ const Editor = ({
             ...tipTapSettings,
         }),
         [
+            onFocus,
             editorExtensions,
             content,
             readOnly,
@@ -347,8 +354,8 @@ const Editor = ({
                         editorSettings.showGrammarSuggestions,
                     })}
                 />
-                <SearchComponent />
-                <ReplaceComponent />
+                <SearchComponent/>
+                <ReplaceComponent/>
 
                 <EditorContentWrapper
                     documentId={documentId}
@@ -441,14 +448,14 @@ const EditorContentWrapper = ({
         >
             <div
                 className="tiptap-editor"
-                style={{ paddingLeft: editorSettings.enableDragHandle ? "3em" : "1em" }}
+                style={{paddingLeft: editorSettings.enableDragHandle ? "3em" : "1em"}}
             >
                 {editorSettings.enableDragHandle && (
                     <DragHandle editor={editor}>
-                        <DragHandleIcon />
+                        <DragHandleIcon/>
                     </DragHandle>
                 )}
-                <EditorContent className="content" editor={editor} />
+                <EditorContent className="content" editor={editor}/>
                 {editor && (
                     <SpellingActionsMenu
                         documentId={documentId}
@@ -495,7 +502,7 @@ const EditorContentWrapper = ({
                     zIndex: 0,
                 }}
             >
-                <EditorContainer style={{ position: "relative", alignSelf: "stretch" }}>
+                <EditorContainer style={{position: "relative", alignSelf: "stretch"}}>
                     <Box
                         sx={{
                             backgroundColor: editorSettings.enablePageEditor
@@ -552,6 +559,7 @@ Editor.propTypes = {
     onFocus: PropTypes.func,
     onTransaction: PropTypes.func,
     onEditorReady: PropTypes.func,
+    handleAi: PropTypes.func,
     handleInsertLink: PropTypes.func.isRequired,
     handleInsertImage: PropTypes.func.isRequired,
     handleInsertFormula: PropTypes.func.isRequired,
@@ -587,8 +595,8 @@ Editor.propTypes = {
 EditorContentWrapper.propTypes = {
     documentId: PropTypes.string.isRequired,
     match: PropTypes.object,
-    isUpdatingEditor: PropTypes.shape({ current: PropTypes.bool }).isRequired,
-    pendingContentUpdate: PropTypes.shape({ current: PropTypes.string }).isRequired,
+    isUpdatingEditor: PropTypes.shape({current: PropTypes.bool}).isRequired,
+    pendingContentUpdate: PropTypes.shape({current: PropTypes.string}).isRequired,
     content: PropTypes.string,
     editorSettings: PropTypes.shape({
         openLinks: PropTypes.bool,
