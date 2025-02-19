@@ -8,9 +8,10 @@ export const AiEnterExtension = Extension.create({
 
     addOptions() {
         return {
-            handleAi: async (prompt) => {
+            // eslint-disable-next-line no-unused-vars
+            handleAi: async (prompt, abortSignal, content) => {
                 console.warn('[AiEnterExtension] No handleAi function provided.')
-                return `No AI function provided for prompt: ${prompt}`
+                return [`No AI function provided for prompt: ${prompt}`]
             },
         }
     },
@@ -19,34 +20,28 @@ export const AiEnterExtension = Extension.create({
         return [AiPlaceholder]
     },
 
-    /**
-     * 1) Add a plugin to listen for key events, so we can set "canceled = true" if the user presses any key.
-     */
     addProseMirrorPlugins() {
         return [
             new Plugin({
                 key: new PluginKey('aiCancelOnKey'),
                 props: {
                     handleKeyDown: () => {
-                        // If we are in the middle of streaming, set canceled = true
                         if (this.editor.storage.aiEnterExtension?.streaming) {
-                            console.log('[AiEnterExtension] User typed => CANCELING AI')
                             this.editor.storage.aiEnterExtension.canceled = true
+                            this.editor.storage.aiEnterExtension.abortController?.abort()
                         }
-                        return false // let other handlers proceed
+                        return false
                     },
                 },
             }),
         ]
     },
 
-    /**
-     * 2) We initialize extension storage to track "streaming" and "canceled" flags.
-     */
     onCreate() {
         this.editor.storage.aiEnterExtension = {
-            streaming: false, // are we in a streaming session?
-            canceled: false,  // user typed => cancel
+            streaming: false,
+            canceled: false,
+            abortController: null,
         }
     },
 
@@ -62,8 +57,7 @@ export const AiEnterExtension = Extension.create({
                 const regex = /^\/\/\/\s*ai\s+(.*)$/
                 const match = blockText.match(regex)
                 if (!match) {
-                    // Let normal Enter happen
-                    return false
+                    return false // let normal Enter happen
                 }
 
                 // 1) Extract the AI prompt
@@ -99,9 +93,27 @@ export const AiEnterExtension = Extension.create({
 
                 // 5) Async AI call
                 setTimeout(async () => {
+                    // Create a new AbortController for this streaming session
+                    const abortController = new AbortController()
+                    this.editor.storage.aiEnterExtension.abortController = abortController
+
                     try {
-                        // A generator or array of chunks
-                        const stream = await this.options.handleAi(prompt)
+                        // We find the start of the "/// ai" line:
+                        const blockStart = $from.start($from.depth)
+
+                        // Gather content from the start of the doc up to that line
+                        const contentBeforeCursor = state.doc.textBetween(
+                            0,
+                            blockStart,
+                            '\n\n'
+                        )
+
+                        // Call handleAi with (prompt, signal, contentBeforeCursor)
+                        const stream = await this.options.handleAi(
+                            prompt,
+                            abortController.signal,
+                            contentBeforeCursor,
+                        )
 
                         // 5a) Remove the placeholder + insert an empty paragraph
                         let textParagraphPos = 0
@@ -112,13 +124,9 @@ export const AiEnterExtension = Extension.create({
                                 const paragraphStart = placeholderPos - 1
                                 const paragraphEnd = placeholderPos + 1
 
-                                // Delete the paragraph with placeholder
                                 tr.deleteRange(paragraphStart, paragraphEnd)
-
-                                // Insert a fresh empty paragraph
                                 tr.insert(paragraphStart, state.schema.nodes.paragraph.create({}))
                                 textParagraphPos = paragraphStart + 1
-
                                 dispatch(tr)
                                 return true
                             })
@@ -128,12 +136,10 @@ export const AiEnterExtension = Extension.create({
                         let runningOffset = textParagraphPos
 
                         for await (const chunk of stream) {
-                            // 5b) If user typed => canceled
                             if (this.editor.storage.aiEnterExtension.canceled) {
                                 throw new Error('User canceled AI streaming')
                             }
 
-                            // Insert chunk at runningOffset
                             this.editor
                                 .chain()
                                 // eslint-disable-next-line no-unused-vars
@@ -148,24 +154,26 @@ export const AiEnterExtension = Extension.create({
 
                         // 6) Done streaming => focus at the end
                         this.editor.chain().focus().run()
-                    } catch (error) {
-                        console.error('[AiEnterExtension] Streaming AI failed:', error)
-                        const canceled = error.message.includes('canceled')
-                        let errorMessage = canceled
-                            ? '  [AI canceled by user input]  '
-                            : `  [AI Error: ${error.message || 'Unknown'}, please retry.]  `
 
-                        // Replace the placeholder paragraph with the error
-                        this.editor
-                            .chain()
-                            .focus()
-                            .deleteRange({from: placeholderPos - 1, to: placeholderPos + 1})
-                            .insertContentAt(placeholderPos, errorMessage)
-                            .run()
+                    } catch (error) {
+                        const canceled = error.message.includes('canceled')
+                        if (!canceled) {
+                            console.error('[AiEnterExtension] Streaming AI failed:', error);
+                            let errorMessage = canceled
+                                ? '  [AI canceled by user input]  '
+                                : `  [AI Error: ${error.message || 'Unknown'}, please retry.]  `
+
+                            this.editor
+                                .chain()
+                                .focus()
+                                .deleteRange({from: placeholderPos - 1, to: placeholderPos + 1})
+                                .insertContentAt(placeholderPos, errorMessage)
+                                .run()
+                        }
                     } finally {
-                        // Clear streaming flag
                         this.editor.storage.aiEnterExtension.streaming = false
                         this.editor.storage.aiEnterExtension.canceled = false
+                        this.editor.storage.aiEnterExtension.abortController = null
                     }
                 }, 0)
 

@@ -28,8 +28,9 @@ const App = () => {
      * @param {string} prompt The user's prompt.
      * @returns {AsyncGenerator<string>} An async generator that yields *incremental* text.
      */
-    async function handleAi(prompt, abortSignal) {
+    async function handleAi(prompt, abortSignal, content) {
         async function* generator() {
+            console.log(content);
             const fullResponse =
                 `Sure, let's continue from your prompt: "${prompt}"\n` +
                 "This is a typing effect demo, so each character arrives individually.\n" +

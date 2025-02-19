@@ -421,8 +421,9 @@ function MyComponent() {
      * @param {string} prompt The user's prompt.
      * @returns {AsyncGenerator<string>} An async generator that yields *incremental* text.
      */
-    async function handleAi(prompt, abortSignal) {
+    async function handleAi(prompt, abortSignal, content) {
         async function* generator() {
+           // Could sent content above cursor along to AI for document continuation.
             const fullResponse =
                 `Sure, let's continue from your prompt: "${prompt}"\n` +
                 "This is a typing effect demo, so each character arrives individually.\n" +
@@ -463,16 +464,7 @@ function MyComponent() {
 export default MyComponent;
 ```
 
-### Canceling or Aborting
-
-A simple approach is to ignore user input and let the AI finish. For a more advanced approach—where the user can press a
-key to cancel, or click a “Stop” button—you can:
-
-- Track a **cancel** flag or use an **AbortController** inside `handleAi`.
-- In your extension or code, set that flag/abort if the user hits a key.
-- Check that flag each time you yield a chunk, and `throw new Error("User canceled")` if set.
-
-### Example Flow
+### AI GEN Example Flow
 
 1. The user types `/// ai Write a short poem about the moon.` on a line.
 2. Presses **Enter**.
