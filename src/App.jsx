@@ -26,15 +26,17 @@ const App = () => {
      * Yields partial text in increments (characters, in this example).
      *
      * @param {string} prompt The user's prompt.
+     * @param abortSignal
+     * @param content
      * @returns {AsyncGenerator<string>} An async generator that yields *incremental* text.
      */
+    // eslint-disable-next-line no-unused-vars
     async function handleAi(prompt, abortSignal, content) {
         async function* generator() {
-            console.log(content);
             const fullResponse =
                 `Sure, let's continue from your prompt: "${prompt}"\n` +
                 "This is a typing effect demo, so each character arrives individually.\n" +
-                "It might take a while if the text is long, but you see partial updates.\n";
+                "It might take a while if the text is long, but you see partial updates.\n\n";
 
             let partial = "";
             // Break into characters

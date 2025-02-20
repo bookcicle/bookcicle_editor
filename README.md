@@ -423,7 +423,7 @@ function MyComponent() {
      */
     async function handleAi(prompt, abortSignal, content) {
         async function* generator() {
-           // Could sent content above cursor along to AI for document continuation.
+           // Could send content above cursor along to AI for document continuation.
             const fullResponse =
                 `Sure, let's continue from your prompt: "${prompt}"\n` +
                 "This is a typing effect demo, so each character arrives individually.\n" +

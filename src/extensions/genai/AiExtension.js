@@ -1,17 +1,45 @@
-// AiEnterExtension.js
-import {Extension} from '@tiptap/core'
+import {Extension, mergeAttributes, Node} from '@tiptap/core'
 import {Plugin, PluginKey, TextSelection} from 'prosemirror-state'
-import {AiPlaceholder} from './AiPlaceholder'
+
+const AiPlaceholder = Node.create({
+    name: 'aiPlaceholder',
+    group: 'block',
+    atom: true,
+    selectable: false,
+    draggable: false,
+    addAttributes() {
+        return {
+            placeholderText: {
+                default: 'Generating…',
+            },
+        }
+    },
+    parseHTML() {
+        return [{tag: 'div[data-ai-placeholder]'}]
+    },
+    renderHTML({node, HTMLAttributes}) {
+        return [
+            'div',
+            mergeAttributes(HTMLAttributes, {'data-ai-placeholder': ''}),
+            node.attrs.placeholderText,
+        ]
+    },
+})
 
 export const AiEnterExtension = Extension.create({
     name: 'aiEnterExtension',
-
     addOptions() {
         return {
+            /**
+             * handleAi: a function returning an async generator of text chunks.
+             * Called with (prompt, abortSignal, contentBeforeCursor).
+             */
             // eslint-disable-next-line no-unused-vars
-            handleAi: async (prompt, abortSignal, content) => {
+            handleAi: async (prompt, abortSignal, contentBeforeCursor) => {
                 console.warn('[AiEnterExtension] No handleAi function provided.')
-                return [`No AI function provided for prompt: ${prompt}`]
+                return (async function* () {
+                    yield `No AI function provided. Prompt was: ${prompt}`
+                })()
             },
         }
     },
@@ -52,123 +80,101 @@ export const AiEnterExtension = Extension.create({
                 const {selection} = state
                 const {$from} = selection
 
-                // Check if line starts with "/// ai ..."
                 const blockText = $from.node($from.depth).textContent
                 const regex = /^\/\/\/\s*ai\s+(.*)$/
                 const match = blockText.match(regex)
                 if (!match) {
-                    return false // let normal Enter happen
+                    return false
                 }
-
-                // 1) Extract the AI prompt
                 const prompt = match[1].trim()
 
-                // 2) Insert paragraph with AiPlaceholder
+                let placeholderPos = null
+                let placeholderNodeSize = null
                 this.editor
                     .chain()
                     .focus()
                     .command(({tr, state, dispatch}) => {
                         const posAfterBlock = $from.after($from.depth)
 
-                        const paragraphNode = state.schema.nodes.paragraph.create(
-                            {},
-                            state.schema.nodes.aiPlaceholder.create({
-                                placeholderText: 'Generating...',
-                            }),
-                        )
+                        const placeholderNode = state.schema.nodes.aiPlaceholder.create({
+                            placeholderText: 'Generating... Hit any button to cancel.',
+                        })
+                        tr.insert(posAfterBlock, placeholderNode)
 
-                        tr.insert(posAfterBlock, paragraphNode)
-                        tr.setSelection(TextSelection.create(tr.doc, posAfterBlock + 1))
+                        placeholderPos = posAfterBlock
+                        placeholderNodeSize = placeholderNode.nodeSize
+
+                        const afterPlaceholder = posAfterBlock + placeholderNodeSize
+                        const emptyParagraph = state.schema.nodes.paragraph.create({})
+                        tr.insert(afterPlaceholder, emptyParagraph)
+
+                        tr.setSelection(TextSelection.create(tr.doc, afterPlaceholder + 1))
                         dispatch(tr)
                         return true
                     })
                     .run()
 
-                // 3) Save the placeholder’s position
-                const placeholderPos = this.editor.state.selection.from
-
-                // 4) Mark that streaming has started and no cancel yet
                 this.editor.storage.aiEnterExtension.streaming = true
                 this.editor.storage.aiEnterExtension.canceled = false
 
-                // 5) Async AI call
                 setTimeout(async () => {
-                    // Create a new AbortController for this streaming session
                     const abortController = new AbortController()
                     this.editor.storage.aiEnterExtension.abortController = abortController
-
                     try {
-                        // We find the start of the "/// ai" line:
                         const blockStart = $from.start($from.depth)
+                        const contentBeforeCursor = state.doc.textBetween(0, blockStart, '\n\n')
 
-                        // Gather content from the start of the doc up to that line
-                        const contentBeforeCursor = state.doc.textBetween(
-                            0,
-                            blockStart,
-                            '\n\n'
-                        )
-
-                        // Call handleAi with (prompt, signal, contentBeforeCursor)
                         const stream = await this.options.handleAi(
                             prompt,
                             abortController.signal,
-                            contentBeforeCursor,
+                            contentBeforeCursor
                         )
-
-                        // 5a) Remove the placeholder + insert an empty paragraph
-                        let textParagraphPos = 0
-                        this.editor
-                            .chain()
-                            .focus()
-                            .command(({tr, state, dispatch}) => {
-                                const paragraphStart = placeholderPos - 1
-                                const paragraphEnd = placeholderPos + 1
-
-                                tr.deleteRange(paragraphStart, paragraphEnd)
-                                tr.insert(paragraphStart, state.schema.nodes.paragraph.create({}))
-                                textParagraphPos = paragraphStart + 1
-                                dispatch(tr)
-                                return true
-                            })
-                            .run()
-
-                        // We'll accumulate text in that new paragraph
-                        let runningOffset = textParagraphPos
+                        let leftoverLine = ''
 
                         for await (const chunk of stream) {
                             if (this.editor.storage.aiEnterExtension.canceled) {
-                                throw new Error('User canceled AI streaming')
+                                throw new Error('User canceled streaming')
                             }
+                            leftoverLine += chunk
+                            const lines = leftoverLine.split('\n')
 
-                            this.editor
-                                .chain()
-                                // eslint-disable-next-line no-unused-vars
-                                .command(({tr, _, dispatch}) => {
-                                    tr.insertText(chunk, runningOffset)
-                                    runningOffset += chunk.length
-                                    dispatch(tr)
-                                    return true
-                                })
-                                .run()
+                            for (let i = 0; i < lines.length - 1; i++) {
+                                const textPart = lines[i]
+                                if (textPart) {
+                                    this.editor.chain().focus().insertContent(textPart).run()
+                                }
+                                this.editor.chain().focus().insertContent({type: 'paragraph'}).run()
+                            }
+                            leftoverLine = lines[lines.length - 1]
                         }
 
-                        // 6) Done streaming => focus at the end
-                        this.editor.chain().focus().run()
+                        if (leftoverLine) {
+                            this.editor.chain().focus().insertContent(leftoverLine).run()
+                        }
 
+                        this.editor.chain().focus().command(({tr, dispatch}) => {
+                            tr.deleteRange(placeholderPos, placeholderPos + placeholderNodeSize)
+                            dispatch(tr)
+                            return true
+                        }).run()
+
+                        this.editor.chain().focus().run()
                     } catch (error) {
+                        if (!`${error}`.includes('canceled')) {
+                            console.error('[AiEnterExtension] AI streaming error:', error)
+                        }
+
+                        // eslint-disable-next-line no-unused-vars
+                        this.editor.chain().focus().command(({tr, state, dispatch}) => {
+                            tr.deleteRange(placeholderPos, placeholderPos + placeholderNodeSize)
+                            dispatch(tr)
+                            return true
+                        }).run()
+
                         const canceled = error.message.includes('canceled')
                         if (!canceled) {
-                            console.error('[AiEnterExtension] Streaming AI failed:', error);
-                            let errorMessage = canceled
-                                ? '  [AI canceled by user input]  '
-                                : `  [AI Error: ${error.message || 'Unknown'}, please retry.]  `
-
-                            this.editor
-                                .chain()
-                                .focus()
-                                .deleteRange({from: placeholderPos - 1, to: placeholderPos + 1})
-                                .insertContentAt(placeholderPos, errorMessage)
-                                .run()
+                            const errorMessage = `[AI Error: ${error.message || 'Unknown'}]`
+                            this.editor.chain().focus().insertContent(errorMessage).run()
                         }
                     } finally {
                         this.editor.storage.aiEnterExtension.streaming = false
@@ -177,7 +183,6 @@ export const AiEnterExtension = Extension.create({
                     }
                 }, 0)
 
-                // Prevent normal Enter
                 return true
             },
         }
