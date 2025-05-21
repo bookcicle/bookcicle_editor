@@ -2,6 +2,7 @@ import {Mark} from '@tiptap/core';
 import {Plugin, PluginKey} from 'prosemirror-state';
 import {debounce} from 'lodash';
 import {v4 as uuidv4} from 'uuid';
+import sha1 from 'crypto-js/sha1';
 import db from '../../db/db.js';
 
 export const LanguageToolHelpingWords = {
@@ -11,7 +12,53 @@ export const LanguageToolHelpingWords = {
 };
 
 let editorView = null;
-let proofReadInitially = false;
+const initialisedViews = new WeakSet();
+
+/* ───────── helpers ───────────────────────────────────────────────────── */
+const SPELL_CATS = ['TYPOS', 'CASING', 'COMPOUNDING', 'CONFUSED_WORDS'];
+const GRAMMAR_CATS = [
+    'GRAMMAR', 'PUNCTUATION', 'REDUNDANCY', 'REPETITIONS', 'REPETITIONS_STYLE',
+    'SEMANTICS', 'GENDER_NEUTRALITY', 'FALSE_FRIENDS', 'TYPOGRAPHY',
+];
+
+const getMatchType = id =>
+    SPELL_CATS.includes(id) ? 'spelling' :
+        GRAMMAR_CATS.includes(id) ? 'grammar' : 'other';
+
+const classForCat = id =>
+    SPELL_CATS.includes(id) ? 'lt lt-spelling-error' :
+        GRAMMAR_CATS.includes(id) ? 'lt lt-grammar-error' : 'lt lt-other-error';
+
+const buildMapping = (doc) => {
+    const mapping = [], textParts = [];
+    doc.descendants((node, pos) => {
+        if (node.isText) {
+            for (let i = 0; i < node.text.length; i++) {
+                mapping[textParts.join('').length + i] = pos + i;
+            }
+            textParts.push(node.text);
+        } else if (node.isBlock) {
+            mapping[textParts.join('').length] = '\n';
+            textParts.push('\n');
+        }
+    });
+    return {text: textParts.join(''), mapping};
+};
+
+const changedSpan = (tr) => {
+    let f = null, t = null;
+    tr.mapping.maps.forEach(m => m.forEach((a, b, c, d) => {
+        if (f === null || c < f) f = c;
+        if (t === null || d > t) t = d;
+    }));
+    return f === null ? null : {from: f, to: t};
+};
+
+const extractFragment = (txt, {from, to}, pad = 250) => {
+    const start = Math.max(0, from - pad), end = Math.min(txt.length, to + pad);
+    return {text: txt.slice(start, end), offset: start};
+};
+/* ─────────────────────────────────────────────────────────────────────── */
 
 export const LanguageToolMark = Mark.create({
     name: 'languagetool',
@@ -20,456 +67,214 @@ export const LanguageToolMark = Mark.create({
         return {
             apiUrl: '',
             language: 'auto',
+            debounceTime: 800,
             automaticMode: true,
-            documentId: undefined,
-            debounceTime: 1000,
-            maxWordsPerRequest: 500,
             enableSpellcheck: true,
             enableGrammarCheck: true,
+            documentId: undefined,
         };
     },
 
     addAttributes() {
         return {
-            match: {
-                default: null,
-            },
-            uuid: {
-                default: null,
-            },
-            class: {
-                default: null,
-            }, // Allow dynamic classes
+            match: {default: null},
+            uuid: {default: null},
+            class: {default: null},
         };
     },
 
     parseHTML() {
-        return [
-            {
-                tag: 'span.lt',
-                getAttrs: (dom) => ({
-                    match: dom.getAttribute('data-match') || null,
-                    uuid: dom.getAttribute('data-uuid') || null,
-                    class: dom.getAttribute('class') || null,
-                }),
-            },
-        ];
+        return [{
+            tag: 'span.lt',
+            getAttrs: dom => ({
+                match: dom.getAttribute('data-match') || null,
+                uuid: dom.getAttribute('data-uuid') || null,
+                class: dom.getAttribute('class') || null,
+            }),
+        }];
     },
 
     renderHTML({HTMLAttributes}) {
         const {match, uuid, ...rest} = HTMLAttributes;
-        return [
-            'span',
-            {
-                ...rest, // Use the rest of the attributes, including class
-                'data-match': match,
-                'data-uuid': uuid,
-            },
-            0,
-        ];
+        return ['span', {...rest, 'data-match': match, 'data-uuid': uuid}, 0];
     },
 
     addCommands() {
         return {
-            proofread:
-                () =>
-                    ({editor}) => {
-                        if (editorView && this.options.automaticMode) {
-                            const {doc} = editor.state;
-                            // Call processDocument from the closure
-                            this.processDocument(doc, editorView);
-                        }
-                        return true;
-                    },
-            ignoreLanguageToolSuggestion:
-                () =>
-                    ({editor}) => {
-                        const {selection, doc} = editor.state;
-                        const {from, to} = selection;
-                        const content = doc.textBetween(from, to);
-
-                        if (this.options.documentId) {
-                            db.ignoredWords.add({
-                                value: content,
-                                documentId: String(this.options.documentId),
-                            });
-                        }
-                        return editor.commands.unsetMark('languagetool', {from, to});
-                    },
+            proofread: () => (() => {
+                if (editorView) {
+                    editorView.dispatch(editorView.state.tr.setMeta('lt:proof', true));
+                }
+                return true;
+            }),
         };
     },
 
     addProseMirrorPlugins() {
-        const extension = this; // Capture 'this' context
-        const {
-            apiUrl,
-            language,
-            automaticMode,
-            debounceTime,
-        } = this.options;
+        const ext = this;
+        const {apiUrl, language, debounceTime} = this.options;
 
-        const getClassForCategoryId = (categoryId) => {
-            const spellingCategories = [
-                'TYPOS',
-                'CASING',
-                'COMPOUNDING',
-                'CONFUSED_WORDS',
-            ];
-            const grammarCategories = [
-                'GRAMMAR',
-                'PUNCTUATION',
-                'REDUNDANCY',
-                'REPETITIONS',
-                'REPETITIONS_STYLE',
-                'SEMANTICS',
-                'GENDER_NEUTRALITY',
-                'FALSE_FRIENDS',
-                'TYPOGRAPHY',
-            ];
-            if (spellingCategories.includes(categoryId)) {
-                return 'lt lt-spelling-error';
-            } else if (grammarCategories.includes(categoryId)) {
-                return 'lt lt-grammar-error';
-            } else {
-                return 'lt lt-other-error';
-            }
-        };
-
-        const getMatchType = (categoryId) => {
-            const spellingCategories = [
-                'TYPOS',
-                'CASING',
-                'COMPOUNDING',
-                'CONFUSED_WORDS',
-            ];
-            const grammarCategories = [
-                'GRAMMAR',
-                'PUNCTUATION',
-                'REDUNDANCY',
-                'REPETITIONS',
-                'REPETITIONS_STYLE',
-                'SEMANTICS',
-                'GENDER_NEUTRALITY',
-                'FALSE_FRIENDS',
-                'TYPOGRAPHY',
-            ];
-            if (spellingCategories.includes(categoryId)) {
-                return 'spelling';
-            } else if (grammarCategories.includes(categoryId)) {
-                return 'grammar';
-            } else {
-                return 'other';
-            }
-        };
-
+        /* fetch + filter */
         const fetchSuggestions = async (text, offset = 0) => {
             if (!apiUrl) return [];
             try {
-                const response = await fetch(apiUrl, {
+                const r = await fetch(apiUrl, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        Accept: 'application/json',
-                    },
-                    body: `text=${encodeURIComponent(text)}&language=${
-                        language
-                    }&enabledOnly=false`,
+                    headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                    body: `text=${encodeURIComponent(text)}&language=${language}&enabledOnly=false`
                 });
-                const data = await response.json();
-                return (data.matches || []).map((match) => ({
-                    ...match,
-                    offset: match.offset + offset,
-                }));
-            } catch (error) {
-                console.error('LanguageTool API error:', error);
+                const data = await r.json();
+                return (data.matches || []).map(m => ({...m, offset: m.offset + offset}));
+            } catch (e) {
+                console.error('LT API', e);
                 return [];
             }
         };
 
-        const filterByOptions = (matches) => {
-            return matches.filter((match) => {
-                const categoryId = match?.rule?.category?.id || 'TYPOS';
-                const matchType = getMatchType(categoryId);
-                if (
-                    (matchType === 'spelling' && !extension.options.enableSpellcheck) ||
-                    (matchType === 'grammar' && !extension.options.enableGrammarCheck)
-                ) {
-                    return false; // Skip this match
-                }
-                return true;
-            });
-        };
+        const filterByOptions = ms => ms.filter(m => {
+            const typ = getMatchType(m.rule?.category?.id || 'TYPOS');
+            return (typ === 'spelling' && ext.options.enableSpellcheck) ||
+                (typ === 'grammar' && ext.options.enableGrammarCheck);
+        });
 
-        const filterIgnoredMatches = async (matches, doc, mapping) => {
-            const uniqueMatches = [];
-            for (const match of matches) {
-                const fromOffset = match.offset;
-                const toOffset = match.offset + match.length - 1;
-                const from = mapping[fromOffset];
-                const to =
-                    mapping[toOffset] !== undefined
-                        ? mapping[toOffset] + 1
-                        : from + match.length;
-                const content = doc.textBetween(from, to);
-
+        const filterIgnored = async (ms, doc, mapping) => {
+            if (!ext.options.documentId) return ms;
+            const out = [];
+            for (const m of ms) {
+                const from = mapping[m.offset], to = from + m.length;
+                const word = doc.textBetween(from, to);
                 let ignored = false;
-                if (extension.options.documentId) {
-                    if (
-                        match.rule.id === 'MORFOLOGIK_RULE_EN_US' ||
-                        match.rule.id === 'MORFOLOGIK_RULE_EN_GB'
-                    ) {
-                        // Spelling error, check ignoredWords
-                        ignored = await db.ignoredWords
-                            .where('[value+documentId]')
-                            .equals([content, String(extension.options.documentId)])
-                            .first();
-                    } else {
-                        // Grammar error, check ignoredGrammarErrors
-                        ignored = await db.ignoredGrammarErrors
-                            .where('[ruleId+contextText+contextOffset+documentId]')
-                            .equals([
-                                match.rule.id,
-                                match.context.text,
-                                match.context.offset,
-                                String(extension.options.documentId),
-                            ])
-                            .first();
-                    }
+                if (getMatchType(m.rule?.category?.id || '') === 'spelling') {
+                    ignored = await db.ignoredWords.where('[value+documentId]')
+                        .equals([word, String(ext.options.documentId)]).first();
+                } else {
+                    ignored = await db.ignoredGrammarErrors.where('[ruleId+contextText+contextOffset+documentId]')
+                        .equals([m.rule.id, m.context.text, m.context.offset, String(ext.options.documentId)]).first();
                 }
-
-                if (!ignored) {
-                    uniqueMatches.push(match);
-                }
+                if (!ignored) out.push(m);
             }
-            return uniqueMatches;
+            return out;
         };
 
-        const applyMarks = (view, matches, mapping) => {
-            const {tr, schema} = view.state;
+        /* mark utils */
+        const removeMarks = (tr, from, to) => {
+            tr.doc.nodesBetween(from, to, (n, pos) => {
+                if (n.isText) n.marks.filter(m => m.type.name === 'languagetool')
+                    .forEach(() => tr.removeMark(pos, pos + n.nodeSize, tr.doc.type.schema.marks.languagetool));
+            });
+        };
 
-            // Remove existing marks
-            view.state.doc.nodesBetween(
-                0,
-                view.state.doc.content.size,
-                (node, pos) => {
-                    if (node.isText) {
-                        const marks = node.marks.filter(
-                            (m) => m.type.name === 'languagetool'
-                        );
-                        if (marks.length > 0) {
-                            tr.removeMark(
-                                pos,
-                                pos + node.nodeSize,
-                                schema.marks.languagetool
-                            );
-                        }
-                    }
-                }
-            );
-
-            // Apply new marks with appropriate classes
-            matches.forEach((match) => {
-                const fromOffset = match.offset;
-                const toOffset = match.offset + match.length - 1;
-                const from = mapping[fromOffset];
-                const to =
-                    mapping[toOffset] !== undefined
-                        ? mapping[toOffset] + 1
-                        : from + match.length;
-                if (
-                    from !== undefined &&
-                    to !== undefined &&
-                    from >= 0 &&
-                    to <= view.state.doc.content.size
-                ) {
-                    tr.addMark(
-                        from,
-                        to,
+        const applyMatches = (view, matches, mapping, span = null) => {
+            if (!view || !view.state) return;
+            const {tr} = view.state;
+            if (span) removeMarks(tr, span.from, span.to);
+            matches.forEach(m => {
+                const from = mapping[m.offset], to = from + m.length;
+                if (from !== undefined && to !== undefined) {
+                    tr.addMark(from, to,
                         view.state.schema.marks.languagetool.create({
-                            match: JSON.stringify(match),
+                            match: JSON.stringify(m),
                             uuid: uuidv4(),
-                            class: getClassForCategoryId(
-                                match?.rule?.category?.id || 'TYPOS'
-                            ),
-                        })
-                    );
+                            class: classForCat(m.rule?.category?.id || 'TYPOS')
+                        }));
                 }
             });
-
             tr.setMeta('languageToolProcessing', true);
             view.dispatch(tr);
-
-            // Add event listeners
-            setTimeout(addMarkListeners, 0);
         };
 
-        // Event handling
-        const handleMouseEnter = (e) => {
-            const matchData = e.target.getAttribute('data-match');
-            updateCurrentMatch(matchData ? JSON.parse(matchData) : undefined);
-        };
+        /* cache */
+        const cache = new Map();
 
-        const handleMouseLeave = () => {
-            updateCurrentMatch(undefined);
-        };
-
-        const addMarkListeners = () => {
-            document.querySelectorAll('span.lt').forEach((mark) => {
-                mark.removeEventListener('mouseenter', handleMouseEnter);
-                mark.removeEventListener('mouseleave', handleMouseLeave);
-                mark.addEventListener('mouseenter', handleMouseEnter);
-                mark.addEventListener('mouseleave', handleMouseLeave);
-            });
-        };
-
-        const updateCurrentMatch = (match) => {
-            if (editorView) {
-                editorView.dispatch(editorView.state.tr.setMeta('match', match));
+        /* processors */
+        const full = async (doc, view) => {
+            const {text, mapping} = buildMapping(doc);
+            const h = sha1(text).toString();
+            let m = cache.get(h);
+            if (!m) {
+                m = await fetchSuggestions(text);
+                m = filterByOptions(m);
+                m = await filterIgnored(m, doc, mapping);
+                cache.set(h, m);
             }
+            applyMatches(view, m, mapping);
+        };
+        const frag = async (doc, span, view) => {
+            const {text: dt, mapping} = buildMapping(doc);
+            const {text, offset} = extractFragment(dt, span);
+            const h = sha1(text + offset).toString();
+            let m = cache.get(h);
+            if (!m) {
+                m = await fetchSuggestions(text, offset);
+                m = filterByOptions(m);
+                m = await filterIgnored(m, doc, mapping);
+                cache.set(h, m);
+            }
+            applyMatches(view, m, mapping, span);
         };
 
-        const processDocument = async (doc, view) => {
-            if (
-                !extension.options.enableSpellcheck &&
-                !extension.options.enableGrammarCheck
-            ) {
-                return; // Skip processing if both options are disabled
-            }
+        const debFull = debounce(full, debounceTime);
+        const debFrag = debounce(frag, debounceTime);
 
-            let text = '';
-            const mapping = []; // text offset -> doc position
-            let lastDocPos = 0;
-            let textOffset = 0;
-
-            doc.descendants((node, pos) => {
-                if (node.isText) {
-                    const nodeText = node.text;
-                    for (let i = 0; i < nodeText.length; i++) {
-                        text += nodeText[i];
-                        mapping[textOffset] = pos + i;
-                        textOffset++;
+        return [new Plugin({
+            key: new PluginKey('languagetool'),
+            state: {
+                init() {
+                    return {initialDone: false}; // track first change
+                },
+                apply(tr, val, _old, newState) {
+                    // manual proof-read command
+                    if (tr.getMeta('lt:proof') && editorView) {
+                        debFull(newState.doc, editorView);
+                        return {initialDone: true};
                     }
-                    lastDocPos = pos + node.nodeSize;
-                } else if (node.isInline && !node.isText) {
-                    // Inline non-text node, e.g., image
-                    text += ' ';
-                    mapping[textOffset] = pos;
-                    textOffset++;
-                    lastDocPos = pos + node.nodeSize;
-                } else if (node.isBlock) {
-                    if (text.length > 0 && text[text.length - 1] !== '\n') {
-                        // Add newline between blocks
-                        text += '\n';
-                        // Map this newline character to a position after the block node
-                        mapping[textOffset] = lastDocPos;
-                        textOffset++;
+                    // regular typing edits
+                    if (tr.docChanged && editorView) {
+                        if (!val.initialDone) {
+                            // skip the first implicit change generated by initial content
+                            return {initialDone: true};
+                        }
+                        const span = changedSpan(tr);
+                        if (span) debFrag(newState.doc, span, editorView);
                     }
-                    lastDocPos = pos + node.nodeSize;
+                    return val;
+                },
+            },
+            props: {attributes: {spellcheck: 'false'}},
+            view(view) {
+                editorView = view;
+                // Run full-document proof-read exactly once per actual view
+                if (!initialisedViews.has(view)) {
+                    debFull(view.state.doc, view);
+                    initialisedViews.add(view);
                 }
-            });
-
-            // Send text to LanguageTool
-            const matches = await fetchSuggestions(text);
-
-            // Filter matches based on enabled options
-            const matchesAfterOptionFiltering = filterByOptions(matches);
-
-            // Filter out ignored matches (if applicable)
-            const filteredMatches = await filterIgnoredMatches(
-                matchesAfterOptionFiltering,
-                doc,
-                mapping
-            );
-
-            // Apply the marks
-            applyMarks(view, filteredMatches, mapping);
-        };
-
-        // Debounce the processDocument function
-        const debouncedProcess = debounce(processDocument, debounceTime);
-
-        // Assign processDocument to the extension for access in commands
-        this.processDocument = processDocument;
-
-        // Create and return the plugin
-        return [
-            new Plugin({
-                key: new PluginKey('languagetool'),
-                state: {
-                    init(_, {doc}) {
-                        if (automaticMode && editorView) {
-                            debouncedProcess(doc, editorView);
-                        }
-                        return null;
-                    },
-                    apply(tr, _, __, newState) {
-                        if (
-                            !tr.getMeta('languageToolProcessing') &&
-                            tr.docChanged &&
-                            extension.options.automaticMode &&
-                            editorView
-                        ) {
-                            debouncedProcess(newState.doc, editorView);
-                        }
-                        return null;
-                    },
-                },
-                props: {
-                    decorations: () => null,
-                    attributes: {
-                        spellcheck: 'false',
-                    },
-                },
-                view(view) {
-                    editorView = view;
-                    if (extension.options.automaticMode && !proofReadInitially) {
-                        debouncedProcess(view.state.doc, view);
-                        proofReadInitially = true;
-                    }
-                    return {
-                        update: (v) => {
-                            editorView = v;
-                        },
-                        destroy: () => {
-                            editorView = null;
-                        },
-                    };
-                },
-            }),
-        ];
+                return {
+                    update: v => (editorView = v),
+                    destroy: () => (editorView = null),
+                };
+            },
+        })];
     },
 });
 
-export function removeLanguageToolMarksFromJson(jsonContent) {
-    if (Array.isArray(jsonContent.content)) {
-        jsonContent.content = jsonContent.content.map((node) => {
-            if (node.marks) {
-                node.marks = node.marks.filter(
-                    (mark) => mark.type !== 'languagetool'
-                );
-            }
-            if (node.content) {
-                node = removeLanguageToolMarksFromJson(node);
-            }
-            return node;
+/* helper exports (unchanged) */
+export function removeLanguageToolMarksFromJson(json) {
+    if (Array.isArray(json.content)) {
+        json.content = json.content.map(n => {
+            if (n.marks) n.marks = n.marks.filter(m => m.type !== 'languagetool');
+            if (n.content) n = removeLanguageToolMarksFromJson(n);
+            return n;
         });
     }
-    return jsonContent;
+    return json;
 }
 
 export function stripLanguageToolAnnotationsFromHTML(html) {
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    const elements = doc.querySelectorAll('span.lt');
-
-    elements.forEach(el => {
-        const parent = el.parentNode;
-        // Replace the span with its child nodes
-        while (el.firstChild) {
-            parent.insertBefore(el.firstChild, el);
-        }
-        parent.removeChild(el);
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    doc.querySelectorAll('span.lt').forEach(el => {
+        const p = el.parentNode;
+        while (el.firstChild) p.insertBefore(el.firstChild, el);
+        p.removeChild(el);
     });
-
     return doc.body.innerHTML;
 }
